@@ -254,6 +254,7 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
     if (!assert(node.type == "FRAME", `Must be 'FRAME' type`, page, node)) {
         return
     }
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.width == 400 && node.height == 400, `Must be 400x400`, page, node);
 }
 
@@ -261,27 +262,29 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     if (!assert(node.type == "FRAME", `Must be 'FRAME' type`, page, node)) {
         return
     }
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     assert(node.width == 1366 && node.height == 1024, `Must be 1366x1024`, page, node);
     let settings = node.children.find((n) => n.name.startsWith("settings"));
     if (settings) {
-        lintSettings(page, settings);
+        lintSettings(page, settings as EllipseNode);
     }
     for (let step of node.children) {
         if(step.name.startsWith("step")) {
-            lintStep(page, step);
+            lintStep(page, step as GroupNode);
         } else if(!step.name.startsWith("settings")) {
             assert(false, `Must be 'settings' or 'step'`, page, step)
         }
     }
 }
 
-function lintStep(page: PageNode, node: SceneNode) {
+function lintStep(page: PageNode, node: GroupNode) {
     if(!assert(node.type == "GROUP", `Must be 'GROUP' type'`, page, node)) { return; }
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     const tags = getTags(node);
     tags.forEach((tag) => {
-        assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
+        assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
         assert(!/^s-multistep-brush$|^s-multistep-bg$/.test(tag), `Tag '${tag}' is obsolete`, page, node, ErrorLevel.WARN);        
     });
     const bg = tags.find((s) => /^s-multistep-bg$|^s-multistep-bg-\d+$/.test(s));
@@ -297,7 +300,7 @@ function lintStep(page: PageNode, node: SceneNode) {
 
     (node as GroupNode).children.forEach((n) =>{
         if (n.name = "input") {
-            lintInput(page, n);
+            lintInput(page, n as GroupNode);
         } else if (n.name = "template") {
             // lint template
         } else {
@@ -306,20 +309,22 @@ function lintStep(page: PageNode, node: SceneNode) {
    });
 }
 
-function lintSettings(page: PageNode, node: SceneNode) {
+function lintSettings(page: PageNode, node: EllipseNode) {
     assert(node.type == "ELLIPSE", `Must be 'ELLIPSE' type'`, page, node);
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     const tags = getTags(node);
     tags.forEach((tag) => {
-        assert(/^settings$|^capture-color$|^zoom-scale-\d+$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);    
+        assert(/^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);    
     });
     const zs = parseInt(tags.find((s) => /^zoom-scale-\d+$/.test(s))?.replace("zoom-scale-", "")) || 1;
     assert(zs >= 1 && zs <= 5, "Must be 1 < zoom-scale <= 5", page, node); 
     bsLimit = zs * 12.8;
 }
 
-function lintInput(page: PageNode, node: SceneNode) {
+function lintInput(page: PageNode, node: GroupNode) {
     if(!assert(node.type == "GROUP", `Must be 'GROUP' type'`, page, node)) { return; }
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     assert(node.name == "input", `Must be 'input'`, page, node);
     (node as GroupNode).children.forEach((v) =>{
@@ -337,7 +342,8 @@ function getTags(node: BaseNode) {
     return node.name.split(" ").filter(Boolean);
 }
 
-function lintVector(page: PageNode, node:VectorNode) {
+function lintVector(page: PageNode, node: VectorNode) {
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     let tags = getTags(node);
     assert(tags.length > 0, `Name must not be empty. Use slash to /ignore.`, page, node);
@@ -355,6 +361,7 @@ function lintVector(page: PageNode, node:VectorNode) {
 }
 
 function lintGroup(page: PageNode, node: GroupNode) {
+    assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     let tags = getTags(node);
     assert(tags.length > 0, `Name must not be empty. Use slash to /ignore.`, page, node);
