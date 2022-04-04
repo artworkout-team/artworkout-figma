@@ -3,6 +3,9 @@ figma.ui.resize(270, 150);
 
 figma.ui.onmessage = async (msg) => {
     switch (msg.type) {
+        case 'separateStep':
+            separateStep(figma.currentPage.selection);
+            break;
         case 'exportFiles':
             exportFiles();
             break;
@@ -24,6 +27,17 @@ figma.ui.onmessage = async (msg) => {
             break;
     }
 };
+
+function separateStep(nodes: readonly SceneNode[]) {
+    const parentStep = findParent(nodes[0], (n) => n.name.startsWith("step"));
+    const frame = parentStep.parent;
+    const index = frame.children.findIndex((n) => n == parentStep);
+    if (!parentStep) { return; }
+    const input = figma.group(nodes, frame);
+    input.name = "input";
+    const newStep = figma.group([input], frame, index);
+    newStep.name = parentStep.name;
+}
 
 function autoFormat() {
     const thumbPage = figma.root.children.find((p) => p.name.toUpperCase() == "THUMBNAILS");
@@ -89,6 +103,15 @@ function findFirst(node: BaseNode, f: (node: BaseNode)=>boolean) {
             if(found)
                 return found;
         }
+    }
+}
+
+function findParent(node: BaseNode, f: (node: BaseNode)=>boolean) {
+    if (f(node)) {
+        return node;
+    }
+    if (node.parent) {
+        return findParent(node.parent, f);
     }
 }
 
@@ -170,7 +193,7 @@ async function exportFiles() {
                     value: 600,
                 },
             });
-            const path = `thumbnails/${page.name}.png`.toLowerCase();
+            const path = `thumbnails/${page.name.toLowerCase()}.png`;
             thumbnails.push({path, bytes});
         }
     }
@@ -186,6 +209,7 @@ interface LintError {
 
 let errors: LintError[] = [];
 let bsLimit = 12.8;
+let order = "steps";
 
 enum ErrorLevel {
     ERROR,
@@ -269,6 +293,19 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     if (settings) {
         lintSettings(page, settings as EllipseNode);
     }
+    let orderNumbers = {};
+    for (let step of node.children) {
+        const tags = getTags(step);
+        tags.forEach((tag) => {
+            const found = /^o-(d+)$/.exec(tag);
+            if (!found) { return; }
+            const o = found[1];
+            assert(!orderNumbers[o], `Must have unique ${tag} values`, page, step)
+            if (o) {
+                orderNumbers[o] = 1;
+            }
+        })
+    }
     for (let step of node.children) {
         if(step.name.startsWith("step")) {
             lintStep(page, step as GroupNode);
@@ -285,15 +322,17 @@ function lintStep(page: PageNode, node: GroupNode) {
     const tags = getTags(node);
     tags.forEach((tag) => {
         assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
-        assert(!/^s-multistep-brush$|^s-multistep-bg$/.test(tag), `Tag '${tag}' is obsolete`, page, node, ErrorLevel.WARN);        
+        // assert(!/^s-multistep-brush$|^s-multistep-bg$/.test(tag), `Tag '${tag}' is obsolete`, page, node, ErrorLevel.WARN);        
     });
     const bg = tags.find((s) => /^s-multistep-bg$|^s-multistep-bg-\d+$/.test(s));
     const ss = parseInt(tags.find((s) => /^ss-\d+$/.test(s))?.replace("ss-", ""));
+    const o = tags.find((s) => /^o-\d+$/.test(s));
     const bs = parseInt(tags.find((s) => /^bs-\d+$/.test(s))?.replace("bs-", ""));
     assert(!(bg && ss), "Should not use bg+ss", page, node, ErrorLevel.INFO);
     assert(!ss || ss >= 15, "ss must be >= 15", page, node);
     assert(!ss || !bs || ss > bs, "ss must be > bs", page, node);
     assert(!bs || bs <= bsLimit, `bs must be <= ${bsLimit} for this zoom-scale`, page, node);
+    assert(!o || order == "layers", `${o} must be used only with settings order-layers`, page, node);
 
     const ff = findFirst(node, (n: VectorNode) => n.fills && n.fills[0]);
     assert(!bg || ff, "bg step shouldn't be used without filled-in vectors", page, node, ErrorLevel.INFO);
@@ -306,7 +345,16 @@ function lintStep(page: PageNode, node: GroupNode) {
         } else {
             assert(false, "Must be 'input' or 'template'", page, n);
         }
-   });
+    });
+   
+    const blinkNodes = findAll(node, (n) => getTags(n).find((t) => /^blink$/.test(t)) !== undefined).flatMap(deepNodes);
+    const filledNode = blinkNodes.find((n) => (n as VectorNode).fills[0]);
+    assert(blinkNodes.length == 0 || !!filledNode || blinkNodes.length > 3, `Should use draw-line if < 4 lines`, page, blinkNodes[0], ErrorLevel.INFO);
+}
+
+function deepNodes(node: GroupNode): SceneNode[] {
+    if (!node.children) { return [node]; }
+    return node.children.flatMap((n) => deepNodes(n as GroupNode));
 }
 
 function lintSettings(page: PageNode, node: EllipseNode) {
@@ -317,8 +365,14 @@ function lintSettings(page: PageNode, node: EllipseNode) {
     tags.forEach((tag) => {
         assert(/^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);    
     });
-    const zs = parseInt(tags.find((s) => /^zoom-scale-\d+$/.test(s))?.replace("zoom-scale-", "")) || 1;
-    assert(zs >= 1 && zs <= 5, "Must be 1 < zoom-scale <= 5", page, node); 
+    if (tags.find((tag) => /^order-layers$/.test(tag))) {
+        order = "layers";
+    } else {
+        order = "steps";
+    }
+
+    const zs = parseInt(tags.find((s) => /^zoom-scale-\d+$/.test(s))?.replace("zoom-scale-", ""));
+    assert(isNaN(zs) || zs > 1 && zs <= 5, `Must be 1 < zoom-scale <= 5 (${zs})`, page, node); 
     bsLimit = zs * 12.8;
 }
 
@@ -353,8 +407,8 @@ function lintVector(page: PageNode, node: VectorNode) {
     let fills = node.fills as Paint[];
     let strokes = node.strokes;
     assert(!fills.length || !strokes.length, `Must not have fill+stroke`, page, node);
-    assert(!strokes.length || /ROUND|NONE/.test(String(node.strokeCap)), `Stroke caps must be round but are ${String(node.strokeCap)}`, page, node, ErrorLevel.ERROR);
-    assert(!strokes.length || node.strokeJoin == "ROUND", `Stroke joins should be round but are ${String(node.strokeJoin)}`, page, node, ErrorLevel.INFO);
+    assert(!strokes.length || /ROUND|NONE/.test(String(node.strokeCap)), `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`, page, node, ErrorLevel.ERROR);
+    assert(!strokes.length || node.strokeJoin == "ROUND", `Stroke joins should be 'ROUND' but are '${String(node.strokeJoin)}'`, page, node, ErrorLevel.INFO);
     const rgbt = tags.find((s) => /^rgb-template$/.test(s));
     const anim = tags.find((s) => /^blink$|^draw-line$/.test(s));
     assert(!rgbt || !!anim, `Must have 'blink' or 'draw-line'`, page, node);
@@ -373,10 +427,5 @@ function lintGroup(page: PageNode, node: GroupNode) {
     assert(!rgbt || !!anim, `Must have 'blink'`, page, node);
 }
 
-// bg with only strokes
-
-// thumbnail correct size (aspect ratio)
-// lesson correct size (ratio?)
 // no hidden fill/stroke
 // no effects
-// fill on lesson frame shouldn't have `show in exports` checkbox - no API?
