@@ -73,6 +73,7 @@ function autoFormat() {
     });
     findAll(figma.root, (node) => /^step s-multistep-result/.test(node.name))
     .forEach((n: GroupNode) => {
+        n.children[0].name = "template";
         (n.children[0] as GroupNode).children[0].name = "/ignore";
         n.resize(40, 40);
         n.x = 10;
@@ -121,7 +122,7 @@ function generateCode() {
 }
 
 function print(text: string) {
-    figma.ui.resize(800, 600);
+    figma.ui.resize(700, 400);
     figma.ui.postMessage({type: "print", text});
 }
 
@@ -133,7 +134,7 @@ function generateTranslationsCode() {
     swiftCourseName = swiftCourseName.charAt(0).toLowerCase() + swiftCourseName.slice(1)
     let tasks = ``;
     for (let page of figma.root.children) {
-        if (page.name.toUpperCase() == "THUMBNAILS") {
+        if (page.name.toUpperCase() == "INDEX") {
             continue;
         }
         tasks+=`"task-name ${courseName}/${page.name}" = "${capitalize(page.name.split('-').join(" "))}";\n`;
@@ -154,10 +155,10 @@ function generateSwiftCode() {
     swiftCourseName = swiftCourseName.charAt(0).toLowerCase() + swiftCourseName.slice(1)
     let tasks = ``;
     for (let page of figma.root.children) {
-        if (page.name.toUpperCase() == "THUMBNAILS") {
+        if (page.name.toUpperCase() == "INDEX") {
             continue;
         }
-        tasks+=`        Task(path: "${courseName}/${page.name}"),\n`;
+        tasks+=`        Task(path: "${courseName}/${page.name}", pro: true),\n`;
     }
     return `
 let ${swiftCourseName} = Course(
@@ -179,7 +180,7 @@ async function exportFiles() {
         if (lesson) {
             const bytes = await lesson.exportAsync({
                 format: "SVG",
-                svgOutlineText: false,
+                // svgOutlineText: false,
                 svgIdAttribute: true,
             });
             const path = `${page.name}.svg`;
@@ -258,7 +259,7 @@ function lintIndex(page: PageNode) {
 
 function lintPage(page: PageNode) {
     if (/^\/|^INDEX$/.test(page.name)) { return; }
-    if(!assert(/^[a-z\-0-9]+/.test(page.name), `Page name '${page.name}' must match [a-z\-0-9]+. Use slash to /ignore.`, page)) {
+    if(!assert(/^[a-z\-0-9]+$/.test(page.name), `Page name '${page.name}' must match [a-z\-0-9]+. Use slash to /ignore.`, page)) {
         return;
     }
     assert(page.children.filter((s) => /^thumbnail$/.test(s.name)).length == 1, `Must contain exactly 1 'thumbnail'`, page);
@@ -297,7 +298,8 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     for (let step of node.children) {
         const tags = getTags(step);
         tags.forEach((tag) => {
-            const found = /^o-(d+)$/.exec(tag);
+            const found = /^o-(\d+)$/.exec(tag);
+            console.log(found);
             if (!found) { return; }
             const o = found[1];
             assert(!orderNumbers[o], `Must have unique ${tag} values`, page, step)
@@ -321,7 +323,7 @@ function lintStep(page: PageNode, node: GroupNode) {
     assert(node.visible, `Must be visible`, page, node);
     const tags = getTags(node);
     tags.forEach((tag) => {
-        assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
+        assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-\d+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
         // assert(!/^s-multistep-brush$|^s-multistep-bg$/.test(tag), `Tag '${tag}' is obsolete`, page, node, ErrorLevel.WARN);        
     });
     const bg = tags.find((s) => /^s-multistep-bg$|^s-multistep-bg-\d+$/.test(s));
@@ -333,12 +335,13 @@ function lintStep(page: PageNode, node: GroupNode) {
     assert(!ss || !bs || ss > bs, "ss must be > bs", page, node);
     assert(!bs || bs <= bsLimit, `bs must be <= ${bsLimit} for this zoom-scale`, page, node);
     assert(!o || order == "layers", `${o} must be used only with settings order-layers`, page, node);
+    assert(order !== "layers" || !!o, `Must have o-N order number`, page, node);
 
     const ff = findFirst(node, (n: VectorNode) => n.fills && n.fills[0]);
     assert(!bg || ff, "bg step shouldn't be used without filled-in vectors", page, node, ErrorLevel.INFO);
 
-    (node as GroupNode).children.forEach((n) =>{
-        if (n.name = "input") {
+    (node as GroupNode).children.forEach((n) => {
+        if (n.name == "input") {
             lintInput(page, n as GroupNode);
         } else if (n.name = "template") {
             // lint template
@@ -363,7 +366,7 @@ function lintSettings(page: PageNode, node: EllipseNode) {
     assert(node.visible, `Must be visible`, page, node);
     const tags = getTags(node);
     tags.forEach((tag) => {
-        assert(/^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);    
+        assert(/^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);    
     });
     if (tags.find((tag) => /^order-layers$/.test(tag))) {
         order = "layers";
@@ -382,12 +385,12 @@ function lintInput(page: PageNode, node: GroupNode) {
     assert(node.visible, `Must be visible`, page, node);
     assert(node.name == "input", `Must be 'input'`, page, node);
     (node as GroupNode).children.forEach((v) =>{
-        if (v.type == "GROUP") {
+        if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
             lintGroup(page, v as GroupNode);
-        } else if (/RECTANGLE|ELLIPSE|VECTOR/.test(v.type)) {
+        } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
             lintVector(page, v as VectorNode);
         } else {
-            assert(false, `Must be 'GROUP' or 'VECTOR' type`, page, v);
+            assert(false, `Must be 'GROUP/VECTOR/RECTANGLE/ELLIPSE/TEXT' type`, page, v);
         }
     });
 }
@@ -415,6 +418,7 @@ function lintVector(page: PageNode, node: VectorNode) {
 }
 
 function lintGroup(page: PageNode, node: GroupNode) {
+    assert(!/BOOLEAN_OPERATION/.test(node.type), `Notice BOOLEAN_OPERATION`, page, node, ErrorLevel.INFO);
     assert(node.opacity == 1, `Must be opaque`, page, node);
     assert(node.visible, `Must be visible`, page, node);
     let tags = getTags(node);
