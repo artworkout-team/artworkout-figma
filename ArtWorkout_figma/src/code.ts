@@ -25,6 +25,9 @@ figma.ui.onmessage = async (msg) => {
         case 'autoFormat':
             autoFormat();
             break;
+        case 'selectError':
+            selectError(msg.index - 1);
+            break;
     }
 };
 
@@ -218,14 +221,18 @@ enum ErrorLevel {
     INFO,
 }
 
+function selectError(index: number) {
+    if(errors[index]?.page) {
+        figma.currentPage = errors[index].page;
+    }
+    if(errors[index]?.node) {
+        errors[0].page.selection = [errors[index].node];
+    }
+}
+
 function printErrors() {
     errors.sort((a, b) => a.level - b.level);
-    if(errors[0]?.page) {
-        figma.currentPage = errors[0].page;
-    }
-    if(errors[0]?.node) {
-            errors[0].page.selection = [errors[0].node];
-    }
+    selectError(0);
     let text = errors.map((e) => `${ErrorLevel[e.level]}\t| ${e.error} | PAGE:${e.page?.name || ""} ${e.node?.type}:${e.node?.name || ""}`).join("\n");
     text += "\nDone";
     print(text);
@@ -299,7 +306,6 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
         const tags = getTags(step);
         tags.forEach((tag) => {
             const found = /^o-(\d+)$/.exec(tag);
-            console.log(found);
             if (!found) { return; }
             const o = found[1];
             assert(!orderNumbers[o], `Must have unique ${tag} values`, page, step)

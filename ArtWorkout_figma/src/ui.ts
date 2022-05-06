@@ -19,11 +19,25 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    let textArea = document.querySelector("#output") as HTMLTextAreaElement;
+
+    textArea.addEventListener('click', () => {
+        parent.postMessage({ pluginMessage: {
+            type: "selectError",
+            index: getLineNumber(),
+        }}, '*');
+    });
+
     function print(s: string) {
         let textArea = document.querySelector("#output") as HTMLTextAreaElement;
         textArea.style.display = "block";
         textArea.value = s;
     }
+
+    function getLineNumber() {
+        let tArea = document.querySelector("#output") as HTMLTextAreaElement;
+        return tArea.value.substr(0, tArea.selectionStart).split("\n").length;
+    }    
 
     function typedArrayToBuffer(array) {
         return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
