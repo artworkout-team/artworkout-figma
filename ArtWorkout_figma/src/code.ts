@@ -212,7 +212,8 @@ interface LintError {
 }
 
 let errors: LintError[] = [];
-let bsLimit = 12.8;
+let zoomScale = 1;
+let maxBs = 12.8;
 let order = "steps";
 
 enum ErrorLevel {
@@ -321,6 +322,7 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
             assert(false, `Must be 'settings' or 'step'`, page, step)
         }
     }
+    assert(maxBs > (zoomScale - 1) * 12.8, `zoom-scale ${zoomScale} must be ${Math.ceil(maxBs / 12.8)} for max bs ${maxBs} used`);
 }
 
 function lintStep(page: PageNode, node: GroupNode) {
@@ -336,10 +338,13 @@ function lintStep(page: PageNode, node: GroupNode) {
     const ss = parseInt(tags.find((s) => /^ss-\d+$/.test(s))?.replace("ss-", ""));
     const o = tags.find((s) => /^o-\d+$/.test(s));
     const bs = parseInt(tags.find((s) => /^bs-\d+$/.test(s))?.replace("bs-", ""));
+    maxBs = Math.max(bs ? bs : maxBs, maxBs);
     assert(!(bg && ss), "Should not use bg+ss", page, node, ErrorLevel.INFO);
     assert(!ss || ss >= 15, "ss must be >= 15", page, node);
     assert(!ss || !bs || ss > bs, "ss must be > bs", page, node);
-    assert(!bs || bs <= bsLimit, `bs must be <= ${bsLimit} for this zoom-scale`, page, node);
+    console.log(bs, zoomScale);
+    assert(!bs || bs <= zoomScale * 12.8, `bs must be <= ${zoomScale * 12.8} for this zoom-scale`, page, node);
+    assert(!bs || bs >= zoomScale * 0.44, `bs must be >= ${zoomScale * 0.44} for this zoom-scale`, page, node);
     assert(!o || order == "layers", `${o} must be used only with settings order-layers`, page, node);
     assert(order !== "layers" || !!o, `Must have o-N order number`, page, node);
 
@@ -380,9 +385,8 @@ function lintSettings(page: PageNode, node: EllipseNode) {
         order = "steps";
     }
 
-    const zs = parseInt(tags.find((s) => /^zoom-scale-\d+$/.test(s))?.replace("zoom-scale-", ""));
-    assert(isNaN(zs) || zs > 1 && zs <= 5, `Must be 1 < zoom-scale <= 5 (${zs})`, page, node); 
-    bsLimit = zs * 12.8;
+    zoomScale = parseInt(tags.find((s) => /^zoom-scale-\d+$/.test(s))?.replace("zoom-scale-", ""));
+    assert(isNaN(zoomScale) || zoomScale > 1 && zoomScale <= 5, `Must be 1 < zoom-scale <= 5 (${zoomScale})`, page, node); 
 }
 
 function lintInput(page: PageNode, node: GroupNode) {
