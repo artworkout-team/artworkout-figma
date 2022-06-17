@@ -47,6 +47,7 @@ function updateDisplay(settings: {displayMode: string, stepNumber: number}) {
     const {displayMode, stepNumber} = settings
     const lesson = figma.currentPage.children.find((el)=> el.name == "lesson") as FrameNode
     const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
+    figma.currentPage.selection = [step]
     emit("updateTags", {ss: parseInt(getTag(step, "ss-")), bs: parseInt(getTag(step, "bs-"))})
     switch (displayMode) {
         case "all":
@@ -420,6 +421,7 @@ function lintStep(page: PageNode, node: GroupNode) {
         // assert(!/^s-multistep-brush$|^s-multistep-bg$/.test(tag), `Tag '${tag}' is obsolete`, page, node, ErrorLevel.WARN);        
     });
     const bg = tags.find((s) => /^s-multistep-bg$|^s-multistep-bg-\d+$/.test(s));
+    const brush = tags.find((s) => /^s-multistep-brush$|^s-multistep-brush-\d+$/.test(s));
     const ss = parseInt(tags.find((s) => /^ss-\d+$/.test(s))?.replace("ss-", ""));
     const o = tags.find((s) => /^o-\d+$/.test(s));
     const bs = parseInt(tags.find((s) => /^bs-\d+$/.test(s))?.replace("bs-", ""));
@@ -434,6 +436,7 @@ function lintStep(page: PageNode, node: GroupNode) {
 
     const ff = findFirst(node, (n: VectorNode) => n.fills && n.fills[0]);
     assert(!bg || ff, "bg step shouldn't be used without filled-in vectors", page, node, ErrorLevel.INFO);
+    assert(!brush || !ff, "brush step shouldn't be used with filled-in vectors", page, node, ErrorLevel.INFO);
 
     (node as GroupNode).children.forEach((n) => {
         if (n.name == "input") {
