@@ -48,7 +48,7 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
     const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
     page.selection = [step]
     const stepCount = lesson.children.filter((n) => getTags(n).includes("step")).length
-    emit("updateForm", {ss: parseInt(getTag(step, "ss-")), bs: parseInt(getTag(step, "bs-")), template: getTag(step, "s-"), stepCount, stepNumber, displayMode})
+    emit("updateForm", {shadowSize: parseInt(getTag(step, "ss-")), brushSize: parseInt(getTag(step, "bs-")), template: getTag(step, "s-"), stepCount, stepNumber, displayMode})
     switch (displayMode) {
         case "all":
             deleteTmp();
@@ -84,7 +84,8 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
             template.findAll((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type)).forEach((el: VectorNode) => {
                 if (el.strokes.length > 0) {
                     el.strokes = [{type: "SOLID", color: {r: 0, g: 0, b: 1}}]
-                    el.strokeWeight = parseInt(getTag(step, "ss-")) || 50
+                    const defaultWeight = getTag(step, "s-") == "multistep-bg" ? 30 : 50
+                    el.strokeWeight = parseInt(getTag(step, "ss-")) || defaultWeight
                     const pink = el.clone()
                     pink.strokes = [{type: "SOLID", color: {r: 1, g: 0, b: 1}}]
                     pink.strokeWeight = 2
@@ -106,16 +107,14 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
 
 updateDisplay(figma.currentPage, {displayMode: "all", stepNumber: 1})
 
-function updateProps(settings: {ss: number, bs: number, stepNumber: number}) {
+function updateProps(settings: {shadowSize: number, brushSize: number, stepNumber: number, template: string}) {
     const lesson = figma.currentPage.children.find((el)=> el.name == "lesson") as FrameNode
     const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
-    // const ss = settings.ss || parseInt(getTag(step, "ss-"))
-    // const bs = settings.bs || parseInt(getTag(step, "bs-"))
-    let tags = getTags(step).filter((t) => !t.startsWith("ss-") && !t.startsWith("bs-"))
-    if (settings.ss) { tags.push(`ss-${settings.ss}`) }
-    if (settings.bs) { tags.push(`bs-${settings.bs}`) }
+    let tags = getTags(step).filter((t) => !t.startsWith("ss-") && !t.startsWith("bs-") && !t.startsWith("s-"))
+    if (settings.template) { tags.splice(1, 0, `s-${settings.template}`) }
+    if (settings.shadowSize) { tags.push(`ss-${settings.shadowSize}`) }
+    if (settings.brushSize) { tags.push(`bs-${settings.brushSize}`) }
 
-    // let tags = getTags(step).filter((t) => !t.startsWith("ss-") && !t.startsWith("bs-")).concat([`ss-${settings.ss}`, `bs-${settings.bs}`])
     step.name = tags.join(" ")
 }
 

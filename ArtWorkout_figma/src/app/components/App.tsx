@@ -21,11 +21,15 @@ function App() {
   }
 
   return (
-    <Tabs defaultActiveKey="create" className="m-1">
+    <Tabs defaultActiveKey="tune" className="m-1">
       <Tab eventKey="create" title="Create" className="m-2">
         {/* <Button>Create lesson</Button> */}
         {/* <Button>Set animations (CONFIRM)</Button> */}
         <Button onClick={() => emit("separateStep")}>Separate step</Button>
+      </Tab>
+
+      <Tab eventKey="tune" title="Tune" className="m-2">
+        <DisplayForm/>
       </Tab>
 
       <Tab eventKey="format" title="Format" className="m-2">
@@ -37,10 +41,6 @@ function App() {
           </div>
           <textarea value={textareaValue} onChange={()=>{}} onClick={selectError} id="output" style={{whiteSpace: "pre",  overflow: "auto"}} cols={83} rows={18}></textarea>
         </Stack>
-      </Tab>
-
-      <Tab eventKey="test" title="Test" className="m-2">
-        <DisplayForm/>
       </Tab>
 
       <Tab eventKey="publish" title="Publish" className="m-2">
