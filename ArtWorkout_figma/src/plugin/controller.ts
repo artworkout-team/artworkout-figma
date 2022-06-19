@@ -48,7 +48,8 @@ function updateDisplay(settings: {displayMode: string, stepNumber: number}) {
     const lesson = figma.currentPage.children.find((el)=> el.name == "lesson") as FrameNode
     const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
     figma.currentPage.selection = [step]
-    emit("updateTags", {ss: parseInt(getTag(step, "ss-")), bs: parseInt(getTag(step, "bs-"))})
+    const stepCount = lesson.children.filter((n) => getTags(n).includes("step")).length
+    emit("updateTags", {ss: parseInt(getTag(step, "ss-")), bs: parseInt(getTag(step, "bs-")), stepCount})
     switch (displayMode) {
         case "all":
             deleteTmp();

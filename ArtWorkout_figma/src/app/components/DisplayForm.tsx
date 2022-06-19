@@ -1,10 +1,12 @@
-import React, { ChangeEvent, ChangeEventHandler, FormEvent, Fragment, useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, Fragment, useEffect, useState } from 'react'
 import {Form, Row, Col} from "react-bootstrap";
 import {emit, on} from '../../events';
+import { useHotkeys } from 'react-hotkeys-hook'
 
 function DisplayForm() {
   const [displayMode, setDisplayMode] = useState("all")
   const [stepNumber, setStepNumber] = useState(1)
+  const [stepCount, setStepCount] = useState(1)
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
 
@@ -32,14 +34,25 @@ function DisplayForm() {
   }, [shadowSize, brushSize])
 
   useEffect(() => {
-    on("updateTags", (settings: {ss: number, bs: number}) => {
+    on("updateTags", (settings: {ss: number, bs: number, stepCount: number}) => {
       console.log("controller->ui updateTags")
       setMutex(true)
       setShadowSize(settings.ss)
       setBrushSize(settings.bs)
+      setStepCount(settings.stepCount)
       setMutex(false)
     })
   }, []) // once
+
+  const enableOnTags: any = ["INPUT", "TEXTAREA", "SELECT"]
+
+  useHotkeys('j', () => setStepNumber((prev) => prev + 1 < stepCount ? prev + 1 : stepCount), {enableOnTags})
+  useHotkeys('k', () => setStepNumber((prev) => prev > 1 ? prev - 1 : 1), {enableOnTags})
+  useHotkeys('g', () => setStepNumber(1), {enableOnTags})
+  useHotkeys('a', () => setDisplayMode("all"), {enableOnTags})
+  useHotkeys('c', () => setDisplayMode("current"), {enableOnTags})
+  useHotkeys('p', () => setDisplayMode("previous"), {enableOnTags})
+  useHotkeys('t', () => setDisplayMode("template"), {enableOnTags})
 
   return (
     <Fragment>
@@ -48,15 +61,15 @@ function DisplayForm() {
           <Form.Group as={Row}>
             <Form.Label column xs={4}>Step</Form.Label>
             <Col>
-              <Form.Control type="number" value={stepNumber} min={1} onChange={onStepNumberChange}/>
+              <Form.Control type="number" value={stepNumber} min={1} max={stepCount} onChange={onStepNumberChange}/>
             </Col>
           </Form.Group>
         </Col>
         <Col onChange={onDisplayModeChange}>
-          <Form.Check type="radio" name="displayMode" value="all" label="All" defaultChecked/>
-          <Form.Check type="radio" name="displayMode" value="current" label="Current"/>
-          <Form.Check type="radio" name="displayMode" value="previous" label="Previous"/>
-          <Form.Check type="radio" name="displayMode" value="template" label="Template"/>
+          <Form.Check type="radio" name="displayMode" value="all" label="All" defaultChecked checked={displayMode == "all"} />
+          <Form.Check type="radio" name="displayMode" value="current" label="Current" checked={displayMode == "current"} />
+          <Form.Check type="radio" name="displayMode" value="previous" label="Previous" checked={displayMode == "previous"} />
+          <Form.Check type="radio" name="displayMode" value="template" label="Template" checked={displayMode == "template"} />
         </Col>
       </Row>
       <Row>
