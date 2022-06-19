@@ -5,6 +5,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 
 function DisplayForm() {
   const [displayMode, setDisplayMode] = useState("all")
+  const [template, setTemplate] = useState("")
   const [stepNumber, setStepNumber] = useState(1)
   const [stepCount, setStepCount] = useState(1)
   const [shadowSize, setShadowSize] = useState(0)
@@ -34,13 +35,14 @@ function DisplayForm() {
   }, [shadowSize, brushSize])
 
   useEffect(() => {
-    on("updateForm", (settings: {ss: number, bs: number, stepCount: number, stepNumber: number, displayMode: string}) => {
+    on("updateForm", (settings: {ss: number, bs: number, stepCount: number, stepNumber: number, displayMode: string, template: string}) => {
       setMutex(true)
       setShadowSize(settings.ss)
       setBrushSize(settings.bs)
       setStepCount(settings.stepCount)
       setStepNumber(settings.stepNumber)
       setDisplayMode(settings.displayMode)
+      setTemplate(settings.template)
       setMutex(false)
     })
   }, []) // once
