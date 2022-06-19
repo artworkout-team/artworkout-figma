@@ -19,27 +19,28 @@ function DisplayForm() {
   }
 
   useEffect(() => {
-    console.log("ui->controller updateDisplay")
-    emit("updateDisplay", {displayMode, stepNumber})
+    if (!mutex) {
+      emit("updateDisplay", {displayMode, stepNumber})
+    }
   }, [stepNumber, displayMode]);
 
   const [mutex, setMutex] = useState(true)
 
   useEffect(() => {
     if (!mutex) {
-      console.log("ui->controller updateTags")
-      emit("updateTags", {ss: shadowSize, bs: brushSize, stepNumber})
+      emit("updateProps", {ss: shadowSize, bs: brushSize, stepNumber})
       emit("updateDisplay", {displayMode, stepNumber})
     }
   }, [shadowSize, brushSize])
 
   useEffect(() => {
-    on("updateTags", (settings: {ss: number, bs: number, stepCount: number}) => {
-      console.log("controller->ui updateTags")
+    on("updateForm", (settings: {ss: number, bs: number, stepCount: number, stepNumber: number, displayMode: string}) => {
       setMutex(true)
       setShadowSize(settings.ss)
       setBrushSize(settings.bs)
       setStepCount(settings.stepCount)
+      setStepNumber(settings.stepNumber)
+      setDisplayMode(settings.displayMode)
       setMutex(false)
     })
   }, []) // once

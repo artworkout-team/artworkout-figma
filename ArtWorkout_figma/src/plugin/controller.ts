@@ -18,8 +18,12 @@ on("lintPage", () => {
 })
 on("autoFormat", autoFormat)
 on("selectError", selectError)
-on("updateDisplay", updateDisplay)
-on("updateTags", updateTags)
+on("updateDisplay", (settings) => updateDisplay(figma.currentPage, settings))
+on("updateProps", updateProps)
+figma.on("currentpagechange", () => {
+    updateDisplay(lastPage, {displayMode: "all", stepNumber: 1})
+    updateDisplay(figma.currentPage, {displayMode: "all", stepNumber: 1})
+})
 
 function getOrder(step: SceneNode) {
     let o = parseInt(getTags(step).find((t) => t.startsWith("o-")).replace("o-", ""))
@@ -43,13 +47,16 @@ function deleteTmp() {
     figma.currentPage.findAll((el) => el.name.startsWith("tmp-")).forEach((el) => el.remove());
 }
 
-function updateDisplay(settings: {displayMode: string, stepNumber: number}) {
+let lastPage = figma.currentPage
+
+function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumber: number}) {
+    lastPage = page
     const {displayMode, stepNumber} = settings
-    const lesson = figma.currentPage.children.find((el)=> el.name == "lesson") as FrameNode
+    const lesson = page.children.find((el)=> el.name == "lesson") as FrameNode
     const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
-    figma.currentPage.selection = [step]
+    page.selection = [step]
     const stepCount = lesson.children.filter((n) => getTags(n).includes("step")).length
-    emit("updateTags", {ss: parseInt(getTag(step, "ss-")), bs: parseInt(getTag(step, "bs-")), stepCount})
+    emit("updateForm", {ss: parseInt(getTag(step, "ss-")), bs: parseInt(getTag(step, "bs-")), stepCount, stepNumber, displayMode})
     switch (displayMode) {
         case "all":
             deleteTmp();
@@ -105,7 +112,7 @@ function updateDisplay(settings: {displayMode: string, stepNumber: number}) {
     }
 }
 
-function updateTags(settings: {ss: number, bs: number, stepNumber: number}) {
+function updateProps(settings: {ss: number, bs: number, stepNumber: number}) {
     const lesson = figma.currentPage.children.find((el)=> el.name == "lesson") as FrameNode
     const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
     // const ss = settings.ss || parseInt(getTag(step, "ss-"))
