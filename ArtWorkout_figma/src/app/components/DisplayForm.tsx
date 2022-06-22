@@ -72,11 +72,11 @@ function DisplayForm() {
             </Col>
           </Form.Group>
         </Col>
-        <Col onChange={onDisplayModeChange}>
-          <Form.Check type="radio" name="displayMode" value="all" label="(Q) All" defaultChecked checked={displayMode == "all"} />
-          <Form.Check type="radio" name="displayMode" value="current" label="(C)urrent" checked={displayMode == "current"} />
-          <Form.Check type="radio" name="displayMode" value="previous" label="(P)revious" checked={displayMode == "previous"} />
-          <Form.Check type="radio" name="displayMode" value="template" label="(T)emplate" checked={displayMode == "template"} />
+        <Col>
+          <Form.Check type="radio" name="displayMode" value="all" label="(Q) All" onChange={onDisplayModeChange} checked={displayMode == "all"} />
+          <Form.Check type="radio" name="displayMode" value="current" label="(C)urrent" onChange={onDisplayModeChange} checked={displayMode == "current"} />
+          <Form.Check type="radio" name="displayMode" value="previous" label="(P)revious" onChange={onDisplayModeChange} checked={displayMode == "previous"} />
+          <Form.Check type="radio" name="displayMode" value="template" label="(T)emplate" onChange={onDisplayModeChange} checked={displayMode == "template"} />
         </Col>
       </Row>
       <Row>
@@ -92,15 +92,6 @@ function DisplayForm() {
               </Form.Select>
             </Col>
           </Form.Group>
-          {/* <Form.Group as={Row} className="mb-2">
-            <Form.Label column xs={5}>Step order</Form.Label>
-            <Col>
-              <Form.Control type="number" min={1} value={shadowSize} onChange={(e) => setShadowSize(parseInt(e.target.value))}/>
-            </Col>
-            <Col className="d-grid">
-              <Button>Next</Button>
-            </Col>
-          </Form.Group> */}
           <Form.Group as={Row} className="mb-2">
             <Form.Label column xs={5}>Tolerance (SW)</Form.Label>
             <Col>

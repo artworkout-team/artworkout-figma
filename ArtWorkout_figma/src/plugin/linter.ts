@@ -1,6 +1,7 @@
 import {emit, on, once} from '../events'
 import {print, getTags, findAll, findFirst} from './util'
 
+on("selectError", selectError)
 on("lintCourse", () => {
     errors = []
     lintCourse()
