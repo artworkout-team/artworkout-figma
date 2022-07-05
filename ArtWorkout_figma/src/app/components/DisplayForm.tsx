@@ -73,10 +73,10 @@ function DisplayForm() {
           </Form.Group>
         </Col>
         <Col>
-          <Form.Check type="radio" name="displayMode" value="all" label="(Q) All" onChange={onDisplayModeChange} checked={displayMode == "all"} />
-          <Form.Check type="radio" name="displayMode" value="current" label="(C)urrent" onChange={onDisplayModeChange} checked={displayMode == "current"} />
-          <Form.Check type="radio" name="displayMode" value="previous" label="(P)revious" onChange={onDisplayModeChange} checked={displayMode == "previous"} />
-          <Form.Check type="radio" name="displayMode" value="template" label="(T)emplate" onChange={onDisplayModeChange} checked={displayMode == "template"} />
+          <Form.Check id="displayModeAll" type="radio" name="displayMode" value="all" label="(Q) All" onChange={onDisplayModeChange} checked={displayMode == "all"} />
+          <Form.Check id="displayModeCurrent" type="radio" name="displayMode" value="current" label="(C)urrent" onChange={onDisplayModeChange} checked={displayMode == "current"} />
+          <Form.Check id="displayModePrevious" type="radio" name="displayMode" value="previous" label="(P)revious" onChange={onDisplayModeChange} checked={displayMode == "previous"} />
+          <Form.Check id="displayModeTemplate" type="radio" name="displayMode" value="template" label="(T)emplate" onChange={onDisplayModeChange} checked={displayMode == "template"} />
         </Col>
       </Row>
       <Row>

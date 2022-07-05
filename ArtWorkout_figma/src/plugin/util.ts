@@ -39,6 +39,10 @@ export function getTags(node: BaseNode) {
     return node.name.split(" ").filter(Boolean);
 }
 
+export function addTag(node: BaseNode, tag: string) {
+    node.name = getTags(node).concat([tag]).join(" ")
+}
+
 export function print(text: string) {
     figma.ui.resize(700, 400);
     emit("print", text)

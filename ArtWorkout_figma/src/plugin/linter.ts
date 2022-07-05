@@ -20,7 +20,7 @@ interface LintError {
     level: ErrorLevel;
 }
 
-export let errors: LintError[] = [];
+let errors: LintError[] = [];
 let zoomScale = 1;
 let maxBs = 12.8;
 let order = "steps";
@@ -31,7 +31,7 @@ enum ErrorLevel {
     INFO,
 }
 
-export function selectError(index: number) {
+function selectError(index: number) {
     if(errors[index]?.page) {
         figma.currentPage = errors[index].page;
     }
@@ -40,7 +40,7 @@ export function selectError(index: number) {
     }
 }
 
-export function printErrors() {
+function printErrors() {
     errors.sort((a, b) => a.level - b.level);
     selectError(0);
     let text = errors.map((e) => `${ErrorLevel[e.level]}\t| ${e.error} | PAGE:${e.page?.name || ""} ${e.node?.type}:${e.node?.name || ""}`).join("\n");
@@ -55,7 +55,7 @@ function assert(val: boolean, error: string, page?: PageNode, node?: SceneNode, 
     return val
 }
 
-export function lintCourse () {
+function lintCourse () {
     assert(/^COURSE-[a-z\-0-9]+$/.test(figma.root.name), `Course name '${figma.root.name}' must match COURSE-[a-z\-0-9]+`)
     const index = figma.root.children.find((p) => p.name == "INDEX");
     if(assert(!!index, `Must have 'INDEX' page`)) {

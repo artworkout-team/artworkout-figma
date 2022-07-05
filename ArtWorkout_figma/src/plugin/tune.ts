@@ -9,7 +9,7 @@ figma.on("currentpagechange", () => {
 })
 
 function getOrder(step: SceneNode) {
-    let o = parseInt(getTags(step).find((t) => t.startsWith("o-")).replace("o-", ""))
+    let o = parseInt(getTags(step).find((t) => t.startsWith("o-")) || "".replace("o-", ""))
     return isNaN(o) ? 9999 : o
 }
 

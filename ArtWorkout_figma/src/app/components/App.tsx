@@ -38,6 +38,7 @@ function App() {
             <Button onClick={() => emit("lintCourse")}>Lint course</Button>
             <Button onClick={() => emit("lintPage")} className='mx-1'>Lint page</Button>
             <Button onClick={() => emit("autoFormat")}>Auto format</Button>
+            <Button onClick={() => emit("formatOrder")}>Format order</Button>
           </div>
           <textarea value={textareaValue} onChange={()=>{}} onClick={selectError} id="output" style={{whiteSpace: "pre",  overflow: "auto"}} cols={83} rows={18}></textarea>
         </Stack>
