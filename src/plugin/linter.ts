@@ -1,5 +1,5 @@
-import {emit, on, once} from '../events'
-import {print, getTags, findAll, findFirst} from './util'
+import {on} from '../events'
+import {print, getTags, findAll} from './util'
 
 on("selectError", selectError)
 on("lintCourse", () => {
@@ -134,13 +134,13 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     assert(maxBs > (zoomScale - 1) * 12.8, `zoom-scale ${zoomScale} must be ${Math.ceil(maxBs / 12.8)} for max bs ${maxBs} used`, page, node);
 }
 
-function lintStep(page: PageNode, node: GroupNode) {
-    if(!assert(node.type == "GROUP", `Must be 'GROUP' type'`, page, node)) { return; }
-    assert(node.opacity == 1, `Must be opaque`, page, node);
-    assert(node.visible, `Must be visible`, page, node);
-    const tags = getTags(node);
+function lintStep(page: PageNode, step: GroupNode) {
+    if(!assert(step.type == "GROUP", `Must be 'GROUP' type'`, page, step)) { return; }
+    assert(step.opacity == 1, `Must be opaque`, page, step);
+    assert(step.visible, `Must be visible`, page, step);
+    const tags = getTags(step);
     tags.forEach((tag) => {
-        assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-\d+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
+        assert(/^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-\d+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(tag), `Tag '${tag}' unknown`, page, step);
         // assert(!/^s-multistep-brush$|^s-multistep-bg$/.test(tag), `Tag '${tag}' is obsolete`, page, node, ErrorLevel.WARN);        
     });
     const bg = tags.find((s) => /^s-multistep-bg$|^s-multistep-bg-\d+$/.test(s));
@@ -149,29 +149,33 @@ function lintStep(page: PageNode, node: GroupNode) {
     const o = tags.find((s) => /^o-\d+$/.test(s));
     const bs = parseInt(tags.find((s) => /^bs-\d+$/.test(s))?.replace("bs-", ""));
     maxBs = Math.max(bs ? bs : maxBs, maxBs);
-    assert(!(bg && ss), "Should not use bg+ss", page, node, ErrorLevel.INFO);
-    assert(!ss || ss >= 15, "ss must be >= 15", page, node);
-    assert(!ss || !bs || ss > bs, "ss must be > bs", page, node);
-    assert(!bs || bs <= zoomScale * 12.8, `bs must be <= ${zoomScale * 12.8} for this zoom-scale`, page, node);
-    assert(!bs || bs >= zoomScale * 0.44, `bs must be >= ${zoomScale * 0.44} for this zoom-scale`, page, node);
-    assert(!o || order == "layers", `${o} must be used only with settings order-layers`, page, node);
-    assert(order !== "layers" || !!o, `Must have o-N order number`, page, node);
+    assert(!ss || ss >= 15, "ss must be >= 15", page, step);
+    assert(!ss || !bs || ss > bs, "ss must be > bs", page, step);
+    assert(!bs || bs <= zoomScale * 12.8, `bs must be <= ${zoomScale * 12.8} for this zoom-scale`, page, step);
+    assert(!bs || bs >= zoomScale * 0.44, `bs must be >= ${zoomScale * 0.44} for this zoom-scale`, page, step);
+    assert(!o || order == "layers", `${o} must be used only with settings order-layers`, page, step);
+    assert(order !== "layers" || !!o, `Must have o-N order number`, page, step);
 
-    const ff = findFirst(node, (n: VectorNode) => n.fills && n.fills[0]);
-    assert(!bg || ff, "bg step shouldn't be used without filled-in vectors", page, node, ErrorLevel.INFO);
-    assert(!brush || !ff, "brush step shouldn't be used with filled-in vectors", page, node, ErrorLevel.INFO);
+    const ff = step.findOne((n: VectorNode) => n.fills && n.fills[0])
+    const sf = step.findOne( (n: VectorNode) => n.strokes?.length > 0)
 
-    (node as GroupNode).children.forEach((n) => {
+    assert(!(bg && ss && sf) , "Should not use bg+ss (stroke found)", page, step, ErrorLevel.INFO);
+    assert(!(bg && ss && !sf), "Should not use bg+ss (stroke not found)", page, step, ErrorLevel.WARN);
+
+    assert(!bg || !!ff, "bg step shouldn't be used without filled-in vectors", page, step, ErrorLevel.INFO);
+    assert(!brush || !ff, "brush step shouldn't be used with filled-in vectors", page, step, ErrorLevel.INFO);
+
+    (step as GroupNode).children.forEach((n) => {
         if (n.name == "input") {
             lintInput(page, n as GroupNode);
-        } else if (n.name = "template") {
+        } else if (n.name === "template") {
             // lint template
         } else {
             assert(false, "Must be 'input' or 'template'", page, n);
         }
     });
    
-    const blinkNodes = findAll(node, (n) => getTags(n).find((t) => /^blink$/.test(t)) !== undefined).flatMap(deepNodes);
+    const blinkNodes = findAll(step, (n) => getTags(n).find((t) => /^blink$/.test(t)) !== undefined).flatMap(deepNodes);
     const filledNode = blinkNodes.find((n) => (n as VectorNode).fills[0]);
     assert(blinkNodes.length == 0 || !!filledNode || blinkNodes.length > 3, `Should use draw-line if < 4 lines`, page, blinkNodes[0], ErrorLevel.INFO);
 }
@@ -240,7 +244,7 @@ function lintGroup(page: PageNode, node: GroupNode) {
     let tags = getTags(node);
     assert(tags.length > 0, `Name must not be empty. Use slash to /ignore.`, page, node);
     tags.forEach((tag) => {
-        assert(/^blink$|^rgb-template$|^blink$|^d\d+$|^r\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
+        assert(/^blink$|^rgb-template$|^d\d+$|^r\d+$/.test(tag), `Tag '${tag}' unknown`, page, node);
     });
     const rgbt = tags.find((s) => /^rgb-template$/.test(s));
     const anim = tags.find((s) => /^blink$/.test(s));
