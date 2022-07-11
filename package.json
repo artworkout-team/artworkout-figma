@@ -1,5 +1,5 @@
 {
-  "name": "ArtWorkout",
+  "name": "artworkout",
   "version": "1.0.0",
   "description": "Your Figma plugin",
   "main": "code.js",
@@ -8,8 +8,11 @@
     "build:watch": "webpack --mode=development --watch",
     "preview:plugin": "webpack --mode=development --PREVIEW_ENV=figma --watch",
     "preview:browser": "node preview-server.js & webpack-dev-server --mode=development --PREVIEW_ENV=browser",
-    "lint": "npm-run-all lint:*",
-    "lint:ts": "eslint index.js app --fix --ext .js,.ts,.tsx --max-warnings 0"
+    "lint:ts": "eslint index.js app --fix --ext .js,.ts,.tsx --max-warnings 0",
+    "lint": "eslint --fix --ext .js,.jsx,.ts .",
+    "lint:fix": "eslint --fix --ext .js,.jsx,.ts ."
+
+
   },
   "author": "",
   "license": "",

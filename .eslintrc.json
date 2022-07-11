@@ -43,10 +43,10 @@
         "no-nested-ternary": 2,
         "@typescript-eslint/explicit-function-return-type": 0,
         "semi": ["error", "never"],
-        "@typescript-eslint/no-explicit-any": ["error"],
+        "@typescript-eslint/no-explicit-any": ["off"],
         "object-shorthand": ["error"],
         "quotes": [2, "single", { "avoidEscape": true }],
-
+        "no-case-declarations": "off",
         "no-undef": "off",
         "no-use-before-define": "off",
         "multiline-ternary": ["off", "never"],

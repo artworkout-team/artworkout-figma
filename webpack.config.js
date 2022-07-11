@@ -1,9 +1,9 @@
-const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
-const ReactRefreshTypeScript = require('react-refresh-typescript').default;
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
+const ReactRefreshTypeScript = require('react-refresh-typescript').default
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const webpack = require('webpack');
+const webpack = require('webpack')
 const path = require('path')
 
 module.exports = (env, argv) => ({
@@ -41,8 +41,8 @@ module.exports = (env, argv) => ({
               getCustomTransformers: () => ({
                 before: argv.PREVIEW_ENV === 'browser ' ? [ReactRefreshTypeScript()] : [],
               }),
-            }
-          }
+            },
+          },
         ].filter(Boolean),
       },
 
@@ -59,7 +59,7 @@ module.exports = (env, argv) => ({
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/'
+    publicPath: '/',
   },
 
   plugins: [
@@ -74,7 +74,7 @@ module.exports = (env, argv) => ({
     argv.PREVIEW_ENV !== 'browser' && new HtmlWebpackInlineSourcePlugin(),
     new webpack.DefinePlugin({
       'process.env':  {
-        PREVIEW_ENV: JSON.stringify(argv.PREVIEW_ENV)
+        PREVIEW_ENV: JSON.stringify(argv.PREVIEW_ENV),
       },
     }),
   ].filter(Boolean),

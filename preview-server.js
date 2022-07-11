@@ -1,7 +1,7 @@
 const express = require('express')
 const http = require('http')
 const WebSocket = require('ws')
-const path = require('path')
+//const path = require('path')
 
 const PORT = 9001
 
@@ -13,24 +13,24 @@ app.get('/', (req, res) => {
 })
 
 //initialize a simple http server
-const server = http.createServer(app);
+const server = http.createServer(app)
 
 //initialize the WebSocket server instance
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server })
 wss.on('connection', (ws) => {
-  ws.isAlive = true;
+  ws.isAlive = true
   ws.on('pong', () => {
-    ws.isAlive = true;
+    ws.isAlive = true
   })
 
   //connection is up, let's add a simple simple event
   ws.on('message', (message) => {
     //send back the message to the other clients
     wss.clients.forEach(client => {
-      if (client != ws) {
-        client.send(JSON.stringify({message, src: 'server'}));
+      if (client !== ws) {
+        client.send(JSON.stringify({message, src: 'server'}))
       }    
-    });
+    })
   })
 
   //send immediately a feedback to the incoming connection    
@@ -39,11 +39,11 @@ wss.on('connection', (ws) => {
 
 setInterval(() => {
   wss.clients.forEach(ws => {
-    if (!ws.isAlive) return ws.terminate();
-    ws.isAlive = false;
-    ws.ping(null, false, () => {});
+    if (!ws.isAlive) return ws.terminate()
+    ws.isAlive = false
+    ws.ping(null, false, () => {})
   })
-}, 10000);
+}, 10000)
 
 server.listen(PORT, () => {
   console.log(`Preview server started on port: ${PORT}`)
