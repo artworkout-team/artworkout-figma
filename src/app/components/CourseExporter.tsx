@@ -1,39 +1,40 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import {on} from '../../events'
-import * as JSZip from 'jszip';
+import * as JSZip from 'jszip'
 
 function CourseExporter() {
-    useEffect(() => {
-        return on("exportZip", exportZip)
-    })
 
-    function typedArrayToBuffer(array) {
-        return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
+  function typedArrayToBuffer(array) {
+    return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
+  }
+
+  async function exportZip(message) {
+    let {lessons, thumbnails, rootName} = message
+    let zip = new JSZip()
+    let files = lessons.concat(thumbnails)
+
+    for (let file of files) {
+      const { path, bytes } = file
+      const cleanBytes = typedArrayToBuffer(bytes)
+      let blob = new Blob([ cleanBytes ], { type: 'application/octet-stream' })
+      zip.file(path, blob, {base64: true})
     }
 
-    async function exportZip(message) {
-        let {lessons, thumbnails, rootName} = message
-        let zip = new JSZip();
-        let files = lessons.concat(thumbnails);
+    const content = await zip.generateAsync({ type: 'blob' })
+    const blobURL = window.URL.createObjectURL(content)
+    const link = document.createElement('a')
+    link.className = 'button button--primary'
+    link.href = blobURL
+    link.download = `${rootName.replace('COURSE-', '')}.zip`
+    link.click()
+    // link.setAttribute('download', name + '.zip');
+  }
 
-        for (let file of files) {
-            const { path, bytes } = file
-            const cleanBytes = typedArrayToBuffer(bytes)
-            let blob = new Blob([ cleanBytes ], { type: 'application/octet-stream' })
-            zip.file(path, blob, {base64: true});
-        }
+  useEffect(() => {
+    return on('exportZip', exportZip)
+  })
 
-        const content = await zip.generateAsync({ type: 'blob' })
-        const blobURL = window.URL.createObjectURL(content);
-        const link = document.createElement('a');
-        link.className = 'button button--primary';
-        link.href = blobURL;
-        link.download = `${rootName.replace("COURSE-", "")}.zip`
-        link.click()
-        // link.setAttribute('download', name + '.zip');
-    }
- 
-    return null
+  return null
 }
 
 export default CourseExporter

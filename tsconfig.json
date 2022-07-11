@@ -8,6 +8,6 @@
       "./node_modules/@types",
       "./node_modules/@figma"
     ],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
   }
 }
