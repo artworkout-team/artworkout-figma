@@ -68,7 +68,6 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
       const input = step.findChild((g) => g.name == 'input')
       const template = input.clone() as GroupNode
       template.name = 'tmp-template'
-      // template.findAll((el) => el.type == "GROUP").forEach((el) => (figma as any).ungroup(el))
       template.findAll((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type)).forEach((el: VectorNode) => {
         if (el.strokes.length > 0) {
           el.strokes = [{type: 'SOLID', color: {r: 0, g: 0, b: 1}}]
@@ -78,7 +77,6 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
           pink.strokes = [{type: 'SOLID', color: {r: 1, g: 0, b: 1}}]
           pink.strokeWeight = 2
           pink.name = 'pink ' + el.name
-          // template.insertChild(0, pink)
           template.appendChild(pink)
           // clone element here and give him thin pink stroke
         }

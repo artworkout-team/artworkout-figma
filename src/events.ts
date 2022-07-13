@@ -1,6 +1,5 @@
 export declare type EventHandler = {
     name: string;
-  // eslint-disable-next-line no-unused-vars
     handler: (...args: any) => void;
 };
 

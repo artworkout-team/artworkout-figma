@@ -3,8 +3,7 @@ import {capitalize, print} from './util'
 
 function generateTranslationsCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
-  //let swiftCourseName = courseName.split('-').map(capitalize).join('')
-  //swiftCourseName = swiftCourseName.charAt(0).toLowerCase() + swiftCourseName.slice(1)
+
   let tasks = ''
   for (let page of figma.root.children) {
     if (page.name.toUpperCase() == 'INDEX') {
@@ -64,10 +63,10 @@ function generateSwiftCode() {
     if (page.name.toUpperCase() == 'INDEX') {
       continue
     }
-    tasks+=`        Task(path: "${courseName}/${page.name}", pro: true),\n`
+    tasks+=`Task(path: "${courseName}/${page.name}", pro: true),\n`
   }
   return `
-let ${swiftCourseName} = Course(
+    let ${swiftCourseName} = Course(
     path: "${courseName}",
     author: REPLACE,
     tasks: [

@@ -9,7 +9,7 @@
     "preview:plugin": "webpack --mode=development --PREVIEW_ENV=figma --watch",
     "preview:browser": "node preview-server.js & webpack-dev-server --mode=development --PREVIEW_ENV=browser",
     "lint:ts": "eslint index.js app --fix --ext .js,.ts,.tsx --max-warnings 0",
-    "lint:fix-all": " eslint \"./**\" --fix\n",
+    "lint:fix-all": "eslint \"./**\" --fix\n",
     "lint:fix": "eslint --fix --ext .js,.jsx,.ts ."
   },
   "author": "",

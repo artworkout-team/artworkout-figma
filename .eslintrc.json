@@ -52,6 +52,8 @@
     "multiline-ternary": ["off", "never"],
     "@typescript-eslint/no-use-before-define": ["error"],
     "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error",
     "eol-last": 0
   },
   "overrides": [

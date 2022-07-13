@@ -13,7 +13,6 @@ export function findAll(node: BaseNode, f: (node: BaseNode)=>boolean) {
   return arr
 }
 
-// eslint-disable-next-line no-unused-vars
 export function findParent(node: BaseNode, f: (node: BaseNode)=>boolean) {
   if (f(node)) {
     return node
@@ -23,7 +22,6 @@ export function findParent(node: BaseNode, f: (node: BaseNode)=>boolean) {
   }
 }
 
-// eslint-disable-next-line no-unused-vars
 export function findFirst(node: BaseNode, f: (node: BaseNode)=>boolean) {
   if (f(node)) {
     return node
