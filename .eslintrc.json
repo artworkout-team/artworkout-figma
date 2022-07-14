@@ -24,21 +24,8 @@
   "rules": {
     "comma-dangle": ["error", "always-multiline"],
     "indent": ["error", 2, {
-      "SwitchCase": 1,
-      "VariableDeclarator": 1,
-      "outerIIFEBody": 1,
-      "MemberExpression": 1,
-      "FunctionDeclaration": { "parameters": 1, "body": 1 },
-      "FunctionExpression": { "parameters": 1, "body": 1 },
-      "CallExpression": { "arguments": 1 },
-      "ArrayExpression": 1,
-      "ObjectExpression": 1,
-      "ImportDeclaration": 1,
-      "flatTernaryExpressions": false,
-      "ignoreComments": false,
-      "ignoredNodes": ["TemplateLiteral *"]
+      "SwitchCase": 1
     }],
-    "react/prop-types": 0,
     "react/jsx-wrap-multilines": ["error", { "condition": "parens" }],
     "no-nested-ternary": 2,
     "@typescript-eslint/explicit-function-return-type": 0,
@@ -46,10 +33,7 @@
     "@typescript-eslint/no-explicit-any": ["off"],
     "object-shorthand": ["error"],
     "quotes": [2, "single", { "avoidEscape": true }],
-    "no-case-declarations": "off",
     "no-undef": "off",
-    "no-use-before-define": "off",
-    "multiline-ternary": ["off", "never"],
     "@typescript-eslint/no-use-before-define": ["error"],
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "no-unused-vars": "off",

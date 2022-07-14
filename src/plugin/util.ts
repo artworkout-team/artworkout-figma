@@ -1,7 +1,6 @@
 import {emit} from '../events'
 
-// eslint-disable-next-line no-unused-vars
-export function findAll(node: BaseNode, f: (node: BaseNode)=>boolean) {
+export function findAll(node: BaseNode, f: (node: BaseNode) => boolean) {
   let arr: BaseNode[] = []
   if (f(node)) {
     arr.push(node)
@@ -13,7 +12,7 @@ export function findAll(node: BaseNode, f: (node: BaseNode)=>boolean) {
   return arr
 }
 
-export function findParent(node: BaseNode, f: (node: BaseNode)=>boolean) {
+export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   if (f(node)) {
     return node
   }
@@ -22,7 +21,7 @@ export function findParent(node: BaseNode, f: (node: BaseNode)=>boolean) {
   }
 }
 
-export function findFirst(node: BaseNode, f: (node: BaseNode)=>boolean) {
+export function findFirst(node: BaseNode, f: (node: BaseNode) => boolean) {
   if (f(node)) {
     return node
   }
@@ -30,7 +29,7 @@ export function findFirst(node: BaseNode, f: (node: BaseNode)=>boolean) {
   if (children) {
     for (let p of children) {
       let found = findFirst(p, f)
-      if(found)
+      if (found)
         return found
     }
   }

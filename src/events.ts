@@ -1,6 +1,6 @@
 export declare type EventHandler = {
-    name: string;
-    handler: (...args: any) => void;
+  name: string;
+  handler: (...args: any) => void;
 };
 
 const eventHandlers = {}
@@ -8,7 +8,7 @@ let currentId = 0
 export function on<Handler extends EventHandler>(name: Handler['name'], handler: Handler['handler']) {
   const id = `${currentId}`
   currentId += 1
-  eventHandlers[id] = { handler, name }
+  eventHandlers[id] = {handler, name}
   return function () {
     delete eventHandlers[id]
   }
@@ -26,10 +26,10 @@ export function once<Handler extends EventHandler>(name: Handler['name'], handle
 }
 
 export const emit = typeof window === 'undefined'
-  ? function<Handler extends EventHandler> (name: Handler['name'], ...args) {
+  ? function <Handler extends EventHandler>(name: Handler['name'], ...args) {
     figma.ui.postMessage([name, ...args])
   }
-  : function<Handler extends EventHandler> (name: Handler['name'], ...args) {
+  : function <Handler extends EventHandler>(name: Handler['name'], ...args) {
     window.parent.postMessage({
       pluginMessage: [name, ...args],
     }, '*')

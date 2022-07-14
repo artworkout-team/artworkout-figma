@@ -25,10 +25,40 @@ function deleteTmp() {
 
 let lastPage = figma.currentPage
 
+function displayTemplate(lesson: FrameNode, step: GroupNode) {
+  deleteTmp()
+  lesson.children.forEach((step) => {
+    step.visible = false
+  })
+
+  const input = step.findChild((g) => g.name == 'input')
+  const template = input.clone() as GroupNode
+  template.name = 'tmp-template'
+  template.findAll((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type)).forEach((el: VectorNode) => {
+    if (el.strokes.length > 0) {
+      el.strokes = [{type: 'SOLID', color: {r: 0, g: 0, b: 1}}]
+      const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
+      el.strokeWeight = parseInt(getTag(step, 'ss-')) || defaultWeight
+      const pink = el.clone()
+      pink.strokes = [{type: 'SOLID', color: {r: 1, g: 0, b: 1}}]
+      pink.strokeWeight = 2
+      pink.name = 'pink ' + el.name
+      template.appendChild(pink)
+      // clone element here and give him thin pink stroke
+    }
+    if ((el.fills as Paint[]).length > 0) {
+      el.fills = [{type: 'SOLID', color: {r: 0.1, g: 0, b: 1}}]
+    }
+  })
+  lesson.appendChild(template)
+  template.x = input.absoluteTransform[0][2] - lesson.absoluteTransform[0][2]
+  template.y = input.absoluteTransform[1][2] - lesson.absoluteTransform[1][2]
+}
+
 function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumber: number}) {
   lastPage = page
   const {displayMode, stepNumber} = settings
-  const lesson = page.children.find((el)=> el.name == 'lesson') as FrameNode
+  const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
     return
   }
@@ -60,33 +90,7 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
       break
 
     case 'template':
-      deleteTmp()
-      lesson.children.forEach((step) => {
-        step.visible = false
-      })
-
-      const input = step.findChild((g) => g.name == 'input')
-      const template = input.clone() as GroupNode
-      template.name = 'tmp-template'
-      template.findAll((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type)).forEach((el: VectorNode) => {
-        if (el.strokes.length > 0) {
-          el.strokes = [{type: 'SOLID', color: {r: 0, g: 0, b: 1}}]
-          const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
-          el.strokeWeight = parseInt(getTag(step, 'ss-')) || defaultWeight
-          const pink = el.clone()
-          pink.strokes = [{type: 'SOLID', color: {r: 1, g: 0, b: 1}}]
-          pink.strokeWeight = 2
-          pink.name = 'pink ' + el.name
-          template.appendChild(pink)
-          // clone element here and give him thin pink stroke
-        }
-        if ((el.fills as Paint[]).length > 0) {
-          el.fills = [{type: 'SOLID', color: {r: 0.1, g: 0, b: 1}}]
-        }
-      })
-      lesson.appendChild(template)
-      template.x = input.absoluteTransform[0][2] - lesson.absoluteTransform[0][2]
-      template.y = input.absoluteTransform[1][2] - lesson.absoluteTransform[1][2]
+      displayTemplate(lesson, step)
       break
   }
 }
@@ -96,12 +100,12 @@ setTimeout(() => {
 }, 1000)
 
 function updateProps(settings: {shadowSize: number, brushSize: number, stepNumber: number, template: string}) {
-  const lesson = figma.currentPage.children.find((el)=> el.name == 'lesson') as FrameNode
+  const lesson = figma.currentPage.children.find((el) => el.name == 'lesson') as FrameNode
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter((t) => !t.startsWith('ss-') && !t.startsWith('bs-') && !t.startsWith('s-'))
-  if (settings.template) { tags.splice(1, 0, `s-${settings.template}`) }
-  if (settings.shadowSize) { tags.push(`ss-${settings.shadowSize}`) }
-  if (settings.brushSize) { tags.push(`bs-${settings.brushSize}`) }
+  if (settings.template) {tags.splice(1, 0, `s-${settings.template}`)}
+  if (settings.shadowSize) {tags.push(`ss-${settings.shadowSize}`)}
+  if (settings.brushSize) {tags.push(`bs-${settings.brushSize}`)}
 
   step.name = tags.join(' ')
 }

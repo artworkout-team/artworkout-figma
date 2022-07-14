@@ -13,21 +13,19 @@ let zoomScale = 1
 let maxBs = 12.8
 let order = 'steps'
 
-// eslint-disable-next-line no-unused-vars
 enum ErrorLevel {
-  // eslint-disable-next-line no-unused-vars
   ERROR,
-  // eslint-disable-next-line no-unused-vars
   WARN,
-  // eslint-disable-next-line no-unused-vars
   INFO,
 }
 
 function selectError(index: number) {
-  if(errors[index]?.page) {
+  if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
-  if(errors[index]?.node) {
+
+  console.log("''")
+  if (errors[index]?.node) {
     errors[0].page.selection = [errors[index].node]
   }
 }
@@ -80,11 +78,11 @@ function lintGroup(page: PageNode, node: GroupNode) {
 }
 
 function lintInput(page: PageNode, node: GroupNode) {
-  if(!assert(node.type == 'GROUP', 'Must be \'GROUP\' type\'', page, node)) { return }
+  if (!assert(node.type == 'GROUP', 'Must be \'GROUP\' type\'', page, node)) {return }
   assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
   assert(node.name == 'input', 'Must be \'input\'', page, node);
-  (node as GroupNode).children.forEach((v) =>{
+  (node as GroupNode).children.forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
     } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
@@ -114,12 +112,12 @@ function lintSettings(page: PageNode, node: EllipseNode) {
 }
 
 function deepNodes(node: GroupNode): SceneNode[] {
-  if (!node.children) { return [node] }
+  if (!node.children) {return [node]}
   return node.children.flatMap((n) => deepNodes(n as GroupNode))
 }
 
 function lintStep(page: PageNode, step: GroupNode) {
-  if(!assert(step.type == 'GROUP', 'Must be \'GROUP\' type\'', page, step)) { return }
+  if (!assert(step.type == 'GROUP', 'Must be \'GROUP\' type\'', page, step)) {return }
   assert(step.opacity == 1, 'Must be opaque', page, step)
   assert(step.visible, 'Must be visible', page, step)
   const tags = getTags(step)
@@ -141,9 +139,9 @@ function lintStep(page: PageNode, step: GroupNode) {
   assert(order !== 'layers' || !!o, 'Must have o-N order number', page, step)
 
   const ff = step.findOne((n: VectorNode) => n.fills && n.fills[0])
-  const sf = step.findOne( (n: VectorNode) => n.strokes?.length > 0)
+  const sf = step.findOne((n: VectorNode) => n.strokes?.length > 0)
 
-  assert(!(bg && ss && sf) , 'Should not use bg+ss (stroke found)', page, step, ErrorLevel.INFO)
+  assert(!(bg && ss && sf), 'Should not use bg+ss (stroke found)', page, step, ErrorLevel.INFO)
   assert(!(bg && ss && !sf), 'Should not use bg+ss (stroke not found)', page, step, ErrorLevel.WARN)
 
   assert(!bg || !!ff, "bg step shouldn't be used without filled-in vectors", page, step, ErrorLevel.INFO)
@@ -180,7 +178,7 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     const tags = getTags(step)
     tags.forEach((tag) => {
       const found = /^o-(\d+)$/.exec(tag)
-      if (!found) { return }
+      if (!found) {return }
       const o = found[1]
       assert(!orderNumbers[o], `Must have unique ${tag} values`, page, step)
       if (o) {
@@ -189,9 +187,9 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     })
   }
   for (let step of node.children) {
-    if(step.name.startsWith('step')) {
+    if (step.name.startsWith('step')) {
       lintStep(page, step as GroupNode)
-    } else if(!step.name.startsWith('settings')) {
+    } else if (!step.name.startsWith('settings')) {
       assert(false, 'Must be \'settings\' or \'step\'', page, step)
     }
   }
@@ -207,8 +205,8 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
 }
 
 function lintPage(page: PageNode) {
-  if (/^\/|^INDEX$/.test(page.name)) { return }
-  if(!assert(/^[a-z\-0-9]+$/.test(page.name), `Page name '${page.name}' must match [a-z\\-0-9]+. Use slash to /ignore.`, page)) {
+  if (/^\/|^INDEX$/.test(page.name)) {return }
+  if (!assert(/^[a-z\-0-9]+$/.test(page.name), `Page name '${page.name}' must match [a-z\\-0-9]+. Use slash to /ignore.`, page)) {
     return
   }
   assert(page.children.filter((s) => /^thumbnail$/.test(s.name)).length == 1, 'Must contain exactly 1 \'thumbnail\'', page)
@@ -216,7 +214,7 @@ function lintPage(page: PageNode) {
   for (let node of page.children) {
     if (node.name == 'lesson') {
       lintTaskFrame(page, node as FrameNode)
-    } else if(node.name == 'thumbnail') {
+    } else if (node.name == 'thumbnail') {
       lintThumbnail(page, node as FrameNode)
     } else {
       assert(/^\//.test(node.name), 'Must be \'thumbnail\' or \'lesson\'. Use slash to /ignore.', page, node, ErrorLevel.WARN)
@@ -232,10 +230,10 @@ function lintIndex(page: PageNode) {
   lintThumbnail(page, page.children[0] as FrameNode)
 }
 
-function lintCourse () {
+function lintCourse() {
   assert(/^COURSE-[a-z\-0-9]+$/.test(figma.root.name), `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`)
   const index = figma.root.children.find((p) => p.name == 'INDEX')
-  if(assert(!!index, 'Must have \'INDEX\' page')) {
+  if (assert(!!index, 'Must have \'INDEX\' page')) {
     lintIndex(index)
   }
   for (let page of figma.root.children) {

@@ -9,7 +9,7 @@ function generateTranslationsCode() {
     if (page.name.toUpperCase() == 'INDEX') {
       continue
     }
-    tasks+=`"task-name ${courseName}/${page.name}" = "${capitalize(page.name.split('-').join(' '))}";\n`
+    tasks += `"task-name ${courseName}/${page.name}" = "${capitalize(page.name.split('-').join(' '))}";\n`
   }
   return `
 "course-name ${courseName}" = "${capitalize(courseName.split('-').join(' '))}";
@@ -63,7 +63,7 @@ function generateSwiftCode() {
     if (page.name.toUpperCase() == 'INDEX') {
       continue
     }
-    tasks+=`Task(path: "${courseName}/${page.name}", pro: true),\n`
+    tasks += `Task(path: "${courseName}/${page.name}", pro: true),\n`
   }
   return `
     let ${swiftCourseName} = Course(

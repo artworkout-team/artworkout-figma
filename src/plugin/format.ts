@@ -17,7 +17,7 @@ function formatOrder(lesson: FrameNode) {
       let tags = getTags(step)
       const layerTag = tags.find((t) => layerRegex.test(t))
       let layer = 4
-      if(layerTag) {
+      if (layerTag) {
         layer = parseInt(layerRegex.exec(layerTag)[2])
         tags = tags.filter((t) => !layerRegex.test(t))
         tags.splice(1, 0, /^(s-multistep-brush|s-multistep-bg)/.exec(layerTag)[1])
@@ -51,7 +51,7 @@ function autoFormat() {
     }
     const thumbnailFrame = p.children.find((t) => t.name == 'thumbnail')
     const lessonFrame = p.children.find((t) => t.name == 'lesson')
-    if(!thumbnailFrame || !lessonFrame) {
+    if (!thumbnailFrame || !lessonFrame) {
       return
     }
     thumbnailFrame.x = lessonFrame.x - 440
