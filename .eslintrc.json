@@ -1,0 +1,52 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "prettier"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "prettier",
+    "@typescript-eslint"
+  ],
+  "rules": {
+    "comma-dangle": ["error", "always-multiline"],
+    "indent": ["error", 2, {
+      "SwitchCase": 1
+    }],
+    "react/jsx-wrap-multilines": ["error", { "condition": "parens" }],
+    "no-nested-ternary": 2,
+    "@typescript-eslint/explicit-function-return-type": 0,
+    "semi": ["error", "never"],
+    "@typescript-eslint/no-explicit-any": ["off"],
+    "object-shorthand": ["error"],
+    "quotes": [2, "single", { "avoidEscape": true }],
+    "no-undef": "off",
+    "@typescript-eslint/no-use-before-define": ["error"],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "eol-last": ["error", "always"]
+  },
+  "overrides": [
+    {
+      "files": [ "*.json" ],
+      "rules": {
+        "quotes": [2, "double", { "avoidEscape": true }],
+        "comma-dangle": "off"
+      }
+    }
+  ]
+}
