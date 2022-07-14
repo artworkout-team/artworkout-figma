@@ -21,20 +21,6 @@ export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   }
 }
 
-export function findFirst(node: BaseNode, f: (node: BaseNode) => boolean) {
-  if (f(node)) {
-    return node
-  }
-  const children = (node as any).children
-  if (children) {
-    for (let p of children) {
-      let found = findFirst(p, f)
-      if (found)
-        return found
-    }
-  }
-}
-
 export function getTags(node: BaseNode) {
   return node.name.split(' ').filter(Boolean)
 }
