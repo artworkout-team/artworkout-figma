@@ -27,12 +27,12 @@ function CourseExporter() {
     link.href = blobURL
     link.download = `${rootName.replace('COURSE-', '')}.zip`
     link.click()
-    // link.setAttribute('download', name + '.zip');
+    // link.setAttribute('download', name + '.zip')
   }
 
   useEffect(() => {
     return on('exportZip', exportZip)
-  })
+  }, [])
 
   return null
 }

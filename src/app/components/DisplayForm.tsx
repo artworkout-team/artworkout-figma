@@ -62,7 +62,7 @@ function DisplayForm() {
   useHotkeys('s', () => setShadowSize((prev) => prev - 5 > 0 ? prev - 5 : 0), {enableOnTags})
 
   return (
-    <Fragment>
+    <>
       <Row className="mb-2">
         <Col xs={5}>
           <Form.Group as={Row}>
@@ -106,7 +106,7 @@ function DisplayForm() {
           </Form.Group>
         </Col>
       </Row>
-    </Fragment> 
+    </> 
   )
 }
 

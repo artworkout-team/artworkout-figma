@@ -24,7 +24,6 @@ function selectError(index: number) {
     figma.currentPage = errors[index].page
   }
 
-  console.log("''")
   if (errors[index]?.node) {
     errors[0].page.selection = [errors[index].node]
   }

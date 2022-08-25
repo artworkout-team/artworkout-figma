@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import {emit, on} from '../../events'
 import {Tabs, Tab, Button, Stack} from 'react-bootstrap'
-import CourseExporter from './CourseExporter'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import DisplayForm from './DisplayForm'
+import InitParse from './InitParse'
+import {userStore} from '../models/user'
+import {PublishTab} from './PublishTab'
 
 function App() {
   const [textareaValue, setTextareaValue] = useState('')
   useEffect(() => {
     return on('print', setTextareaValue)
   })
+
+  useEffect(() => {
+    InitParse()
+    userStore.loadUser()
+  }, [])
 
   function getLineNumber() {
     let tArea = document.querySelector('#output') as HTMLTextAreaElement
@@ -35,20 +42,17 @@ function App() {
       <Tab eventKey="format" title="Format" className="m-2">
         <Stack gap={2}>
           <div>
-            <Button onClick={() => emit('lintCourse')}>Lint course</Button>
-            <Button onClick={() => emit('lintPage')} className='mx-1'>Lint page</Button>
-            <Button onClick={() => emit('autoFormat')}>Auto format</Button>
-            <Button onClick={() => emit('formatOrder')}>Format order</Button>
+            <Button className='m-1' onClick={() => emit('lintCourse')}>Lint course</Button>
+            <Button className='m-1' onClick={() => emit('lintPage')}>Lint page</Button>
+            <Button className='m-1' onClick={() => emit('autoFormat')}>Auto format</Button>
+            <Button className='m-1' onClick={() => emit('formatOrder')}>Format order</Button>
           </div>
           <textarea value={textareaValue} onChange={()=>{}} onClick={selectError} id="output" style={{whiteSpace: 'pre',  overflow: 'auto'}} cols={83} rows={18}></textarea>
         </Stack>
       </Tab>
 
       <Tab eventKey="publish" title="Publish" className="m-2">
-        <Button onClick={() => emit('exportCourse')}>Export course</Button>
-        <CourseExporter/>
-        <Button onClick={() => emit('generateCode')} className='mx-1'>Generate code</Button>
-        {/* upload course, login-password */}
+        <PublishTab/>
       </Tab>
     </Tabs>
   )

@@ -44,16 +44,25 @@ function invokeEventHandler(name, args) {
 }
 
 if (typeof window === 'undefined') {
-  figma.ui.onmessage = function ([name, ...args]) {
+  figma.ui.onmessage = function (...params) {
+    if (params[0]?.jsonrpc) {
+      return
+    }
+    const [name, ...args] = params[0]
     invokeEventHandler(name, args)
   }
 }
 else {
-  window.onmessage = function (event) {
-    if (!Array.isArray(event.data.pluginMessage)) {
-      return
+  setTimeout(() => { // TODO: very dirty hack, needs fixing
+    const fallback = window.onmessage
+    window.onmessage = function (...params) {
+      fallback.apply(window, params)
+      const event = params[0]
+      if (!Array.isArray(event.data.pluginMessage)) {
+        return
+      }
+      const [name, ...args] = event.data.pluginMessage
+      invokeEventHandler(name, args)
     }
-    const [name, ...args] = event.data.pluginMessage
-    invokeEventHandler(name, args)
-  }
+  }, 100)
 }

@@ -54,6 +54,33 @@ async function exportCourse() {
   emit('exportZip', {rootName: figma.root.name, lessons, thumbnails})
 }
 
+export async function exportLesson() {
+  const page = figma.currentPage
+  const lesson = page.children.find((f) => f.name == 'lesson')
+  const thumbnail = page.children.find((f) => f.name == 'thumbnail')
+  if (!lesson) {
+    return
+  }
+  const lessonFile = await lesson.exportAsync({
+    format: 'SVG',
+    // svgOutlineText: false,
+    svgIdAttribute: true,
+  })
+  const thumbnailFile = await thumbnail.exportAsync({
+    format: 'PNG',
+    constraint: {
+      type: 'WIDTH',
+      value: 600,
+    },
+  })
+  return {
+    coursePath: figma.root.name.replace('COURSE-', ''),
+    lessonPath: page.name,
+    lessonFile,
+    thumbnailFile,
+  }
+}
+
 function generateSwiftCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
   let swiftCourseName = courseName.split('-').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join('')
