@@ -2,7 +2,8 @@ import {emit, on} from '../events'
 import {getTags} from './util'
 
 function getOrder(step: SceneNode) {
-  let o = parseInt(getTags(step).find((t) => t.startsWith('o-')) || ''.replace('o-', ''))
+  const otag = (getTags(step).find((t) => t.startsWith('o-')) || '')
+  const o = parseInt(otag.replace('o-', ''))
   return isNaN(o) ? 9999 : o
 }
 
