@@ -1,4 +1,4 @@
-import {emit, on} from '../events'
+import {on} from '../events'
 import {capitalize, print} from './util'
 
 function generateTranslationsCode() {
@@ -21,52 +21,30 @@ ${tasks}
 `
 }
 
-async function exportCourse() {
-  let lessons = []
-  let thumbnails = []
-  for (let page of figma.root.children) {
-    if (page.name.toUpperCase() == 'THUMBNAILS') {
-      continue
-    }
-    const lesson = page.children.find((f) => f.name == 'lesson')
-    const thumbnail = page.children.find((f) => f.name == 'thumbnail')
-    if (lesson) {
-      const bytes = await lesson.exportAsync({
-        format: 'SVG',
-        // svgOutlineText: false,
-        svgIdAttribute: true,
-      })
-      const path = `${page.name}.svg`
-      lessons.push({path, bytes})
-    }
-    if (thumbnail) {
-      const bytes = await thumbnail.exportAsync({
-        format: 'PNG',
-        constraint: {
-          type: 'WIDTH',
-          value: 600,
-        },
-      })
-      const path = `thumbnails/${page.name.toLowerCase()}.png`
-      thumbnails.push({path, bytes})
-    }
-  }
-  emit('exportZip', {rootName: figma.root.name, lessons, thumbnails})
+interface ILesson {
+  path: string
+  coursePath: string
+  file: Uint8Array
+  thumbnail: Uint8Array
+  index: number
 }
 
-export async function exportLesson() {
-  const page = figma.currentPage
-  const lesson = page.children.find((f) => f.name == 'lesson')
-  const thumbnail = page.children.find((f) => f.name == 'thumbnail')
-  if (!lesson) {
+export async function exportLesson(page?: PageNode): Promise<ILesson> {
+  if (!page) {
+    page = figma.currentPage
+  }
+  const index = figma.root.children.indexOf(page)
+  const lessonNode = page.children.find((f) => f.name == 'lesson')
+  const thumbnailNode = page.children.find((f) => f.name == 'thumbnail')
+  if (!lessonNode) {
     return
   }
-  const lessonFile = await lesson.exportAsync({
+  const file = await lessonNode.exportAsync({
     format: 'SVG',
     // svgOutlineText: false,
     svgIdAttribute: true,
   })
-  const thumbnailFile = await thumbnail.exportAsync({
+  const thumbnail = await thumbnailNode.exportAsync({
     format: 'PNG',
     constraint: {
       type: 'WIDTH',
@@ -75,9 +53,26 @@ export async function exportLesson() {
   })
   return {
     coursePath: figma.root.name.replace('COURSE-', ''),
-    lessonPath: page.name,
-    lessonFile,
-    thumbnailFile,
+    path: page.name,
+    file,
+    thumbnail,
+    index,
+  }
+}
+
+export async function exportCourse() {
+  const lessons = await Promise.all(figma.root.children.filter((page) => page.name != 'INDEX').map(page => exportLesson(page)))
+  const thumbnail = await figma.root.children.find((page) => page.name == 'INDEX').exportAsync({
+    format: 'PNG',
+    constraint: {
+      type: 'WIDTH',
+      value: 600,
+    },
+  })
+  return {
+    path: figma.root.name.replace('COURSE-', ''),
+    lessons,
+    thumbnail,
   }
 }
 
@@ -106,5 +101,4 @@ function generateCode() {
   print(code)
 }
 
-on('exportCourse', exportCourse)
 on('generateCode', generateCode)

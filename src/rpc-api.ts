@@ -1,5 +1,5 @@
 import {createPluginAPI, createUIAPI} from 'figma-jsonrpc'
-import {exportLesson} from './plugin/publish'
+import {exportLesson, exportCourse} from './plugin/publish'
 
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
@@ -10,6 +10,7 @@ export const pluginApi = createPluginAPI({
     return figma.clientStorage.getAsync('sessionToken')
   },
   exportLesson,
+  exportCourse,
 })
 
 // Figma UI app methods
