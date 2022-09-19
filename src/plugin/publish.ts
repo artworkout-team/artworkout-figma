@@ -61,14 +61,16 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
 }
 
 export async function exportCourse() {
-  const lessons = await Promise.all(figma.root.children.filter((page) => page.name != 'INDEX').map(page => exportLesson(page)))
-  const thumbnail = await figma.root.children.find((page) => page.name == 'INDEX').exportAsync({
-    format: 'PNG',
-    constraint: {
-      type: 'WIDTH',
-      value: 600,
-    },
-  })
+  const [lessons, thumbnail] = await Promise.all([
+    Promise.all(figma.root.children.filter((page) => page.name != 'INDEX').map(page => exportLesson(page))),
+    figma.root.children.find((page) => page.name == 'INDEX').exportAsync({
+      format: 'PNG',
+      constraint: {
+        type: 'WIDTH',
+        value: 600,
+      },
+    }),
+  ])
   return {
     path: figma.root.name.replace('COURSE-', ''),
     lessons,

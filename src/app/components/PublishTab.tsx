@@ -11,15 +11,16 @@ const ParseCourse = Parse.Object.extend('Course')
 
 export function PublishTab() {
 
-  async function publishLesson(lesson, course) {
-    const lessonFile = await new Parse.File(`${lesson.coursePath}.${lesson.path}.svg`, Array.from(lesson.file), 'image/svg+xml').save()
-    const thumbnailFile = await new Parse.File(`${lesson.coursePath}.${lesson.path}.thumbnail.png`, Array.from(lesson.thumbnail), 'image/png').save()
+  async function makeLesson(lesson, course) {
+    const [lessonFile, thumbnailFile] = await Promise.all([
+      new Parse.File(`${lesson.coursePath}.${lesson.path}.svg`, Array.from(lesson.file), 'image/svg+xml').save(),
+      new Parse.File(`${lesson.coursePath}.${lesson.path}.thumbnail.png`, Array.from(lesson.thumbnail), 'image/png').save(),
+    ])
     const query = new Parse.Query(ParseLesson)
     query.equalTo('coursePath', lesson.coursePath)
     query.equalTo('path', lesson.path)
-    let lessonObject = await query.first()
-    if (!lessonObject) {
-      lessonObject = new ParseLesson()
+    let lessonObject: Parse.Object = new ParseLesson() // (await query.first()) || new ParseLesson()
+    if (lessonObject.isNew()) {
       lessonObject.set('coursePath', lesson.coursePath)
       lessonObject.set('path', lesson.path)
       lessonObject.set('name', {en: lesson.path+'.name'})
@@ -28,7 +29,7 @@ export function PublishTab() {
     lessonObject.set('file', lessonFile)
     lessonObject.set('thumbnail', thumbnailFile)
     lessonObject.set('order', lesson.index)
-    return lessonObject.save()
+    return lessonObject
   }
 
   async function deleteCourseLessons(coursePath) {
@@ -40,19 +41,21 @@ export function PublishTab() {
 
   async function publishCourse() {
     const course = await pluginApi.exportCourse()
-    let courseObject = await new Parse.Query(ParseCourse).equalTo('path', course.path).first()
-    const thumbnailFile = await new Parse.File(`${course.path}.INDEX.thumbnail.png`, Array.from(course.thumbnail), 'image/png').save()
-    if (!courseObject) {
-      courseObject = new ParseCourse()
-      courseObject.set('path', course.path)
-    }
-    await deleteCourseLessons(course.path)
+    let [courseObject, thumbnailFile] = await Promise.all([
+      new Parse.Query(ParseCourse).equalTo('path', course.path).first(),
+      new Parse.File(`${course.path}.INDEX.thumbnail.png`, Array.from(course.thumbnail), 'image/png').save(),
+      await deleteCourseLessons(course.path), // TODO: delete only lessons that are not in the course
+    ])
+    courseObject = courseObject || new ParseCourse()
+    courseObject.set('path', course.path)
     courseObject.set('name', {en: course.path+'.name'})
     courseObject.set('description', {en: course.path+'.description'})
     courseObject.set('thumbnail', thumbnailFile)
-    await courseObject.save()
-    await Promise.allSettled(course.lessons.map(lesson => publishLesson(lesson, courseObject)))
-    await courseObject.save()
+    if (courseObject.isNew()) {
+      await courseObject.save()
+    }
+    const lessons = await Promise.all(course.lessons.map(lesson => makeLesson(lesson, courseObject)))
+    await Parse.Object.saveAll(lessons.concat([courseObject]))
   }
 
   return (
