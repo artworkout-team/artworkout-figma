@@ -3,11 +3,7 @@
     "browser": true,
     "es2021": true
   },
-  "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaFeatures": {
@@ -16,16 +12,25 @@
     "ecmaVersion": 12,
     "sourceType": "module"
   },
-  "plugins": [
-    "react",
-    "prettier",
-    "@typescript-eslint"
-  ],
+  "plugins": ["react", "prettier", "@typescript-eslint"],
   "rules": {
-    "comma-dangle": ["error", "always-multiline"],
-    "indent": ["error", 2, {
-      "SwitchCase": 1
-    }],
+    "comma-dangle": [
+      "error",
+      {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "imports": "always-multiline",
+        "exports": "always-multiline",
+        "functions": "never"
+      }
+    ],
+    "indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
     "react/jsx-wrap-multilines": ["error", { "condition": "parens" }],
     "no-nested-ternary": 2,
     "@typescript-eslint/explicit-function-return-type": 0,
@@ -42,7 +47,7 @@
   },
   "overrides": [
     {
-      "files": [ "*.json" ],
+      "files": ["*.json"],
       "rules": {
         "quotes": [2, "double", { "avoidEscape": true }],
         "comma-dangle": "off"
