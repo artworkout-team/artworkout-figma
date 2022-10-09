@@ -27,7 +27,6 @@ function deleteTmp() {
 let lastPage = figma.currentPage
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
-  deleteTmp()
   lesson.children.forEach((step) => {
     step.visible = false
   })
@@ -56,6 +55,31 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
   template.y = input.absoluteTransform[1][2] - lesson.absoluteTransform[1][2]
 }
 
+function displayBrushSize(lesson: FrameNode, step: GroupNode) {
+  const defaultBS = getTag(step, 's-') == 'multistep-bg' ? 12.8 : 10
+  const bs = parseInt(getTag(step, 'bs-')) || defaultBS
+  const smallLine = figma.createLine()
+  smallLine.name = 'smallLine'
+  smallLine.resize(300, 0)
+  smallLine.strokes = [{type: 'SOLID', color: {r: 0, g: 0.8, b: 0}}]
+  smallLine.strokeWeight = bs / 3
+  smallLine.strokeCap = 'ROUND'
+  smallLine.strokeAlign = 'CENTER'
+  smallLine.y = smallLine.strokeWeight / 2
+
+  const bigLine = smallLine.clone()
+  bigLine.name = 'bigLine'
+  bigLine.opacity = 0.3
+  bigLine.strokeWeight = bs + Math.pow(bs, 1.4) * 0.8
+  bigLine.y = bigLine.strokeWeight / 2
+
+  const group = figma.group([bigLine, smallLine], lesson.parent)
+
+  group.name = 'tmp-bs'
+  group.x = lesson.x
+  group.y = lesson.y - 80
+}
+
 function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumber: number}) {
   lastPage = page
   const {displayMode, stepNumber} = settings
@@ -67,16 +91,16 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
   page.selection = [step]
   const stepCount = lesson.children.filter((n) => getTags(n).includes('step')).length
   emit('updateForm', {shadowSize: parseInt(getTag(step, 'ss-')), brushSize: parseInt(getTag(step, 'bs-')), template: getTag(step, 's-'), stepCount, stepNumber, displayMode})
+  deleteTmp()
   switch (displayMode) {
     case 'all':
-      deleteTmp()
       lesson.children.forEach((step) => {
         step.visible = true
       })
       break
 
     case 'current':
-      deleteTmp()
+      displayBrushSize(lesson, step)
       lesson.children.forEach((step) => {
         step.visible = false
       })
@@ -84,13 +108,14 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
       break
 
     case 'previous':
-      deleteTmp()
+      displayBrushSize(lesson, step)
       stepsByOrder(lesson).forEach((step, i) => {
         step.visible = i < stepNumber
       })
       break
 
     case 'template':
+      displayBrushSize(lesson, step)
       displayTemplate(lesson, step)
       break
   }
@@ -98,7 +123,7 @@ function updateDisplay(page: PageNode, settings: {displayMode: string, stepNumbe
 
 setTimeout(() => {
   updateDisplay(figma.currentPage, {displayMode: 'all', stepNumber: 1})
-}, 1000)
+}, 1500)
 
 function updateProps(settings: {shadowSize: number, brushSize: number, stepNumber: number, template: string}) {
   const lesson = figma.currentPage.children.find((el) => el.name == 'lesson') as FrameNode
