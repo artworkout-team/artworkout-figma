@@ -24,13 +24,7 @@
         "functions": "never"
       }
     ],
-    "indent": [
-      "error",
-      2,
-      {
-        "SwitchCase": 1
-      }
-    ],
+    "indent": "off",
     "react/jsx-wrap-multilines": ["error", { "condition": "parens" }],
     "no-nested-ternary": 2,
     "@typescript-eslint/explicit-function-return-type": 0,

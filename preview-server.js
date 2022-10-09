@@ -25,19 +25,19 @@ wss.on('connection', (ws) => {
   //connection is up, let's add a simple simple event
   ws.on('message', (message) => {
     //send back the message to the other clients
-    wss.clients.forEach(client => {
+    wss.clients.forEach((client) => {
       if (client !== ws) {
-        client.send(JSON.stringify({message, src: 'server'}))
-      }    
+        client.send(JSON.stringify({ message, src: 'server' }))
+      }
     })
   })
 
-  //send immediately a feedback to the incoming connection    
+  //send immediately a feedback to the incoming connection
   // ws.send('Hi there, I am a WebSocket server');
 })
 
 setInterval(() => {
-  wss.clients.forEach(ws => {
+  wss.clients.forEach((ws) => {
     if (!ws.isAlive) return ws.terminate()
     ws.isAlive = false
     ws.ping(null, false, () => {})

@@ -39,7 +39,10 @@ module.exports = (env, argv) => ({
             options: {
               transpileOnly: true,
               getCustomTransformers: () => ({
-                before: argv.PREVIEW_ENV === 'browser ' ? [ReactRefreshTypeScript()] : [],
+                before:
+                  argv.PREVIEW_ENV === 'browser '
+                    ? [ReactRefreshTypeScript()]
+                    : [],
               }),
             },
           },
@@ -73,7 +76,7 @@ module.exports = (env, argv) => ({
     }),
     argv.PREVIEW_ENV !== 'browser' && new HtmlWebpackInlineSourcePlugin(),
     new webpack.DefinePlugin({
-      'process.env':  {
+      'process.env': {
         PREVIEW_ENV: JSON.stringify(argv.PREVIEW_ENV),
       },
     }),

@@ -7,8 +7,7 @@ function PreviewApp() {
   const [isConnected, setIsConnected] = useState(false)
   const ws = useRef(null)
 
-  
-  const onWindowMsg = msg => {
+  const onWindowMsg = (msg) => {
     if (msg.data.pluginMessage) {
       const message = JSON.stringify(msg.data.pluginMessage)
       if (ws.current.readyState === 1) {
@@ -36,7 +35,7 @@ function PreviewApp() {
       }, 3000)
     }
 
-    ws.current.onmessage = event => {
+    ws.current.onmessage = (event) => {
       try {
         let msg = JSON.parse(event.data)
         if (msg.src === 'server') {
@@ -61,15 +60,19 @@ function PreviewApp() {
   }, [])
 
   return (
-    <div className="preview-app">
+    <div className='preview-app'>
       <h3>Preview App</h3>
-      <div className="preview-connection-info">
+      <div className='preview-connection-info'>
         <strong>Connection Status:</strong>
-        <div className={`preview-connection-status${isConnected ? ' status-green' : ''}`}/>
+        <div
+          className={`preview-connection-status${
+            isConnected ? ' status-green' : ''
+          }`}
+        />
       </div>
 
       {PREVIEW_ENV === 'browser' && setIsConnected && (
-        <div className="preview-plugin-wrapper">
+        <div className='preview-plugin-wrapper'>
           <App />
         </div>
       )}

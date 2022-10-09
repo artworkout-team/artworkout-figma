@@ -2,9 +2,7 @@
   "name": "ArtWorkout",
   "id": "1089847128778676151",
   "api": "1.0.0",
-  "editorType": [
-    "figma"
-  ],
+  "editorType": ["figma"],
   "main": "dist/code.js",
   "ui": "dist/ui.html"
 }

@@ -4,10 +4,7 @@
     "jsx": "react",
     "lib": ["es6", "dom"],
     "moduleResolution": "node",
-    "typeRoots": [
-      "./node_modules/@types",
-      "./node_modules/@figma"
-    ],
-    "allowSyntheticDefaultImports": true,
+    "typeRoots": ["./node_modules/@types", "./node_modules/@figma"],
+    "allowSyntheticDefaultImports": true
   }
 }
