@@ -13,6 +13,7 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function PublishTab() {
   const userSnapshot = useSnapshot(userStore)
+  const [disabled, setDisabled] = React.useState(false)
 
   async function makeLesson(lesson, course, serverLesson, debug) {
     const cp = debug ? `${lesson.coursePath}-debug` : lesson.coursePath
@@ -45,6 +46,7 @@ export function PublishTab() {
   async function publishCourse(
     { debug }: { debug: boolean } = { debug: false }
   ) {
+    setDisabled(true)
     const course = await pluginApi.exportCourse()
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
@@ -84,17 +86,22 @@ export function PublishTab() {
       )
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
+    setDisabled(false)
   }
 
   return (
     <>
       <LoginForm />
-      <Button onClick={() => publishCourse({ debug: true })}>
+      <Button
+        disabled={disabled}
+        onClick={() => publishCourse({ debug: true })}
+      >
         Publish debug
       </Button>{' '}
       {userSnapshot.user &&
         userSnapshot.user.get('email') === 'ulitiy@gmail.com' && (
           <Button
+            disabled={disabled}
             variant='danger'
             onClick={() => publishCourse({ debug: false })}
           >
