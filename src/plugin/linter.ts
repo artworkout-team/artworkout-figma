@@ -235,6 +235,9 @@ function lintCourse() {
   if (assert(!!index, 'Must have \'INDEX\' page')) {
     lintIndex(index)
   }
+  // find all non-unique named pages
+  const nonUnique = figma.root.children.filter((p, i, a) => a.findIndex((p2) => p2.name == p.name) != i)
+  nonUnique.forEach((p) => assert(false, `Page name '${p.name}' must be unique`, p))
   for (let page of figma.root.children) {
     lintPage(page)
   }
