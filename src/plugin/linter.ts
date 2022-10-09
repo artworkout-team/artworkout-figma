@@ -25,7 +25,7 @@ function selectError(index: number) {
   }
 
   if (errors[index]?.node) {
-    errors[0].page.selection = [errors[index].node]
+    errors[index].page.selection = [errors[index].node]
   }
 }
 
@@ -44,13 +44,28 @@ function assert(val: boolean, error: string, page?: PageNode, node?: SceneNode, 
   return val
 }
 
+function deepNodes(node: GroupNode): SceneNode[] {
+  if (!node.children) {return [node]}
+  return node.children.flatMap((n) => deepNodes(n as GroupNode))
+}
+
+function descendants(node: GroupNode): SceneNode[] {
+  if (!node.children) {return [node]}
+  return [node, ...node.children.flatMap((n) => descendants(n as GroupNode))]
+}
+
+function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
+  if (!node.children) {return []}
+  return node.children.flatMap((n) => descendants(n as GroupNode))
+}
+
 function lintVector(page: PageNode, node: VectorNode) {
   assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
   let tags = getTags(node)
   assert(tags.length > 0, 'Name must not be empty. Use slash to /ignore.', page, node)
   tags.forEach((tag) => {
-    assert(/^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$/.test(tag), `Tag '${tag}' unknown. Use slash to /ignore.`, page, node)
+    assert(/^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$/.test(tag), `Tag '${tag}' unknown. Use slash to /ignore.`, page, node)
   })
   let fills = node.fills as Paint[]
   let strokes = node.strokes
@@ -59,7 +74,7 @@ function lintVector(page: PageNode, node: VectorNode) {
   assert(!strokes.length || node.strokeJoin == 'ROUND', `Stroke joins should be 'ROUND' but are '${String(node.strokeJoin)}'`, page, node, ErrorLevel.INFO)
   const rgbt = tags.find((s) => /^rgb-template$/.test(s))
   const anim = tags.find((s) => /^blink$|^draw-line$/.test(s))
-  assert(!rgbt || !!anim, 'Must have \'blink\' or \'draw-line\'', page, node)
+  assert(!rgbt || !!anim, 'Must have \'blink\' or \'draw-line\'', page, node) // every rgbt must have animation
 }
 
 function lintGroup(page: PageNode, node: GroupNode) {
@@ -73,15 +88,15 @@ function lintGroup(page: PageNode, node: GroupNode) {
   })
   const rgbt = tags.find((s) => /^rgb-template$/.test(s))
   const anim = tags.find((s) => /^blink$/.test(s))
-  assert(!rgbt || !!anim, 'Must have \'blink\'', page, node)
+  assert(!rgbt || !!anim, 'Must have \'blink\'', page, node) // every rgbt must have animation
 }
 
 function lintInput(page: PageNode, node: GroupNode) {
   if (!assert(node.type == 'GROUP', 'Must be \'GROUP\' type\'', page, node)) {return }
   assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
-  assert(node.name == 'input', 'Must be \'input\'', page, node);
-  (node as GroupNode).children.forEach((v) => {
+  assert(node.name == 'input', 'Must be \'input\'', page, node)
+  descendantsWithoutSelf(node as GroupNode).forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
     } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
@@ -108,11 +123,6 @@ function lintSettings(page: PageNode, node: EllipseNode) {
 
   zoomScale = parseInt(tags.find((s) => /^zoom-scale-\d+$/.test(s))?.replace('zoom-scale-', '') || '1')
   assert(zoomScale >= 1 && zoomScale <= 5, `Must be 1 <= zoom-scale <= 5 (${zoomScale})`, page, node)
-}
-
-function deepNodes(node: GroupNode): SceneNode[] {
-  if (!node.children) {return [node]}
-  return node.children.flatMap((n) => deepNodes(n as GroupNode))
 }
 
 function lintStep(page: PageNode, step: GroupNode) {
