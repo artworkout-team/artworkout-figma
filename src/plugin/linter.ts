@@ -69,7 +69,21 @@ function lintVector(page: PageNode, node: VectorNode) {
   })
   let fills = node.fills as Paint[]
   let strokes = node.strokes
-  assert(!fills.length || !strokes.length, 'Must not have fill+stroke', page, node)
+  assert(!fills.length || !strokes.length, 'Should not have fill+stroke', page, node, ErrorLevel.WARN)
+  strokes.forEach((s) => {
+    assert(s.visible, 'Stroke must be visible', page, node)
+    assert(s.type == 'SOLID', 'Stroke must be solid', page, node)
+    let s1 = s as SolidPaint
+    assert(s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0, 'Stroke color must not be black', page, node)
+    assert(s1.color.r != 1 || s1.color.g != 1 || s1.color.b != 1, 'Stroke color must not be white', page, node)
+  })
+  fills.forEach((f) => {
+    assert(f.visible, 'Fill must be visible', page, node)
+    assert(f.type == 'SOLID', 'Fill must be solid', page, node)
+    let f1 = f as SolidPaint
+    assert(f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0, 'Fill color must not be black', page, node)
+    assert(f1.color.r != 1 || f1.color.g != 1 || f1.color.b != 1, 'Fill color must not be white', page, node)
+  })
   assert(!strokes.length || /ROUND|NONE/.test(String(node.strokeCap)), `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`, page, node, ErrorLevel.ERROR)
   assert(!strokes.length || node.strokeJoin == 'ROUND', `Stroke joins should be 'ROUND' but are '${String(node.strokeJoin)}'`, page, node, ErrorLevel.INFO)
   const rgbt = tags.find((s) => /^rgb-template$/.test(s))
@@ -150,8 +164,8 @@ function lintStep(page: PageNode, step: GroupNode) {
   const ff = step.findOne((n: VectorNode) => n.fills && n.fills[0])
   const sf = step.findOne((n: VectorNode) => n.strokes?.length > 0)
 
-  assert(!(bg && ss && sf), 'Should not use bg+ss (stroke found)', page, step, ErrorLevel.INFO)
-  assert(!(bg && ss && !sf), 'Should not use bg+ss (stroke not found)', page, step, ErrorLevel.WARN)
+  assert(!(bg && ss && sf), 'Should not use bg+ss (stroke present)', page, step, ErrorLevel.INFO)
+  assert(!(bg && ss && !sf), 'Should not use bg+ss (stroke not present)', page, step, ErrorLevel.WARN)
 
   assert(!bg || !!ff, "bg step shouldn't be used without filled-in vectors", page, step, ErrorLevel.INFO)
   assert(!brush || !ff, "brush step shouldn't be used with filled-in vectors", page, step, ErrorLevel.INFO);

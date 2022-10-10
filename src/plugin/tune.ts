@@ -32,6 +32,9 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
   })
 
   const input = step.findChild((g) => g.name == 'input')
+  if (!input) {
+    return
+  }
   const template = input.clone() as GroupNode
   template.name = 'tmp-template'
   template.findAll((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type)).forEach((el: VectorNode) => {
