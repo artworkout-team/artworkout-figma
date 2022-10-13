@@ -8,6 +8,8 @@ import React, {
 import { Form, Row, Col } from 'react-bootstrap'
 import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
+import { pluginApi } from '../../rpc-api'
+import { StepList } from './StepList'
 
 function DisplayForm() {
   const [displayMode, setDisplayMode] = useState('all')
@@ -16,6 +18,7 @@ function DisplayForm() {
   const [stepCount, setStepCount] = useState(1)
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
+  const [stepNodes, setStepNodes] = useState([])
 
   const [mutex, setMutex] = useState(true)
 
@@ -25,6 +28,13 @@ function DisplayForm() {
 
   function onDisplayModeChange(event: FormEvent) {
     setDisplayMode((event.target as HTMLInputElement).value)
+  }
+
+  async function onListUpdate(selectedNode) {
+    let sns = await pluginApi.getStepNodes()
+    setStepNodes(sns)
+    let index = sns.findIndex((node) => node.id === selectedNode.id)
+    setStepNumber(index + 1)
   }
 
   useEffect(() => {
@@ -43,7 +53,7 @@ function DisplayForm() {
   useEffect(() => {
     on(
       'updateForm',
-      (settings: {
+      async (settings: {
         shadowSize: number
         brushSize: number
         stepCount: number
@@ -58,6 +68,7 @@ function DisplayForm() {
         setStepNumber(settings.stepNumber)
         setDisplayMode(settings.displayMode)
         setTemplate(settings.template)
+        setStepNodes(await pluginApi.getStepNodes())
         setMutex(false)
       }
     )
@@ -195,6 +206,13 @@ function DisplayForm() {
             </Col>
           </Form.Group>
         </Col>
+      </Row>
+      <Row>
+        <StepList
+          stepNodes={stepNodes}
+          selectedNode={stepNodes[stepNumber - 1]}
+          onUpdate={onListUpdate}
+        />
       </Row>
     </>
   )
