@@ -1,23 +1,25 @@
 import { useEffect } from 'react'
-import {on} from '../../events'
+import { on } from '../../events'
 import * as JSZip from 'jszip'
 
 function CourseExporter() {
-
   function typedArrayToBuffer(array) {
-    return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
+    return array.buffer.slice(
+      array.byteOffset,
+      array.byteLength + array.byteOffset
+    )
   }
 
   async function exportZip(message) {
-    let {lessons, thumbnails, rootName} = message
+    let { lessons, thumbnails, rootName } = message
     let zip = new JSZip()
     let files = lessons.concat(thumbnails)
 
     for (let file of files) {
       const { path, bytes } = file
       const cleanBytes = typedArrayToBuffer(bytes)
-      let blob = new Blob([ cleanBytes ], { type: 'application/octet-stream' })
-      zip.file(path, blob, {base64: true})
+      let blob = new Blob([cleanBytes], { type: 'application/octet-stream' })
+      zip.file(path, blob, { base64: true })
     }
 
     const content = await zip.generateAsync({ type: 'blob' })

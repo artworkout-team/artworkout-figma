@@ -1,4 +1,4 @@
-import {emit} from '../events'
+import { emit } from '../events'
 
 export function findAll(node: BaseNode, f: (node: BaseNode) => boolean) {
   let arr: BaseNode[] = []

@@ -1,6 +1,6 @@
 import Parse from 'parse'
-import {proxy} from 'valtio'
-import {pluginApi} from '../../rpc-api'
+import { proxy } from 'valtio'
+import { pluginApi } from '../../rpc-api'
 
 export const userStore = proxy({
   user: null,

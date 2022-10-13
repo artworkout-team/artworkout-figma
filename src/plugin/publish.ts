@@ -1,5 +1,5 @@
-import {on} from '../events'
-import {capitalize, print} from './util'
+import { on } from '../events'
+import { capitalize, print } from './util'
 
 function generateTranslationsCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
@@ -9,7 +9,9 @@ function generateTranslationsCode() {
     if (page.name.toUpperCase() == 'INDEX') {
       continue
     }
-    tasks += `"task-name ${courseName}/${page.name}" = "${capitalize(page.name.split('-').join(' '))}";\n`
+    tasks += `"task-name ${courseName}/${page.name}" = "${capitalize(
+      page.name.split('-').join(' ')
+    )}";\n`
   }
   return `
 "course-name ${courseName}" = "${capitalize(courseName.split('-').join(' '))}";
@@ -62,14 +64,20 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
 
 export async function exportCourse() {
   const [lessons, thumbnail] = await Promise.all([
-    Promise.all(figma.root.children.filter((page) => page.name != 'INDEX').map(page => exportLesson(page))),
-    figma.root.children.find((page) => page.name == 'INDEX').exportAsync({
-      format: 'PNG',
-      constraint: {
-        type: 'WIDTH',
-        value: 600,
-      },
-    }),
+    Promise.all(
+      figma.root.children
+        .filter((page) => page.name != 'INDEX')
+        .map((page) => exportLesson(page))
+    ),
+    figma.root.children
+      .find((page) => page.name == 'INDEX')
+      .exportAsync({
+        format: 'PNG',
+        constraint: {
+          type: 'WIDTH',
+          value: 600,
+        },
+      }),
   ])
   return {
     path: figma.root.name.replace('COURSE-', ''),
@@ -80,8 +88,12 @@ export async function exportCourse() {
 
 function generateSwiftCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
-  let swiftCourseName = courseName.split('-').map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join('')
-  swiftCourseName = swiftCourseName.charAt(0).toLowerCase() + swiftCourseName.slice(1)
+  let swiftCourseName = courseName
+    .split('-')
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join('')
+  swiftCourseName =
+    swiftCourseName.charAt(0).toLowerCase() + swiftCourseName.slice(1)
   let tasks = ''
   for (let page of figma.root.children) {
     if (page.name.toUpperCase() == 'INDEX') {

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import {emit, on} from '../../events'
-import {Tabs, Tab, Button, Stack} from 'react-bootstrap'
+import { emit, on } from '../../events'
+import { Tabs, Tab, Button, Stack } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import DisplayForm from './DisplayForm'
 import InitParse from './InitParse'
-import {userStore} from '../models/user'
-import {PublishTab} from './PublishTab'
+import { userStore } from '../models/user'
+import { PublishTab } from './PublishTab'
 
 function App() {
   const [textareaValue, setTextareaValue] = useState('')
@@ -28,31 +28,47 @@ function App() {
   }
 
   return (
-    <Tabs defaultActiveKey="tune" className="m-1">
-      <Tab eventKey="create" title="Create" className="m-2">
+    <Tabs defaultActiveKey='tune' className='m-1'>
+      <Tab eventKey='create' title='Create' className='m-2'>
         {/* <Button>Create lesson</Button> */}
         {/* <Button>Set animations (CONFIRM)</Button> */}
         <Button onClick={() => emit('separateStep')}>Separate step</Button>
       </Tab>
 
-      <Tab eventKey="tune" title="Tune" className="m-2">
-        <DisplayForm/>
+      <Tab eventKey='tune' title='Tune' className='m-2'>
+        <DisplayForm />
       </Tab>
 
-      <Tab eventKey="format" title="Format" className="m-2">
+      <Tab eventKey='format' title='Format' className='m-2'>
         <Stack gap={2}>
           <div>
-            <Button className='m-1' onClick={() => emit('lintCourse')}>Lint course</Button>
-            <Button className='m-1' onClick={() => emit('lintPage')}>Lint page</Button>
-            <Button className='m-1' onClick={() => emit('autoFormat')}>Auto format</Button>
-            <Button className='m-1' onClick={() => emit('formatOrder')}>Format order</Button>
+            <Button className='m-1' onClick={() => emit('lintCourse')}>
+              Lint course
+            </Button>
+            <Button className='m-1' onClick={() => emit('lintPage')}>
+              Lint page
+            </Button>
+            <Button className='m-1' onClick={() => emit('autoFormat')}>
+              Auto format
+            </Button>
+            <Button className='m-1' onClick={() => emit('formatOrder')}>
+              Format order
+            </Button>
           </div>
-          <textarea value={textareaValue} onChange={()=>{}} onClick={selectError} id="output" style={{whiteSpace: 'pre',  overflow: 'auto'}} cols={83} rows={18}></textarea>
+          <textarea
+            value={textareaValue}
+            onChange={() => {}}
+            onClick={selectError}
+            id='output'
+            style={{ whiteSpace: 'pre', overflow: 'auto' }}
+            cols={83}
+            rows={18}
+          ></textarea>
         </Stack>
       </Tab>
 
-      <Tab eventKey="publish" title="Publish" className="m-2">
-        <PublishTab/>
+      <Tab eventKey='publish' title='Publish' className='m-2'>
+        <PublishTab />
       </Tab>
     </Tabs>
   )
