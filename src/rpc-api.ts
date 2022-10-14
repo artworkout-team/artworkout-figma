@@ -1,4 +1,5 @@
 import { createPluginAPI, createUIAPI } from 'figma-jsonrpc'
+import { exportTexts } from './plugin/format-rpc'
 import { exportLesson, exportCourse } from './plugin/publish'
 import { getStepNodes, setStepOrder } from './plugin/tune-rpc'
 
@@ -14,6 +15,7 @@ export const pluginApi = createPluginAPI({
   exportCourse,
   getStepNodes,
   setStepOrder,
+  exportTexts,
 })
 
 // Figma UI app methods

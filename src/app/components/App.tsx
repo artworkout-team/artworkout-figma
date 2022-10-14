@@ -6,6 +6,7 @@ import DisplayForm from './DisplayForm'
 import InitParse from './InitParse'
 import { userStore } from '../models/user'
 import { PublishTab } from './PublishTab'
+import { pluginApi } from '../../rpc-api'
 
 function App() {
   const [textareaValue, setTextareaValue] = useState('')
@@ -25,6 +26,16 @@ function App() {
 
   function selectError() {
     emit('selectError', getLineNumber() - 1)
+  }
+
+  async function exportTexts() {
+    setTextareaValue(
+      (await pluginApi.exportTexts())
+        .map((s) => {
+          return `"${s}" = "${s}";`
+        })
+        .join('\n')
+    )
   }
 
   return (
@@ -53,6 +64,9 @@ function App() {
             </Button>
             <Button className='m-1' onClick={() => emit('formatOrder')}>
               Format order
+            </Button>
+            <Button className='m-1' onClick={exportTexts}>
+              Texts
             </Button>
           </div>
           <textarea
