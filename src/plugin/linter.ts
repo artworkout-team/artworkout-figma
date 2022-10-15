@@ -362,6 +362,12 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     page,
     node
   )
+  assert(
+    !!node.children.find((n) => getTags(n).includes('s-multistep-result')),
+    "Must have 's-multistep-result' child",
+    page,
+    node
+  )
   let settings = node.children.find((n) => n.name.startsWith('settings'))
   if (settings) {
     lintSettings(page, settings as EllipseNode)
