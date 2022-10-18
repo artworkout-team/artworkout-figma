@@ -27,6 +27,7 @@ function deleteTmp() {
 }
 
 let lastPage = figma.currentPage
+let lastMode = 'all'
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
   lesson.children.forEach((step) => {
@@ -92,6 +93,7 @@ function updateDisplay(
   settings: { displayMode: string; stepNumber: number }
 ) {
   lastPage = page
+  lastMode = settings.displayMode
   const { displayMode, stepNumber } = settings
   const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
@@ -185,5 +187,5 @@ figma.on('selectionchange', () => {
     return
   }
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber })
+  updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
 })
