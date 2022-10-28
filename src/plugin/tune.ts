@@ -59,8 +59,7 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
       }
     })
   lesson.appendChild(template)
-  template.x = input.absoluteTransform[0][2] - lesson.absoluteTransform[0][2]
-  template.y = input.absoluteTransform[1][2] - lesson.absoluteTransform[1][2]
+  template.relativeTransform = input.relativeTransform
 }
 
 function displayBrushSize(lesson: FrameNode, step: GroupNode) {
