@@ -294,8 +294,10 @@ function lintStep(page: PageNode, step: GroupNode) {
   )
   assert(order !== 'layers' || !!o, 'Must have o-N order number', page, step)
 
-  const ff = step.findOne((n: VectorNode) => n.fills && n.fills[0])
   const sf = step.findOne((n: VectorNode) => n.strokes?.length > 0)
+  const ffs = step.findAll((n: VectorNode) => n.fills && n.fills[0])
+  const bigFfs = ffs.filter((n: VectorNode) => n.width > 27 || n.height > 27)
+  const ff = ffs.length > 0
 
   assert(
     !(bg && ss && sf),
@@ -313,15 +315,15 @@ function lintStep(page: PageNode, step: GroupNode) {
   )
 
   assert(
-    !bg || !!ff,
+    !bg || ff,
     "bg step shouldn't be used without filled-in vectors",
     page,
     step,
     ErrorLevel.INFO
   )
   assert(
-    !brush || !ff,
-    "brush step shouldn't be used with filled-in vectors",
+    !brush || bigFfs.length == 0,
+    "brush step shouldn't be used with filled-in vectors (size > 27)",
     page,
     step,
     ErrorLevel.INFO
