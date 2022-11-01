@@ -74,13 +74,19 @@ function displayBrushSize(lesson: FrameNode, step: GroupNode) {
   smallLine.strokeAlign = 'CENTER'
   smallLine.y = smallLine.strokeWeight / 2
 
+  const mediumLine = smallLine.clone()
+  mediumLine.name = 'mediumLine'
+  mediumLine.opacity = 0.2
+  mediumLine.strokeWeight = bs
+  mediumLine.y = mediumLine.strokeWeight / 2
+
   const bigLine = smallLine.clone()
   bigLine.name = 'bigLine'
-  bigLine.opacity = 0.3
+  bigLine.opacity = 0.1
   bigLine.strokeWeight = bs + Math.pow(bs, 1.4) * 0.8
   bigLine.y = bigLine.strokeWeight / 2
 
-  const group = figma.group([bigLine, smallLine], lesson.parent)
+  const group = figma.group([bigLine, mediumLine, smallLine], lesson.parent)
 
   group.name = 'tmp-bs'
   group.x = lesson.x
