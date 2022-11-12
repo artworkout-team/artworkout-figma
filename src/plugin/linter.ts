@@ -23,10 +23,11 @@ function selectError(index: number) {
   if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
-
+  // setTimeout(() => { // crashes, probably because of selection happening from the DisplayForm
   if (errors[index]?.node) {
     errors[index].page.selection = [errors[index].node]
   }
+  // }, 0)
 }
 
 function printErrors() {
@@ -271,7 +272,28 @@ function lintStep(page: PageNode, step: GroupNode) {
   const ss = parseInt(tags.find((s) => /^ss-\d+$/.test(s))?.replace('ss-', ''))
   const o = tags.find((s) => /^o-\d+$/.test(s))
   const bs = parseInt(tags.find((s) => /^bs-\d+$/.test(s))?.replace('bs-', ''))
+  const terminalNodes = descendantsWithoutSelf(step).filter(
+    (v) => v['children'] == undefined
+  )
+  const maxSize = terminalNodes.reduce((acc, v) => {
+    return Math.max(acc, v.width, v.height)
+  }, 0)
+
   maxBs = Math.max(bs ? bs : maxBs, maxBs)
+  assert(
+    !ss || ss >= 20 || maxSize <= 100,
+    `Should not use ss<20 with long lines. Consider using bg template. ${ss}<20 ${maxSize}>100`,
+    page,
+    step,
+    ErrorLevel.INFO
+  )
+  assert(
+    !ss || ss >= 20 || terminalNodes.length <= 8,
+    `Should not use ss<20 with too many lines. Consider using bg template. ${ss}<20 ${terminalNodes.length}>8`,
+    page,
+    step,
+    ErrorLevel.INFO
+  )
   assert(!ss || ss >= 15, 'ss must be >= 15', page, step)
   assert(!ss || !bs || ss > bs, 'ss must be > bs', page, step)
   assert(
