@@ -282,18 +282,19 @@ function lintStep(page: PageNode, step: GroupNode) {
   maxBs = Math.max(bs ? bs : maxBs, maxBs)
   assert(
     !ss || ss >= 20 || maxSize <= 100,
-    `Should not use ss<20 with long lines. Consider using bg template. ${ss}<20 ${maxSize}>100`,
+    `Should not use ss<20 with long lines. Consider using bg template. ${maxSize}>100`,
     page,
     step,
     ErrorLevel.INFO
   )
   assert(
     !ss || ss >= 20 || terminalNodes.length <= 8,
-    `Should not use ss<20 with too many lines. Consider using bg template. ${ss}<20 ${terminalNodes.length}>8`,
+    `Should not use ss<20 with too many lines. Consider using bg template. ${terminalNodes.length}>8`,
     page,
     step,
     ErrorLevel.INFO
   )
+  assert(!bs || bs >= 15, 'Should not use bs<15', page, step, ErrorLevel.INFO)
   assert(!ss || ss >= 15, 'ss must be >= 15', page, step)
   assert(!ss || !bs || ss > bs, 'ss must be > bs', page, step)
   assert(
