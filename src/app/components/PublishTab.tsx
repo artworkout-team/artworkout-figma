@@ -15,7 +15,7 @@ export function PublishTab() {
   const userSnapshot = useSnapshot(userStore)
   const [disabled, setDisabled] = React.useState(false)
 
-  async function makeLesson(lesson, course, serverLesson, debug) {
+  async function makeLesson(lesson, course, serverLesson, free, debug) {
     const cp = debug ? `${lesson.coursePath}-debug` : lesson.coursePath
     const [lessonFile, thumbnailFile] = await Promise.all([
       new Parse.File(
@@ -32,6 +32,7 @@ export function PublishTab() {
     if (serverLesson.isNew()) {
       serverLesson.set('coursePath', cp)
       serverLesson.set('path', lesson.path)
+      serverLesson.set('free', free)
       serverLesson.set('name', {
         en: capitalize(lesson.path.split('-').join(' ')),
       })
@@ -75,12 +76,13 @@ export function PublishTab() {
       await courseObject.save()
     }
     const lessons = await Promise.all(
-      course.lessons.map((lesson) =>
+      course.lessons.map((lesson, index) =>
         makeLesson(
           lesson,
           courseObject,
           serverLessons.find((l) => l.get('path') === lesson.path) ||
             new ParseLesson(),
+          index == 0,
           debug
         )
       )
