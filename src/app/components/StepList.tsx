@@ -48,7 +48,7 @@ export function StepList({
                       active={stepNode.id === selectedNode.id}
                       onClick={() => onUpdate(stepNode)}
                     >
-                      {stepNode.name.substring(5)}
+                      {stepNode.name.substring(5).replace(/s-multistep-/, '')}
                     </ListGroup.Item>
                   )}
                 </Draggable>
