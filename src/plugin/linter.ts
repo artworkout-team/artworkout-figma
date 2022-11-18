@@ -272,6 +272,9 @@ function lintStep(page: PageNode, step: GroupNode) {
   const ss = parseInt(tags.find((s) => /^ss-\d+$/.test(s))?.replace('ss-', ''))
   const o = tags.find((s) => /^o-\d+$/.test(s))
   const bs = parseInt(tags.find((s) => /^bs-\d+$/.test(s))?.replace('bs-', ''))
+  const brushName = tags
+    .find((s) => /^brush-name-\w+$/.test(s))
+    ?.replace('brush-name-', '')
   const terminalNodes = descendantsWithoutSelf(step).filter(
     (v) => v['children'] == undefined
   )
@@ -294,7 +297,13 @@ function lintStep(page: PageNode, step: GroupNode) {
     step,
     ErrorLevel.INFO
   )
-  assert(!bs || bs >= 15, 'Should not use bs<15', page, step, ErrorLevel.INFO)
+  assert(
+    !bs || bs >= 15 || brushName == 'pencil',
+    'Should not use bs<15',
+    page,
+    step,
+    ErrorLevel.INFO
+  )
   assert(!ss || ss >= 15, 'ss must be >= 15', page, step)
   assert(!ss || !bs || ss > bs, 'ss must be > bs', page, step)
   assert(
