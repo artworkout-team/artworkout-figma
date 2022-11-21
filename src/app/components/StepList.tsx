@@ -8,9 +8,9 @@ export function StepList({
   selectedNode,
   onUpdate,
 }: {
-  stepNodes: SceneNode[]
-  selectedNode: SceneNode
-  onUpdate: (selected: SceneNode) => void
+  stepNodes: any[]
+  selectedNode: any
+  onUpdate: (selected: any) => void
 }) {
   async function onDragEnd(result) {
     if (!result.destination) {
@@ -43,12 +43,23 @@ export function StepList({
                       style={{
                         padding: '0.2rem 1rem',
                         fontSize: '0.7rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
                         ...provided.draggableProps.style,
                       }}
                       active={stepNode.id === selectedNode.id}
                       onClick={() => onUpdate(stepNode)}
                     >
                       {stepNode.name.substring(5).replace(/s-multistep-/, '')}
+                      <div
+                        style={{
+                          color: stepNode.color,
+                          fontSize: '0.85rem',
+                        }}
+                      >
+                        ⬤
+                      </div>
                     </ListGroup.Item>
                   )}
                 </Draggable>
