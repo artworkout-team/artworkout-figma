@@ -12,6 +12,10 @@ export function findAll(node: BaseNode, f: (node: BaseNode) => boolean) {
   return arr
 }
 
+export function findLeafNodes(node: GroupNode): SceneNode[] {
+  return node.findAll(n => !('children' in n))
+}
+
 export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   if (f(node)) {
     return node
