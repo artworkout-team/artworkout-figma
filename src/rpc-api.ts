@@ -1,7 +1,7 @@
 import { createPluginAPI, createUIAPI } from 'figma-jsonrpc'
 import { exportTexts } from './plugin/format-rpc'
 import { exportLesson, exportCourse } from './plugin/publish'
-import { getStepNodes, setStepOrder } from './plugin/tune-rpc'
+import { getSteps, setStepOrder } from './plugin/tune-rpc'
 
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
@@ -13,7 +13,7 @@ export const pluginApi = createPluginAPI({
   },
   exportLesson,
   exportCourse,
-  getStepNodes,
+  getSteps,
   setStepOrder,
   exportTexts,
 })

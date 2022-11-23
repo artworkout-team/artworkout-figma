@@ -18,7 +18,7 @@ function DisplayForm() {
   const [stepCount, setStepCount] = useState(1)
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
-  const [stepNodes, setStepNodes] = useState([])
+  const [steps, setSteps] = useState([])
 
   const [mutex, setMutex] = useState(true)
 
@@ -31,8 +31,8 @@ function DisplayForm() {
   }
 
   async function onListUpdate(selectedNode) {
-    let sns = await pluginApi.getStepNodes()
-    setStepNodes(sns)
+    let sns = await pluginApi.getSteps()
+    setSteps(sns)
     let index = sns.findIndex((node) => node.id === selectedNode.id)
     setStepNumber(index + 1)
   }
@@ -68,7 +68,7 @@ function DisplayForm() {
         setStepNumber(settings.stepNumber)
         setDisplayMode(settings.displayMode)
         setTemplate(settings.template)
-        setStepNodes(await pluginApi.getStepNodes())
+        setSteps(await pluginApi.getSteps())
         setMutex(false)
       }
     )
@@ -209,8 +209,8 @@ function DisplayForm() {
       </Row>
       <Row>
         <StepList
-          stepNodes={stepNodes}
-          selectedNode={stepNodes[stepNumber - 1]}
+          steps={steps}
+          selectedStep={steps[stepNumber - 1]}
           onUpdate={onListUpdate}
         />
       </Row>
