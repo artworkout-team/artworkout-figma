@@ -3,6 +3,7 @@ import ListGroup from 'react-bootstrap/ListGroup'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import { pluginApi } from '../../rpc-api'
 import { Step } from '../../plugin/tune-rpc'
+import './StepList.css'
 
 export function StepList({
   steps,
@@ -41,28 +42,23 @@ export function StepList({
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
+                      className='list-group-icon'
                       style={{
-                        padding: '0.2rem 1rem',
-                        fontSize: '0.7rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
                         ...provided.draggableProps.style,
                       }}
                       active={stepNode.id === selectedStep.id}
                       onClick={() => onUpdate(stepNode)}
                     >
                       {stepNode.name.substring(5).replace(/s-multistep-/, '')}
-                      <div
-                        style={{
-                          background: stepNode.colors.fillsColor,
-                          border: `3px solid ${stepNode.colors.strokesColor}`,
-                          borderRadius: '50%',
-                          width: '1.3em',
-                          height: '1.3em',
-                          textAlign: 'center'
-                        }}
-                      >
+                      <div className='round-icon-container'>
+                        <div
+                          className='round-icon'
+                          style={{
+                            background: stepNode.colors.fillsColor,
+                            border: `3px solid ${stepNode.colors.strokesColor}`,
+                          }}
+                        >
+                        </div>
                       </div>
                     </ListGroup.Item>
                   )}
