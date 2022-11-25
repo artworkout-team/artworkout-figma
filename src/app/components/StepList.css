@@ -5,24 +5,32 @@
 }
 
 .list-group-item {
-    padding: 0.25em 0.5em 0.25em 1em;
     margin: 0;
     font-size: 0.7rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 100%;
+    max-height: 40px;
+    padding: 0;
+    padding-left: 1em;
+    overflow: hidden;
 }
 
 .list-group-item.active {
     border-color: lightgray;
+    max-height: 41px;
+    overflow: hidden;
+    margin: 0;
 }
 
 .round-icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background: #FFF;
-    height: 100%;
-    padding: 0.7em;
-    border-radius: 25%;
+    height: 40px;
+    width: 40px;
+    margin: 0;
 }
 
 .round-icon {
