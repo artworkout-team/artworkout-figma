@@ -51,14 +51,26 @@ export function StepList({
                     >
                       {stepNode.name.substring(5).replace(/s-multistep-/, '')}
                       <div className='round-icon-container'>
-                        <div
-                          className='round-icon'
-                          style={{
-                            background: stepNode.colors.fillsColor,
-                            border: `3px solid ${stepNode.colors.strokesColor}`,
-                          }}
-                        >
-                        </div>
+                        {!stepNode.name.includes('result') ? (
+                          <div
+                            className='round-icon'
+                            style={{
+                              background: stepNode.colors.fillsColor,
+                              border: `3px solid ${stepNode.colors.strokesColor}`,
+                            }}
+                          ></div>
+                        ) : (
+                          <div
+                            className='result-icon'
+                            style={{
+                              color:
+                                stepNode.colors.fillsColor ||
+                                stepNode.colors.strokesColor,
+                            }}
+                          >
+                            R
+                          </div>
+                        )}
                       </div>
                     </ListGroup.Item>
                   )}

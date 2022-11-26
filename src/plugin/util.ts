@@ -13,7 +13,7 @@ export function findAll(node: BaseNode, f: (node: BaseNode) => boolean) {
 }
 
 export function findLeafNodes(node: GroupNode): SceneNode[] {
-  return node.findAll(n => !('children' in n))
+  return node.findAll((n) => !('children' in n))
 }
 
 export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {

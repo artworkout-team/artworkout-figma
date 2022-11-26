@@ -1,40 +1,35 @@
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+.list-group-item,
+.round-icon-container {
+  display: flex;
+  align-items: center;
 }
 
 .list-group-item {
-    margin: 0;
-    font-size: 0.7rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-height: 40px;
-    padding: 0;
-    padding-left: 1em;
-    overflow: hidden;
+  font-size: 0.7rem;
+  justify-content: space-between;
+  padding: 0;
+  padding-left: 1em;
+  overflow: hidden;
 }
 
 .list-group-item.active {
-    border-color: lightgray;
-    max-height: 41px;
-    overflow: hidden;
-    margin: 0;
+  border-color: lightgray;
 }
 
 .round-icon-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #FFF;
-    height: 40px;
-    width: 40px;
-    margin: 0;
+  justify-content: center;
+  background: #fff;
+  height: 24px;
+  width: 40px;
 }
 
 .round-icon {
-    width: 1.3em;
-    height: 1.3em;
-    border-radius: 50%;
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 50%;
+}
+
+.result-icon {
+  font-size: 1rem;
+  font-weight: 700;
 }

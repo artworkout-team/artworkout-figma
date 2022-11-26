@@ -34,8 +34,8 @@ function getPaintColor(paint: Paint) {
 
 function getColors(node: GroupNode) {
   let defaultColor = { r: 0, g: 0, b: 0, a: 0 } // transparent = default color
-  let fills: { r: number, g: number, b: number, a: number } = defaultColor
-  let strokes: { r: number, g: number, b: number, a: number } = defaultColor
+  let fills: { r: number; g: number; b: number; a: number } = defaultColor
+  let strokes: { r: number; g: number; b: number; a: number } = defaultColor
   const leaf = findLeafNodes(node)[0]
   if ('fills' in leaf && leaf.fills !== figma.mixed && leaf.fills.length > 0) {
     fills = getPaintColor(leaf.fills[0])
@@ -45,11 +45,16 @@ function getColors(node: GroupNode) {
   }
   return {
     fillsColor: displayColor(fills),
-    strokesColor: displayColor(strokes)
+    strokesColor: displayColor(strokes),
   }
 }
 
-function displayColor(color: { r: number, g: number, b: number, a: number }): string {
+function displayColor(color: {
+  r: number
+  g: number
+  b: number
+  a: number
+}): string {
   const { r, g, b, a } = color
   return `rgba(${r}, ${g}, ${b}, ${a})`
 }
