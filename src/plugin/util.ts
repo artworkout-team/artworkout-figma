@@ -1,4 +1,5 @@
 import { emit } from '../events'
+import { Step } from './tune-rpc'
 
 export function findAll(node: BaseNode, f: (node: BaseNode) => boolean) {
   let arr: BaseNode[] = []
@@ -25,7 +26,7 @@ export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   }
 }
 
-export function getTags(node: BaseNode) {
+export function getTags(node: BaseNode | Step) {
   return node.name.split(' ').filter(Boolean)
 }
 

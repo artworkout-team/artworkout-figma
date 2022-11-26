@@ -32,6 +32,16 @@ function getPaintColor(paint: Paint) {
   }
 }
 
+function displayColor(color: {
+  r: number
+  g: number
+  b: number
+  a: number
+}): string {
+  const { r, g, b, a } = color
+  return `rgba(${r}, ${g}, ${b}, ${a})`
+}
+
 function getColors(node: GroupNode) {
   let defaultColor = { r: 0, g: 0, b: 0, a: 0 } // transparent = default color
   let fills: { r: number; g: number; b: number; a: number } = defaultColor
@@ -47,16 +57,6 @@ function getColors(node: GroupNode) {
     fillsColor: displayColor(fills),
     strokesColor: displayColor(strokes),
   }
-}
-
-function displayColor(color: {
-  r: number
-  g: number
-  b: number
-  a: number
-}): string {
-  const { r, g, b, a } = color
-  return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
 export function getSteps(): Step[] {

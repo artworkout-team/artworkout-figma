@@ -4,6 +4,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 import { pluginApi } from '../../rpc-api'
 import { Step } from '../../plugin/tune-rpc'
 import './StepList.css'
+import { getTags } from '../../plugin/util'
 
 export function StepList({
   steps,
@@ -51,7 +52,7 @@ export function StepList({
                     >
                       {stepNode.name.substring(5).replace(/s-multistep-/, '')}
                       <div className='round-icon-container'>
-                        {!stepNode.name.includes('result') ? (
+                        {!getTags(stepNode).includes('s-multistep-result') ? (
                           <div
                             className='round-icon'
                             style={{
