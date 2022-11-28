@@ -94,22 +94,25 @@ export function PublishTab() {
   return (
     <>
       <LoginForm />
-      <Button
-        disabled={disabled}
-        onClick={() => publishCourse({ debug: true })}
-      >
-        Publish debug
-      </Button>{' '}
-      {userSnapshot.user &&
-        userSnapshot.user.get('email') === 'ulitiy@gmail.com' && (
+      {userSnapshot.user && (
+        <>
           <Button
             disabled={disabled}
-            variant='danger'
-            onClick={() => publishCourse({ debug: false })}
+            onClick={() => publishCourse({ debug: true })}
           >
-            Publish production
-          </Button>
-        )}
+            Publish debug
+          </Button>{' '}
+          {userSnapshot.user.get('email') === 'ulitiy@gmail.com' && (
+            <Button
+              disabled={disabled}
+              variant='danger'
+              onClick={() => publishCourse({ debug: false })}
+            >
+              Publish production
+            </Button>
+          )}
+        </>
+      )}
     </>
   )
 }
