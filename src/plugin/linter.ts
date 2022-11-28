@@ -256,7 +256,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   const tags = getTags(step)
   tags.forEach((tag) => {
     assert(
-      /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-\d+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(
+      /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(
         tag
       ),
       `Tag '${tag}' unknown. Use slash to /ignore.`,
