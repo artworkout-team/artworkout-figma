@@ -1,0 +1,35 @@
+.list-group-item,
+.round-icon-container {
+  display: flex;
+  align-items: center;
+}
+
+.list-group-item {
+  font-size: 0.7rem;
+  justify-content: space-between;
+  padding: 0;
+  padding-left: 1em;
+  overflow: hidden;
+}
+
+.list-group-item.active {
+  border-color: lightgray;
+}
+
+.round-icon-container {
+  justify-content: center;
+  background: #fff;
+  height: 24px;
+  width: 40px;
+}
+
+.round-icon {
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 50%;
+}
+
+.result-icon {
+  font-size: 1rem;
+  font-weight: 700;
+}

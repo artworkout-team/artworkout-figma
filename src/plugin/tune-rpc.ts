@@ -23,19 +23,23 @@ function stepsByOrder(lesson: FrameNode) {
     })
 }
 
-function getPaintColor(paint: Paint) {
+function getPaintColor(paint: Paint): RGBA {
   if (paint.type === 'SOLID') {
-    const { r, g, b } = paint.color
+    const { r, g, b }: RGB = paint.color
     return { r: r * 255, g: g * 255, b: b * 255, a: 1 }
   } else {
     return { r: 166, g: 166, b: 166, a: 1 }
   }
 }
 
+function displayColor({ r, g, b, a }: RGBA): string {
+  return `rgba(${r}, ${g}, ${b}, ${a})`
+}
+
 function getColors(node: GroupNode) {
-  let defaultColor = { r: 0, g: 0, b: 0, a: 0 } // transparent = default color
-  let fills: { r: number, g: number, b: number, a: number } = defaultColor
-  let strokes: { r: number, g: number, b: number, a: number } = defaultColor
+  const defaultColor: RGBA = { r: 0, g: 0, b: 0, a: 0 } // transparent = default color
+  let fills: RGBA = defaultColor
+  let strokes: RGBA = defaultColor
   const leaf = findLeafNodes(node)[0]
   if ('fills' in leaf && leaf.fills !== figma.mixed && leaf.fills.length > 0) {
     fills = getPaintColor(leaf.fills[0])
@@ -45,13 +49,8 @@ function getColors(node: GroupNode) {
   }
   return {
     fillsColor: displayColor(fills),
-    strokesColor: displayColor(strokes)
+    strokesColor: displayColor(strokes),
   }
-}
-
-function displayColor(color: { r: number, g: number, b: number, a: number }): string {
-  const { r, g, b, a } = color
-  return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
 export function getSteps(): Step[] {
