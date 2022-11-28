@@ -32,8 +32,7 @@ function getPaintColor(paint: Paint): RGBA {
   }
 }
 
-function displayColor(color: RGBA): string {
-  const { r, g, b, a } = color
+function displayColor({ r, g, b, a }: RGBA): string {
   return `rgba(${r}, ${g}, ${b}, ${a})`
 }
 
