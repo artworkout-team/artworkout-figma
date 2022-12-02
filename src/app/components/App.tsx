@@ -40,8 +40,10 @@ function App() {
 
   return (
     <Tabs defaultActiveKey='tune' className='m-1'>
-      <Tab eventKey='create' title='Create' className='m-2'>
-        {/* <Button>Create lesson</Button> */}
+      <Tab eventKey='create' title='Create' className='m-2 text-center'>
+        <Button onClick={() => emit('createLesson')} className='m-2'>
+          Create lesson
+        </Button>
         {/* <Button>Set animations (CONFIRM)</Button> */}
         <Button onClick={() => emit('separateStep')}>Separate step</Button>
       </Tab>
