@@ -187,10 +187,14 @@ figma.on('selectionchange', () => {
   const lesson = figma.currentPage.children.find(
     (el) => el.name == 'lesson'
   ) as FrameNode
-  const step = figma.currentPage.selection[0] as GroupNode
-  if (!step || !lesson || !lesson.children.includes(step)) {
+  const selection = figma.currentPage.selection[0]
+  if (!selection || !lesson || !lesson.children.includes(selection)) {
     return
   }
-  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
-  updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
+  if (selection.type === 'GROUP') {
+    //update step
+    const step = figma.currentPage.selection[0] as GroupNode
+    const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+    updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
+  }
 })
