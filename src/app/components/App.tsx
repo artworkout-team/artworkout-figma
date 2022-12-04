@@ -41,11 +41,13 @@ function App() {
   return (
     <Tabs defaultActiveKey='tune' className='m-1'>
       <Tab eventKey='create' title='Create' className='m-2 text-center'>
-        <Button onClick={() => emit('createLesson')} className='m-2'>
+        <Button onClick={async () => pluginApi.createLesson()} className='m-2'>
           Create lesson
         </Button>
         {/* <Button>Set animations (CONFIRM)</Button> */}
-        <Button onClick={() => emit('separateStep')}>Separate step</Button>
+        <Button onClick={async () => pluginApi.separateStep()}>
+          Separate step
+        </Button>
       </Tab>
 
       <Tab eventKey='tune' title='Tune' className='m-2'>
