@@ -1,7 +1,138 @@
-import { on } from '../events'
 import { findParent } from './util'
 
-function separateStep(nodes: readonly SceneNode[]) {
+interface nodeParameters {
+  name: string
+  x: number
+  y: number
+  width?: number
+  height?: number
+}
+
+function formatNode(
+  node: FrameNode | GroupNode | RectangleNode | EllipseNode,
+  parameters: nodeParameters
+) {
+  const { name, x, y, width = 40, height = 40 } = parameters
+  node.name = name
+  node.x = x
+  node.y = y
+  node.resize(width, height)
+}
+
+function fillServiceNodes(node: RectangleNode | EllipseNode) {
+  node.fills = [
+    {
+      type: 'SOLID',
+      color: {
+        r: 0.7686274647712708,
+        g: 0.7686274647712708,
+        b: 0.7686274647712708,
+      },
+    },
+  ]
+}
+
+function rescaleImageNode(
+  node: SceneNode,
+  resizeParams: { maxWidth: number; maxHeight: number }
+) {
+  const { maxWidth, maxHeight } = resizeParams
+  const isCorrectSize = node.width <= maxWidth && node.height <= maxHeight
+  const isCorrectType =
+    node.type === 'FRAME' || node.type === 'RECTANGLE' || node.type === 'VECTOR'
+  if (isCorrectType && !isCorrectSize) {
+    const scaleFactor = Math.min(maxWidth / node.width, maxHeight / node.height)
+    node.rescale(scaleFactor)
+  }
+  return node
+}
+
+export function createLesson() {
+  const node: PageNode = figma.currentPage
+  if (node.children.length !== 1) {
+    return
+  }
+
+  const originalImage = node.children[0]
+  const lesson = figma.createFrame()
+  formatNode(lesson, {
+    name: 'lesson',
+    x: -461,
+    y: -512,
+    width: 1366,
+    height: 1024,
+  })
+
+  const thumbnail = figma.createFrame()
+  formatNode(thumbnail, {
+    name: 'thumbnail',
+    x: -901,
+    y: -512,
+    width: 400,
+    height: 400,
+  })
+
+  // Create step
+  const step = originalImage.clone()
+  step.name = 'image'
+  const resizedImage = rescaleImageNode(originalImage, {
+    maxWidth: lesson.width - 83 * 2,
+    maxHeight: lesson.height - 12 * 2,
+  })
+  const stepInput = figma.group([step], lesson)
+  stepInput.name = 'input'
+  const firstStep = figma.group([stepInput], lesson)
+  formatNode(firstStep, {
+    name: 'step s-multistep-brush',
+    x: (lesson.width - resizedImage.width) / 2,
+    y: (lesson.height - resizedImage.height) / 2,
+    width: resizedImage.width,
+    height: resizedImage.height,
+  })
+
+  // Create thumbnail
+  const thumbnailImage = originalImage.clone()
+  thumbnailImage.name = 'image'
+  const resizedThumbnail = rescaleImageNode(thumbnailImage, {
+    maxWidth: thumbnail.width - 35 * 2,
+    maxHeight: thumbnail.height - 35 * 2,
+  })
+  const thumbnailGroup = figma.group([thumbnailImage], thumbnail)
+  formatNode(thumbnailGroup, {
+    name: 'thumbnail group',
+    x: (thumbnail.width - resizedThumbnail.width) / 2,
+    y: (thumbnail.height - resizedThumbnail.height) / 2,
+    width: resizedThumbnail.width,
+    height: resizedThumbnail.height,
+  })
+
+  // Create result
+  const resultRectangle = figma.createRectangle()
+  fillServiceNodes(resultRectangle)
+  const templateGroup = figma.group([resultRectangle], lesson)
+  templateGroup.name = 'template'
+  const result = figma.group([templateGroup], lesson)
+  formatNode(result, {
+    name: 'step s-multistep-result',
+    x: 10,
+    y: 60,
+  })
+
+  // Create settings
+  const settingsEllipse = figma.createEllipse()
+  fillServiceNodes(settingsEllipse)
+  formatNode(settingsEllipse, {
+    name: 'settings capture-color zoom-scale-2 order-layers',
+    x: 10,
+    y: 10,
+  })
+  lesson.appendChild(settingsEllipse)
+
+  originalImage.remove()
+}
+
+export function separateStep() {
+  const nodes: readonly SceneNode[] = figma.currentPage.selection
   const parentStep = findParent(nodes[0], (n) => n.name.startsWith('step'))
   const frame = parentStep.parent
   const index = frame.children.findIndex((n) => n == parentStep)
@@ -13,5 +144,3 @@ function separateStep(nodes: readonly SceneNode[]) {
   const newStep = figma.group([input], frame, index)
   newStep.name = parentStep.name
 }
-
-on('separateStep', () => separateStep(figma.currentPage.selection))
