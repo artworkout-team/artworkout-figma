@@ -1,4 +1,4 @@
-import { findParent } from './util'
+import { findParent, findLeafNodes } from './util'
 
 interface nodeParameters {
   name: string
@@ -45,6 +45,19 @@ function rescaleImageNode(
     node.rescale(scaleFactor)
   }
   return node
+}
+
+function createResultNode(node: FrameNode) {
+  const resultRectangle = figma.createRectangle()
+  fillServiceNodes(resultRectangle)
+  const templateGroup = figma.group([resultRectangle], node)
+  templateGroup.name = 'template'
+  const result = figma.group([templateGroup], node)
+  formatNode(result, {
+    name: 'step s-multistep-result',
+    x: 10,
+    y: 60,
+  })
 }
 
 export function createLesson() {
@@ -107,16 +120,7 @@ export function createLesson() {
   })
 
   // Create result
-  const resultRectangle = figma.createRectangle()
-  fillServiceNodes(resultRectangle)
-  const templateGroup = figma.group([resultRectangle], lesson)
-  templateGroup.name = 'template'
-  const result = figma.group([templateGroup], lesson)
-  formatNode(result, {
-    name: 'step s-multistep-result',
-    x: 10,
-    y: 60,
-  })
+  createResultNode(lesson)
 
   // Create settings
   const settingsEllipse = figma.createEllipse()
@@ -143,4 +147,76 @@ export function separateStep() {
   input.name = 'input'
   const newStep = figma.group([input], frame, index)
   newStep.name = parentStep.name
+}
+
+function stringifyColor(color: RGB) {
+  let { r, g, b } = color
+  r = Math.round(r * 255)
+  g = Math.round(g * 255)
+  b = Math.round(b * 255)
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+function createStepNode(node: FrameNode, nodesArray: SceneNode[]) {
+  const input = figma.group(nodesArray, node)
+  input.name = 'input'
+  const step = figma.group([input], node)
+  step.name = 'step s-multistep brush'
+  node.appendChild(step)
+}
+
+function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
+  if (!map.has(key)) {
+    map.set(key, [])
+  }
+  map.get(key).push(node)
+}
+
+export function splitByColor() {
+  const lesson = figma.currentPage.children.find(
+    (el) => el.name === 'lesson'
+  ) as FrameNode
+  if (lesson.children[0].type !== 'GROUP') {
+    return
+  }
+
+  let fillsByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
+  let strokesByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
+  let unknownNodes: SceneNode[] = []
+
+  findLeafNodes(lesson.children[0] as GroupNode).forEach((n: SceneNode) => {
+    if (
+      'fills' in n &&
+      n.fills !== figma.mixed &&
+      n.fills[0].type === 'SOLID'
+    ) {
+      addToMap(fillsByColor, stringifyColor(n.fills[0].color), n)
+    } else if ('strokes' in n && n.strokes[0].type === 'SOLID') {
+      addToMap(strokesByColor, stringifyColor(n.strokes[0].color), n)
+    } else {
+      unknownNodes.push(n)
+    }
+  })
+
+  for (let fills of fillsByColor.values()) {
+    createStepNode(lesson, fills)
+  }
+  for (let strokes of strokesByColor.values()) {
+    createStepNode(lesson, strokes)
+  }
+  if (unknownNodes.length > 0) {
+    createStepNode(lesson, unknownNodes)
+  }
+
+  // Make sure the result is located at the end
+  const result = lesson.children.find(
+    (n) => n.name === 'step s-multistep-result'
+  )
+  if (result) {
+    result.remove()
+  }
+  createResultNode(lesson)
+
+  // Remove original node
+  lesson.children[0].remove()
 }

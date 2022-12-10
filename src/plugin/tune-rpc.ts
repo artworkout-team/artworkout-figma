@@ -25,8 +25,11 @@ function stepsByOrder(lesson: FrameNode) {
 
 function getPaintColor(paint: Paint): RGBA {
   if (paint.type === 'SOLID') {
-    const { r, g, b }: RGB = paint.color
-    return { r: r * 255, g: g * 255, b: b * 255, a: 1 }
+    let { r, g, b }: RGB = paint.color
+    r = Math.round(r * 255)
+    g = Math.round(g * 255)
+    b = Math.round(b * 255)
+    return { r, g, b, a: 1 }
   } else {
     return { r: 166, g: 166, b: 166, a: 1 }
   }

@@ -48,6 +48,9 @@ function App() {
         <Button onClick={async () => pluginApi.separateStep()}>
           Separate step
         </Button>
+        <Button onClick={async () => pluginApi.splitByColor()}>
+          Split by color
+        </Button>
       </Tab>
 
       <Tab eventKey='tune' title='Tune' className='m-2'>
