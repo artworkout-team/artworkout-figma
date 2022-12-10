@@ -1,4 +1,4 @@
-import { findParent } from './util'
+import { findParent, findLeafNodes } from './util'
 
 interface nodeParameters {
   name: string
@@ -45,6 +45,19 @@ function rescaleImageNode(
     node.rescale(scaleFactor)
   }
   return node
+}
+
+function createResult(node: PageNode | FrameNode) {
+  const resultRectangle = figma.createRectangle()
+  fillServiceNodes(resultRectangle)
+  const templateGroup = figma.group([resultRectangle], node)
+  templateGroup.name = 'template'
+  const result = figma.group([templateGroup], node)
+  formatNode(result, {
+    name: 'step s-multistep-result',
+    x: 10,
+    y: 60,
+  })
 }
 
 export function createLesson() {
@@ -107,16 +120,7 @@ export function createLesson() {
   })
 
   // Create result
-  const resultRectangle = figma.createRectangle()
-  fillServiceNodes(resultRectangle)
-  const templateGroup = figma.group([resultRectangle], lesson)
-  templateGroup.name = 'template'
-  const result = figma.group([templateGroup], lesson)
-  formatNode(result, {
-    name: 'step s-multistep-result',
-    x: 10,
-    y: 60,
-  })
+  createResult(node)
 
   // Create settings
   const settingsEllipse = figma.createEllipse()
@@ -143,4 +147,81 @@ export function separateStep() {
   input.name = 'input'
   const newStep = figma.group([input], frame, index)
   newStep.name = parentStep.name
+}
+
+function stringifyColor(color: RGB) {
+  let { r, g, b } = color
+  r = Math.round(r * 255)
+  g = Math.round(g * 255)
+  b = Math.round(b * 255)
+  return `rgb(${r}, ${g}, ${b})`
+}
+
+function initializeStructure(node: FrameNode, nodesArray: SceneNode[]) {
+  const input = figma.group(nodesArray, node)
+  input.name = 'input'
+  const step = figma.group([input], node)
+  step.name = 'step s-multistep brush'
+  node.appendChild(step)
+}
+
+export function splitByColors() {
+  const node: FrameNode = figma.currentPage.children[0] as FrameNode
+  if (node.children[0].type !== 'GROUP') {
+    return
+  }
+
+  let fillsByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
+  let strokesByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
+  let unknownNodes: SceneNode[] = []
+
+  findLeafNodes(node.children[0] as GroupNode).forEach((n: SceneNode) => {
+    if (n.type === 'VECTOR') {
+      if (
+        'fills' in n &&
+        n.fills !== figma.mixed &&
+        n.fills[0].type === 'SOLID'
+      ) {
+        const key = stringifyColor(n.fills[0].color)
+        if (!fillsByColor.has(key)) {
+          fillsByColor.set(key, [])
+        }
+        fillsByColor.get(key).push(n)
+      } else if ('strokes' in n && n.strokes[0].type === 'SOLID') {
+        const key = stringifyColor(n.strokes[0].color)
+        if (!strokesByColor.has(key)) {
+          strokesByColor.set(key, [])
+        }
+        strokesByColor.get(key).push(n)
+      } else {
+        unknownNodes.push(n)
+      }
+    } else {
+      unknownNodes.push(n)
+    }
+  })
+
+  if (fillsByColor.size > 0) {
+    for (let fill of fillsByColor.values()) {
+      initializeStructure(node, fill)
+    }
+  }
+  if (strokesByColor.size > 0) {
+    for (let stroke of strokesByColor.values()) {
+      initializeStructure(node, stroke)
+    }
+    if (unknownNodes.length > 0) {
+      initializeStructure(node, unknownNodes)
+    }
+  }
+
+  // Make sure the result is located at the end
+  const result = node.children.find((n) => n.name === 'step s-multistep-result')
+  if (result) {
+    result.remove()
+  }
+  createResult(node)
+
+  // Remove original node
+  node.children[0].remove()
 }
