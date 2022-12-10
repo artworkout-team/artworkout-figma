@@ -48,8 +48,8 @@ function App() {
         <Button onClick={async () => pluginApi.separateStep()}>
           Separate step
         </Button>
-        <Button onClick={async () => pluginApi.splitByColors()}>
-          Split by colors
+        <Button onClick={async () => pluginApi.splitByColor()}>
+          Split by color
         </Button>
       </Tab>
 

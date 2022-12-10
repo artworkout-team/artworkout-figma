@@ -2,7 +2,7 @@ import { createPluginAPI, createUIAPI } from 'figma-jsonrpc'
 import { exportTexts } from './plugin/format-rpc'
 import { exportLesson, exportCourse } from './plugin/publish'
 import { getSteps, setStepOrder } from './plugin/tune-rpc'
-import { createLesson, separateStep, splitByColors } from './plugin/create'
+import { createLesson, separateStep, splitByColor } from './plugin/create'
 
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
@@ -19,7 +19,7 @@ export const pluginApi = createPluginAPI({
   exportTexts,
   createLesson,
   separateStep,
-  splitByColors,
+  splitByColor,
 })
 
 // Figma UI app methods
