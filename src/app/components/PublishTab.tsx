@@ -13,7 +13,18 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function PublishTab() {
   const userSnapshot = useSnapshot(userStore)
-  const [disabled, setDisabled] = React.useState(false)
+  const [isDisabled, setIsDisabled] = React.useState(false)
+  const [isPublished, setIsPublished] = React.useState(false)
+  const [link, setLink] = React.useState('')
+  const [isCopiedLink, setIsCopiedLink] = React.useState(false)
+
+  async function copyLinkToClipboard(link: string) {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(link)
+      setIsCopiedLink(true)
+    }
+    return false
+  }
 
   async function makeLesson(lesson, course, serverLesson, free, debug) {
     const cp = debug ? `${lesson.coursePath}-debug` : lesson.coursePath
@@ -47,7 +58,7 @@ export function PublishTab() {
   async function publishCourse(
     { debug }: { debug: boolean } = { debug: false }
   ) {
-    setDisabled(true)
+    setIsDisabled(true)
     const course = await pluginApi.exportCourse()
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
@@ -88,30 +99,56 @@ export function PublishTab() {
       )
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
-    setDisabled(false)
+
+    setLink(`https://artworkout.app.link/courses/${courseObject._getId()}`)
+    setIsPublished(true)
+    setIsDisabled(false)
   }
 
   return (
     <>
       <LoginForm />
       {userSnapshot.user && (
-        <>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Button
-            disabled={disabled}
+            disabled={isDisabled}
             onClick={() => publishCourse({ debug: true })}
           >
             Publish debug
           </Button>{' '}
           {userSnapshot.user.get('email') === 'ulitiy@gmail.com' && (
             <Button
-              disabled={disabled}
+              disabled={isDisabled}
               variant='danger'
               onClick={() => publishCourse({ debug: false })}
             >
               Publish production
             </Button>
           )}
-        </>
+          {isPublished && (
+            <>
+              <a
+                href='#'
+                className='pt-3'
+                onClick={async () => copyLinkToClipboard(link)}
+              >
+                {link}
+              </a>
+              {isCopiedLink && <p>Copied to clipboard</p>}
+              <img
+                className='pt-3'
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artworkout.app.link/figma_user/${userSnapshot.user._getId()}`}
+              />
+            </>
+          )}
+        </div>
       )}
     </>
   )
