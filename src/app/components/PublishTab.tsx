@@ -68,6 +68,7 @@ export function PublishTab() {
     courseObject = courseObject || new ParseCourse()
     courseObject.set('path', cp)
     courseObject.set('thumbnail', thumbnailFile)
+    courseObject.set('author', userSnapshot.user)
     if (courseObject.isNew()) {
       courseObject.set('name', {
         en: capitalize(cp.split('-').join(' ')),
