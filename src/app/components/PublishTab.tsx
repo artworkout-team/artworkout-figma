@@ -15,16 +15,31 @@ export function PublishTab() {
   const userSnapshot = useSnapshot(userStore)
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
-  const [isCopiedLink, setIsCopiedLink] = React.useState(false)
+  const [linkCopied, setLinkCopied] = React.useState(false)
 
-  async function copyLinkToClipboard(event: Event, link: string) {
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(link)
+  function copyToClipboard(value: string) {
+    try {
+      // @ts-ignore
+      if (window.copy) {
+        // @ts-ignore
+        window.copy(value)
+      } else {
+        const area = document.createElement('textarea')
+        document.body.appendChild(area)
+        area.value = value
+        area.focus()
+        area.select()
+        const result = document.execCommand('copy')
+        document.body.removeChild(area)
+        if (!result) {
+          throw new Error()
+        }
+      }
+    } catch (e) {
+      console.error(`Unable to copy the value: ${value}`)
+      return false
     }
-    if ((event.target as HTMLLinkElement).id === 'courseLink') {
-      setIsCopiedLink(true)
-    }
-    return false
+    return true
   }
 
   async function makeLesson(lesson, course, serverLesson, free, debug) {
@@ -103,9 +118,7 @@ export function PublishTab() {
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
 
-    setCourseLink(
-      `https://artworkout.app.link/courses/${courseObject._getId()}`
-    )
+    setCourseLink(`https://artworkout.app.link/courses/${courseObject.id}`)
     setIsDisabled(false)
   }
 
@@ -138,31 +151,29 @@ export function PublishTab() {
               Publish production
             </Button>
           )}
-          {courseLink && (
-            <>
+          <p className='mt-3'>
+            {courseLink && (
               <a
                 href='#'
-                className='pt-3'
                 id='courseLink'
-                onClick={async () =>
-                  copyLinkToClipboard(window.event, courseLink)
-                }
+                onClick={async () => {
+                  copyToClipboard(courseLink)
+                  setLinkCopied(true)
+                  setTimeout(() => setLinkCopied(false), 2000)
+                }}
               >
-                Share course link
+                {linkCopied ? 'Link copied ✓' : 'Share course'}
               </a>
-              {isCopiedLink && (
-                <p style={{ margin: '0' }}>Copied to clipboard</p>
-              )}
-            </>
-          )}
+            )}
+            &nbsp;
+          </p>
+          <p>Scan with iPad to sync your courses:</p>
           <img
-            className='pt-3'
             id='qr'
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artworkout.app.link/figma_user/${userSnapshot.user._getId()}`}
-            onClick={async () =>
-              copyLinkToClipboard(
-                window.event,
-                `https://artworkout.app.link/figma_user/${userSnapshot.user._getId()}`
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=https://artworkout.app.link/figma_user/${userSnapshot.user.id}`}
+            onClick={() =>
+              copyToClipboard(
+                `https://artworkout.app.link/figma_user/${userSnapshot.user.id}`
               )
             }
           />
