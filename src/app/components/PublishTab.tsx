@@ -13,7 +13,19 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function PublishTab() {
   const userSnapshot = useSnapshot(userStore)
-  const [disabled, setDisabled] = React.useState(false)
+  const [isDisabled, setIsDisabled] = React.useState(false)
+  const [courseLink, setCourseLink] = React.useState('')
+  const [isCopiedLink, setIsCopiedLink] = React.useState(false)
+
+  async function copyLinkToClipboard(event: Event, link: string) {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(link)
+    }
+    if ((event.target as HTMLLinkElement).id === 'courseLink') {
+      setIsCopiedLink(true)
+    }
+    return false
+  }
 
   async function makeLesson(lesson, course, serverLesson, free, debug) {
     const cp = debug ? `${lesson.coursePath}-debug` : lesson.coursePath
@@ -47,7 +59,7 @@ export function PublishTab() {
   async function publishCourse(
     { debug }: { debug: boolean } = { debug: false }
   ) {
-    setDisabled(true)
+    setIsDisabled(true)
     const course = await pluginApi.exportCourse()
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
@@ -90,30 +102,71 @@ export function PublishTab() {
       )
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
-    setDisabled(false)
+
+    setCourseLink(
+      `https://artworkout.app.link/courses/${courseObject._getId()}`
+    )
+    setIsDisabled(false)
   }
 
   return (
     <>
       <LoginForm />
       {userSnapshot.user && (
-        <>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Button
-            disabled={disabled}
+            disabled={isDisabled}
             onClick={() => publishCourse({ debug: true })}
+            style={{ minWidth: '165px' }}
           >
             Publish debug
           </Button>{' '}
           {userSnapshot.user.get('email') === 'ulitiy@gmail.com' && (
             <Button
-              disabled={disabled}
+              disabled={isDisabled}
               variant='danger'
               onClick={() => publishCourse({ debug: false })}
+              style={{ marginTop: '0.5em', minWidth: '165px' }}
             >
               Publish production
             </Button>
           )}
-        </>
+          {courseLink && (
+            <>
+              <a
+                href='#'
+                className='pt-3'
+                id='courseLink'
+                onClick={async () =>
+                  copyLinkToClipboard(window.event, courseLink)
+                }
+              >
+                Share course link
+              </a>
+              {isCopiedLink && (
+                <p style={{ margin: '0' }}>Copied to clipboard</p>
+              )}
+            </>
+          )}
+          <img
+            className='pt-3'
+            id='qr'
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://artworkout.app.link/figma_user/${userSnapshot.user._getId()}`}
+            onClick={async () =>
+              copyLinkToClipboard(
+                window.event,
+                `https://artworkout.app.link/figma_user/${userSnapshot.user._getId()}`
+              )
+            }
+          />
+        </div>
       )}
     </>
   )
