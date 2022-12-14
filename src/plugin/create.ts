@@ -188,10 +188,15 @@ export function splitByColor() {
     if (
       'fills' in n &&
       n.fills !== figma.mixed &&
+      n.fills.length > 0 &&
       n.fills[0].type === 'SOLID'
     ) {
       addToMap(fillsByColor, stringifyColor(n.fills[0].color), n)
-    } else if ('strokes' in n && n.strokes[0].type === 'SOLID') {
+    } else if (
+      'strokes' in n &&
+      n.strokes.length > 0 &&
+      n.strokes[0].type === 'SOLID'
+    ) {
       addToMap(strokesByColor, stringifyColor(n.strokes[0].color), n)
     } else {
       unknownNodes.push(n)
