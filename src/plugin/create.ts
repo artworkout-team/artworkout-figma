@@ -135,20 +135,6 @@ export function createLesson() {
   originalImage.remove()
 }
 
-export function separateStep() {
-  const nodes: readonly SceneNode[] = figma.currentPage.selection
-  const parentStep = findParent(nodes[0], (n) => n.name.startsWith('step'))
-  const frame = parentStep.parent
-  const index = frame.children.findIndex((n) => n == parentStep)
-  if (!parentStep) {
-    return
-  }
-  const input = figma.group(nodes, frame)
-  input.name = 'input'
-  const newStep = figma.group([input], frame, index)
-  newStep.name = parentStep.name
-}
-
 function stringifyColor(color: RGB) {
   let { r, g, b } = color
   r = Math.round(r * 255)
@@ -157,12 +143,58 @@ function stringifyColor(color: RGB) {
   return `rgb(${r}, ${g}, ${b})`
 }
 
-function createStepNode(node: FrameNode, nodesArray: SceneNode[]) {
+function nameLeafNodes(nodes: readonly SceneNode[]) {
+  let allStrokes: boolean = true
+  for (let node of nodes) {
+    if (!('strokes' in node && node.strokes.length > 0)) {
+      allStrokes = false
+    }
+  }
+  for (let node of nodes) {
+    node.name =
+      'rgb-template ' + (allStrokes && nodes.length > 3 ? 'draw-line' : 'blink')
+  }
+}
+
+function nameStepNodes(step: GroupNode) {
+  const leafs = findLeafNodes(step)
+  let fills = leafs.filter(
+    (n) => 'fills' in n && n.fills !== figma.mixed && n.fills.length > 0
+  )
+  let strokes = leafs.filter((n) => 'strokes' in n && n.strokes.length > 0)
+  let multistepType = fills.length >= strokes.length ? 'bg' : 'brush'
+  let maxWeight: number = 1
+  for (let node of strokes) {
+    'strokeWeight' in node && node.strokeWeight > maxWeight
+      ? (maxWeight = node.strokeWeight)
+      : maxWeight
+  }
+  let weight: number = strokes.length > 0 ? maxWeight : 25
+  step.name = `step s-multistep-${multistepType} bs-${weight}`
+}
+
+function createStepNode(
+  node: FrameNode,
+  nodesArray: readonly SceneNode[],
+  index?: number
+): GroupNode {
+  nameLeafNodes(nodesArray)
   const input = figma.group(nodesArray, node)
   input.name = 'input'
-  const step = figma.group([input], node)
-  step.name = 'step s-multistep brush'
-  node.appendChild(step)
+  const step = figma.group([input], node, index)
+  nameStepNodes(step)
+  return step
+}
+
+export function separateStep() {
+  const nodes: readonly SceneNode[] = figma.currentPage.selection
+  const parentStep = findParent(nodes[0], (n) => n.name.startsWith('step'))
+  if (!parentStep || parentStep.name === 'step s-multistep-result') {
+    return
+  }
+  const frame = parentStep.parent
+  const index = frame.children.findIndex((n: SceneNode) => n === parentStep)
+  createStepNode(frame, nodes, index)
 }
 
 function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
@@ -204,13 +236,13 @@ export function splitByColor() {
   })
 
   for (let fills of fillsByColor.values()) {
-    createStepNode(lesson, fills)
+    lesson.appendChild(createStepNode(lesson, fills))
   }
   for (let strokes of strokesByColor.values()) {
-    createStepNode(lesson, strokes)
+    lesson.appendChild(createStepNode(lesson, strokes))
   }
   if (unknownNodes.length > 0) {
-    createStepNode(lesson, unknownNodes)
+    lesson.appendChild(createStepNode(lesson, unknownNodes))
   }
 
   // Make sure the result is located at the end
