@@ -144,31 +144,30 @@ function stringifyColor(color: RGB) {
 }
 
 function nameLeafNodes(nodes: readonly SceneNode[]) {
-  let allStrokes: boolean = true
-  for (let node of nodes) {
-    if (!('strokes' in node && node.strokes.length > 0)) {
-      allStrokes = false
-    }
-  }
+  let allStrokes: boolean =
+    nodes.find(
+      (node) =>
+        'fills' in node && node.fills !== figma.mixed && node.fills.length > 0
+    ) === undefined
   for (let node of nodes) {
     node.name =
       'rgb-template ' + (allStrokes && nodes.length > 3 ? 'draw-line' : 'blink')
   }
 }
 
-function nameStepNodes(step: GroupNode) {
+function nameStepNode(step: GroupNode) {
   const leafs = findLeafNodes(step)
   let fills = leafs.filter(
     (n) => 'fills' in n && n.fills !== figma.mixed && n.fills.length > 0
   )
   let strokes = leafs.filter((n) => 'strokes' in n && n.strokes.length > 0)
-  let multistepType = fills.length >= strokes.length ? 'bg' : 'brush'
-  let maxWeight: number = 1
-  for (let node of strokes) {
-    'strokeWeight' in node && node.strokeWeight > maxWeight
-      ? (maxWeight = node.strokeWeight)
-      : maxWeight
-  }
+  let multistepType = fills.length > 0 ? 'bg' : 'brush'
+  let strokeWeightsArr: number[] = strokes.map((node) => {
+    if ('strokeWeight' in node) {
+      return node.strokeWeight
+    }
+  })
+  let maxWeight = Math.max(...strokeWeightsArr)
   let weight: number = strokes.length > 0 ? maxWeight : 25
   step.name = `step s-multistep-${multistepType} bs-${weight}`
 }
@@ -182,7 +181,7 @@ function createStepNode(
   const input = figma.group(nodesArray, node)
   input.name = 'input'
   const step = figma.group([input], node, index)
-  nameStepNodes(step)
+  nameStepNode(step)
   return step
 }
 
@@ -236,13 +235,13 @@ export function splitByColor() {
   })
 
   for (let fills of fillsByColor.values()) {
-    lesson.appendChild(createStepNode(lesson, fills))
+    createStepNode(lesson, fills)
   }
   for (let strokes of strokesByColor.values()) {
-    lesson.appendChild(createStepNode(lesson, strokes))
+    createStepNode(lesson, strokes)
   }
   if (unknownNodes.length > 0) {
-    lesson.appendChild(createStepNode(lesson, unknownNodes))
+    createStepNode(lesson, unknownNodes)
   }
 
   // Make sure the result is located at the end
