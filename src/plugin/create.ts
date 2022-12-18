@@ -143,7 +143,7 @@ function stringifyColor(color: RGB) {
   return `rgb(${r}, ${g}, ${b})`
 }
 
-function nameLeafNodes(nodes: readonly SceneNode[]) {
+function nameLeafNodes(nodes: SceneNode[]) {
   let allStrokes: boolean = !nodes.find(
     (node) =>
       'fills' in node && node.fills !== figma.mixed && node.fills.length > 0
@@ -155,11 +155,11 @@ function nameLeafNodes(nodes: readonly SceneNode[]) {
 }
 
 function nameStepNode(step: GroupNode) {
-  const leafs = findLeafNodes(step)
-  let fills = leafs.filter(
+  const leaves = findLeafNodes(step)
+  let fills = leaves.filter(
     (n) => 'fills' in n && n.fills !== figma.mixed && n.fills.length > 0
   )
-  let strokes = leafs.filter((n) => 'strokes' in n && n.strokes.length > 0)
+  let strokes = leaves.filter((n) => 'strokes' in n && n.strokes.length > 0)
   let multistepType = fills.length > 0 ? 'bg' : 'brush'
   let strokeWeightsArr = strokes.map((node) => {
     return node['strokeWeight'] || 0
@@ -171,26 +171,44 @@ function nameStepNode(step: GroupNode) {
 
 function createStepNode(
   node: FrameNode,
-  nodesArray: readonly SceneNode[],
+  nodesArray: SceneNode[],
   index?: number
-): GroupNode {
+) {
+  if (!nodesArray.length) {
+    return
+  }
   nameLeafNodes(nodesArray)
   const input = figma.group(nodesArray, node)
   input.name = 'input'
   const step = figma.group([input], node, index)
   nameStepNode(step)
-  return step
+}
+
+function isResultStep(node: BaseNode) {
+  return node && getTags(node).includes('s-multistep-result')
+}
+
+function findParentByTag(node: BaseNode, tag: string): GroupNode {
+  return findParent(node, (n) => getTags(n).includes(tag))
+}
+
+function getNodeIndex(node: BaseNode) {
+  return node.parent.children.findIndex((n: BaseNode) => n.id === node.id)
 }
 
 export function separateStep() {
-  const nodes: readonly SceneNode[] = figma.currentPage.selection
-  const parentStep = findParent(nodes[0], (n) => getTags(n).includes('step'))
-  if (!parentStep || getTags(parentStep).includes('s-multistep-result')) {
+  const selection = figma.currentPage.selection
+  const leaves = selection.filter((node) => !('children' in node))
+  if (!leaves.length) {
     return
   }
-  const frame = parentStep.parent
-  const index = frame.children.findIndex((n: SceneNode) => n === parentStep)
-  createStepNode(frame, nodes, index)
+  const firstParentStep = findParentByTag(selection[0], 'step')
+  if (isResultStep(firstParentStep)) {
+    return
+  }
+  const lesson = firstParentStep.parent as FrameNode
+  const index = getNodeIndex(firstParentStep)
+  createStepNode(lesson, leaves, index)
 }
 
 function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
@@ -201,19 +219,22 @@ function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
 }
 
 export function splitByColor() {
-  const lesson = figma.currentPage.children.find(
-    (el) => el.name === 'lesson'
-  ) as FrameNode
-  const firstStep = lesson.children.find((el) => {
-    const tags = getTags(el)
-    return tags.includes('step') && !tags.includes('s-multistep-result')
-  }) as GroupNode
+  const selection: readonly SceneNode[] = figma.currentPage.selection
+  if (!selection.length) {
+    return
+  }
+  const parentStep = findParentByTag(selection[0], 'step')
+  const lesson = parentStep.parent as FrameNode
+  const leaves = findLeafNodes(parentStep)
+  if (!parentStep || isResultStep(parentStep) || leaves.length <= 1) {
+    return
+  }
 
   let fillsByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
   let strokesByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
   let unknownNodes: SceneNode[] = []
 
-  findLeafNodes(firstStep).forEach((n: SceneNode) => {
+  findLeafNodes(parentStep).forEach((n: SceneNode) => {
     if (
       'fills' in n &&
       n.fills !== figma.mixed &&
@@ -251,6 +272,8 @@ export function splitByColor() {
   }
   createResultNode(lesson)
 
-  // Remove original node
-  lesson.children[0].remove()
+  // Remove original node if there are remains
+  if (!parentStep.removed) {
+    parentStep.remove()
+  }
 }
