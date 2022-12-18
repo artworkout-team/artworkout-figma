@@ -1,4 +1,4 @@
-import { findParent, findLeafNodes } from './util'
+import { findParent, findLeafNodes, getTags } from './util'
 
 interface nodeParameters {
   name: string
@@ -184,8 +184,8 @@ function createStepNode(
 
 export function separateStep() {
   const nodes: readonly SceneNode[] = figma.currentPage.selection
-  const parentStep = findParent(nodes[0], (n) => n.name.startsWith('step'))
-  if (!parentStep || parentStep.name === 'step s-multistep-result') {
+  const parentStep = findParent(nodes[0], (n) => getTags(n).includes('step'))
+  if (!parentStep || getTags(parentStep).includes('s-multistep-result')) {
     return
   }
   const frame = parentStep.parent
@@ -204,9 +204,10 @@ export function splitByColor() {
   const lesson = figma.currentPage.children.find(
     (el) => el.name === 'lesson'
   ) as FrameNode
-  const firstStep = lesson.children.find(
-    (el) => el.name.startsWith('step') && el.name !== 'step s-multistep-result'
-  ) as GroupNode
+  const firstStep = lesson.children.find((el) => {
+    const tags = getTags(el)
+    return tags.includes('step') && !tags.includes('s-multistep-result')
+  }) as GroupNode
 
   let fillsByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
   let strokesByColor: Map<string, SceneNode[]> = new Map<string, SceneNode[]>()
