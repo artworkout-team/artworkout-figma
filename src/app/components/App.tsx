@@ -38,6 +38,11 @@ function App() {
     )
   }
 
+  async function handleSplitByColor() {
+    await pluginApi.splitByColor()
+    emit('updateDisplay', { displayMode: 'all', stepNumber: 1 })
+  }
+
   return (
     <Tabs defaultActiveKey='tune' className='m-1'>
       <Tab eventKey='create' title='Create' className='m-2 text-center'>
@@ -48,9 +53,7 @@ function App() {
         <Button onClick={async () => pluginApi.separateStep()}>
           Separate step
         </Button>
-        <Button onClick={async () => pluginApi.splitByColor()}>
-          Split by color
-        </Button>
+        <Button onClick={handleSplitByColor}>Split by color</Button>
       </Tab>
 
       <Tab eventKey='tune' title='Tune' className='m-2'>
