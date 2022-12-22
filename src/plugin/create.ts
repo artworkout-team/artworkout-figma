@@ -1,4 +1,11 @@
-import { findParent, findLeafNodes, getTags } from './util'
+import {
+  findLeafNodes,
+  findLesson,
+  findParentByTag,
+  getNodeIndex,
+  getTags,
+  isResultStep,
+} from './util'
 
 interface nodeParameters {
   name: string
@@ -24,9 +31,9 @@ function fillServiceNodes(node: RectangleNode | EllipseNode) {
     {
       type: 'SOLID',
       color: {
-        r: 0.7686274647712708,
-        g: 0.7686274647712708,
-        b: 0.7686274647712708,
+        r: 196 / 255,
+        g: 196 / 255,
+        b: 196 / 255,
       },
     },
   ]
@@ -184,24 +191,6 @@ function createStepNode(
   nameStepNode(step)
 }
 
-function isResultStep(node: BaseNode) {
-  return node && getTags(node).includes('s-multistep-result')
-}
-
-function findParentByTag(node: BaseNode, tag: string): GroupNode {
-  return findParent(node, (n) => getTags(n).includes(tag))
-}
-
-function getNodeIndex(node: BaseNode) {
-  return node.parent.children.findIndex((n: BaseNode) => n.id === node.id)
-}
-
-function findLesson() {
-  return figma.currentPage.children.find(
-    (el) => el.name === 'lesson'
-  ) as FrameNode
-}
-
 export function separateStep() {
   const selection = figma.currentPage.selection
   const leaves = selection.filter((node) => !('children' in node))
@@ -212,7 +201,7 @@ export function separateStep() {
   if (isResultStep(firstParentStep)) {
     return
   }
-  const lesson = firstParentStep.parent as FrameNode
+  const lesson = findLesson()
   const index = getNodeIndex(firstParentStep)
   createStepNode(lesson, leaves, index)
 }
@@ -267,7 +256,7 @@ export function splitByColor() {
     return
   }
   const parentStep = findParentByTag(selection[0], 'step')
-  const lesson = parentStep.parent as FrameNode
+  const lesson = findLesson()
   const leaves = findLeafNodes(parentStep)
   if (!parentStep || isResultStep(parentStep) || leaves.length <= 1) {
     return

@@ -26,12 +26,30 @@ export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   }
 }
 
+export function getNodeIndex(node: BaseNode) {
+  return node.parent.children.findIndex((n: BaseNode) => n.id === node.id)
+}
+
+export function findLesson() {
+  return figma.currentPage.children.find(
+    (el) => el.name === 'lesson'
+  ) as FrameNode
+}
+
 export function getTags(node: BaseNode | Step) {
   return node.name.split(' ').filter(Boolean)
 }
 
 export function addTag(node: BaseNode, tag: string) {
   node.name = getTags(node).concat([tag]).join(' ')
+}
+
+export function findParentByTag(node: BaseNode, tag: string): GroupNode {
+  return findParent(node, (n) => getTags(n).includes(tag))
+}
+
+export function isResultStep(node: BaseNode) {
+  return node && getTags(node).includes('s-multistep-result')
 }
 
 export function print(text: string) {

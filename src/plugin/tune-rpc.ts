@@ -1,4 +1,4 @@
-import { getTags, findLeafNodes } from './util'
+import { getTags, findLeafNodes, findLesson } from './util'
 
 export interface Step {
   id: string
@@ -57,18 +57,14 @@ function getColors(node: GroupNode) {
 }
 
 export function getSteps(): Step[] {
-  const lesson = figma.currentPage.children.find(
-    (el) => el.name == 'lesson'
-  ) as FrameNode
+  const lesson = findLesson()
   return stepsByOrder(lesson).map((step: GroupNode) => {
     return { id: step.id, name: step.name, colors: getColors(step) }
   })
 }
 
 export function setStepOrder(steps: [{ id: string }]) {
-  const lesson = figma.currentPage.children.find(
-    (el) => el.name == 'lesson'
-  ) as FrameNode
+  const lesson = findLesson()
   steps.forEach((step, i) => {
     const s = lesson.findOne((el) => el.id == step.id)
     if (s) {
