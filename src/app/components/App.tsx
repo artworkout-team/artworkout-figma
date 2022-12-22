@@ -7,6 +7,7 @@ import InitParse from './InitParse'
 import { userStore } from '../models/user'
 import { PublishTab } from './PublishTab'
 import { pluginApi } from '../../rpc-api'
+import './App.css'
 
 function App() {
   const [textareaValue, setTextareaValue] = useState('')
@@ -46,14 +47,28 @@ function App() {
   return (
     <Tabs defaultActiveKey='tune' className='m-1'>
       <Tab eventKey='create' title='Create' className='m-2 text-center'>
-        <Button onClick={async () => pluginApi.createLesson()} className='m-2'>
+        <Button
+          onClick={async () => pluginApi.createLesson()}
+          className='plugin-btn'
+        >
           Create lesson
         </Button>
         {/* <Button>Set animations (CONFIRM)</Button> */}
-        <Button onClick={async () => pluginApi.separateStep()}>
+        <Button
+          onClick={async () => pluginApi.separateStep()}
+          className='plugin-btn'
+        >
           Separate step
         </Button>
-        <Button onClick={handleSplitByColor}>Split by color</Button>
+        <Button onClick={handleSplitByColor} className='plugin-btn'>
+          Split by color
+        </Button>
+        <Button
+          onClick={async () => pluginApi.joinSteps()}
+          className='plugin-btn'
+        >
+          Join steps
+        </Button>
       </Tab>
 
       <Tab eventKey='tune' title='Tune' className='m-2'>
