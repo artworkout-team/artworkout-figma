@@ -330,16 +330,17 @@ export function splitByColor() {
 export function joinSteps() {
   const selection = figma.currentPage.selection
   const allSteps = selection.every((n) => getTags(n).includes('step'))
-  if (!allSteps) {
-    return
-  }
   const steps = selection.filter((n) => !isResultStep(n))
-  if (steps.length < 2) {
+  if (!allSteps && steps.length < 2) {
     return
   }
-  const leaves = steps.map((n) => findLeafNodes(n as GroupNode)).flat()
-  const firstParentStep = steps[0]
+  const inputNodes = steps
+    .map((step: GroupNode) =>
+      step.children.filter((n) => n.name === 'input' && n.type === 'GROUP')
+    )
+    .flat() as GroupNode[]
+  const leaves = inputNodes.map((n) => n.children).flat()
   const lesson = findLesson()
-  const index = getNodeIndex(firstParentStep)
+  const index = getNodeIndex(steps[0])
   createStepNode(lesson, leaves, index)
 }
