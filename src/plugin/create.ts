@@ -331,7 +331,7 @@ export function joinSteps() {
   const selection = figma.currentPage.selection
   const allSteps = selection.every((n) => getTags(n).includes('step'))
   const steps = selection.filter((n) => !isResultStep(n))
-  if (!allSteps && steps.length < 2) {
+  if (!allSteps || steps.length < 2) {
     return
   }
   const inputNodes = steps
