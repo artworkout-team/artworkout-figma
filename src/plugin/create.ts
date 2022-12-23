@@ -196,6 +196,12 @@ function getNodeIndex(node: BaseNode) {
   return node.parent.children.findIndex((n: BaseNode) => n.id === node.id)
 }
 
+function findLesson() {
+  return figma.currentPage.children.find(
+    (el) => el.name === 'lesson'
+  ) as FrameNode
+}
+
 export function separateStep() {
   const selection = figma.currentPage.selection
   const leaves = selection.filter((node) => !('children' in node))
@@ -319,4 +325,22 @@ export function splitByColor() {
   if (!parentStep.removed) {
     parentStep.remove()
   }
+}
+
+export function joinSteps() {
+  const selection = figma.currentPage.selection
+  const allSteps = selection.every((n) => getTags(n).includes('step'))
+  const steps = selection.filter((n) => !isResultStep(n))
+  if (!allSteps || steps.length < 2) {
+    return
+  }
+  const inputNodes = steps
+    .map((step: GroupNode) =>
+      step.children.filter((n) => n.name === 'input' && n.type === 'GROUP')
+    )
+    .flat() as GroupNode[]
+  const leaves = inputNodes.map((n) => n.children).flat()
+  const lesson = findLesson()
+  const index = getNodeIndex(steps[0])
+  createStepNode(lesson, leaves, index)
 }
