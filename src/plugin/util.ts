@@ -30,7 +30,7 @@ export function getNodeIndex(node: BaseNode) {
   return node.parent.children.findIndex((n: BaseNode) => n.id === node.id)
 }
 
-export function findLesson() {
+export function getCurrentLesson() {
   return figma.currentPage.children.find(
     (el) => el.name === 'lesson'
   ) as FrameNode

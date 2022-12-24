@@ -1,4 +1,4 @@
-import { getTags, findLeafNodes, findLesson } from './util'
+import { getTags, findLeafNodes, getCurrentLesson } from './util'
 
 export interface Step {
   id: string
@@ -57,14 +57,14 @@ function getColors(node: GroupNode) {
 }
 
 export function getSteps(): Step[] {
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   return stepsByOrder(lesson).map((step: GroupNode) => {
     return { id: step.id, name: step.name, colors: getColors(step) }
   })
 }
 
 export function setStepOrder(steps: [{ id: string }]) {
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   steps.forEach((step, i) => {
     const s = lesson.findOne((el) => el.id == step.id)
     if (s) {

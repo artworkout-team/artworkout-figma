@@ -1,5 +1,5 @@
 import { emit, on } from '../events'
-import { findLesson, getTags } from './util'
+import { getCurrentLesson, getTags } from './util'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -157,7 +157,7 @@ function updateProps(settings: {
   stepNumber: number
   template: string
 }) {
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
     (t) => !t.startsWith('ss-') && !t.startsWith('bs-') && !t.startsWith('s-')
@@ -182,7 +182,7 @@ figma.on('currentpagechange', () => {
   updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
 })
 figma.on('selectionchange', () => {
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   const selection = figma.currentPage.selection[0]
   if (
     !selection ||

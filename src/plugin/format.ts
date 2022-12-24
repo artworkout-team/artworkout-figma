@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { addTag, findAll, findLesson, getTags } from './util'
+import { addTag, findAll, getCurrentLesson, getTags } from './util'
 
 function formatOrder(lesson: FrameNode) {
   if (lesson.findChild((n) => !!getTags(n).find((t) => /^o-/.test(t)))) {
@@ -86,4 +86,4 @@ function autoFormat() {
 }
 
 on('autoFormat', autoFormat)
-on('formatOrder', () => formatOrder(findLesson()))
+on('formatOrder', () => formatOrder(getCurrentLesson()))

@@ -1,6 +1,6 @@
 import {
   findLeafNodes,
-  findLesson,
+  getCurrentLesson,
   findParentByTag,
   getNodeIndex,
   getTags,
@@ -201,7 +201,7 @@ export function separateStep() {
   if (isResultStep(firstParentStep)) {
     return
   }
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   const index = getNodeIndex(firstParentStep)
   createStepNode(lesson, leaves, index)
 }
@@ -256,7 +256,7 @@ export function splitByColor() {
     return
   }
   const parentStep = findParentByTag(selection[0], 'step')
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   const leaves = findLeafNodes(parentStep)
   if (!parentStep || isResultStep(parentStep) || leaves.length <= 1) {
     return
@@ -329,7 +329,7 @@ export function joinSteps() {
     )
     .flat() as GroupNode[]
   const leaves = inputNodes.map((n) => n.children).flat()
-  const lesson = findLesson()
+  const lesson = getCurrentLesson()
   const index = getNodeIndex(steps[0])
   createStepNode(lesson, leaves, index)
 }
