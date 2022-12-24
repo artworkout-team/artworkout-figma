@@ -19,6 +19,7 @@ function DisplayForm() {
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
   const [steps, setSteps] = useState([])
+  const [suggestedBrushSize, setSuggestedBrushSize] = useState(0)
 
   const [mutex, setMutex] = useState(true)
 
@@ -36,6 +37,13 @@ function DisplayForm() {
     let index = sns.findIndex((node) => node.id === selectedNode.id)
     setStepNumber(index + 1)
   }
+
+  useEffect(() => {
+    const getBrushSize = async () => await pluginApi.getBrushSize()
+    getBrushSize()
+      .then((bs) => setSuggestedBrushSize(bs))
+      .catch((err) => console.error(err))
+  }, [onListUpdate])
 
   useEffect(() => {
     if (!mutex) {
@@ -168,7 +176,12 @@ function DisplayForm() {
             <Col>
               <Form.Select
                 value={template}
-                onChange={(e) => setTemplate(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === 'multistep-bg') {
+                    setShadowSize(0)
+                  }
+                  setTemplate(e.target.value)
+                }}
               >
                 <option value=''></option>
                 <option value='multistep-brush'>brush</option>
@@ -195,7 +208,7 @@ function DisplayForm() {
             <Form.Label column xs={5}>
               Brush size (AD)
             </Form.Label>
-            <Col>
+            <Col className='d-flex'>
               <Form.Control
                 type='number'
                 min={0}
@@ -203,6 +216,19 @@ function DisplayForm() {
                 onChange={(e) => setBrushSize(parseInt(e.target.value))}
                 step={5}
               />
+              <button
+                type='button'
+                className='btn btn-outline-light'
+                style={{
+                  marginLeft: '0.4rem',
+                  width: '50px',
+                  border: '1px solid lightgray',
+                  color: 'darkgray',
+                }}
+                onClick={() => setBrushSize(suggestedBrushSize)}
+              >
+                {suggestedBrushSize}
+              </button>
             </Col>
           </Form.Group>
         </Col>

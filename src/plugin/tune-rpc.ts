@@ -1,4 +1,10 @@
-import { getTags, findLeafNodes, getCurrentLesson } from './util'
+import {
+  getTags,
+  findLeafNodes,
+  getCurrentLesson,
+  findParentByTag,
+  isResultStep,
+} from './util'
 
 export interface Step {
   id: string
@@ -71,4 +77,17 @@ export function setStepOrder(steps: [{ id: string }]) {
       s.name = s.name.replace(/o-\d+/, 'o-' + (i + 1))
     }
   })
+}
+
+export function getBrushSize() {
+  const selection = figma.currentPage.selection
+  const parentStep = findParentByTag(selection[0], 'step')
+  if (isResultStep(parentStep)) {
+    return 0
+  }
+  const leaves = findLeafNodes(parentStep)
+  let strokes = leaves.filter((n) => 'strokes' in n && n.strokes.length > 0)
+  let strokeWeightsArr = strokes.map((node) => node['strokeWeight'] || 0)
+  let maxWeight = Math.max(...strokeWeightsArr)
+  return strokes.length > 0 ? maxWeight : 25
 }
