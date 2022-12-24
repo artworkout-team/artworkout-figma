@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { addTag, findAll, getTags } from './util'
+import { addTag, findAll, getCurrentLesson, getTags } from './util'
 
 function formatOrder(lesson: FrameNode) {
   if (lesson.findChild((n) => !!getTags(n).find((t) => /^o-/.test(t)))) {
@@ -86,8 +86,4 @@ function autoFormat() {
 }
 
 on('autoFormat', autoFormat)
-on('formatOrder', () =>
-  formatOrder(
-    figma.currentPage.findChild((t) => t.name == 'lesson') as FrameNode
-  )
-)
+on('formatOrder', () => formatOrder(getCurrentLesson()))

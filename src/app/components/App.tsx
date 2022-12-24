@@ -78,19 +78,19 @@ function App() {
       <Tab eventKey='format' title='Format' className='m-2'>
         <Stack gap={2}>
           <div>
-            <Button className='m-1' onClick={() => emit('lintCourse')}>
+            <Button className='plugin-btn' onClick={() => emit('lintCourse')}>
               Lint course
             </Button>
-            <Button className='m-1' onClick={() => emit('lintPage')}>
+            <Button className='plugin-btn' onClick={() => emit('lintPage')}>
               Lint page
             </Button>
-            <Button className='m-1' onClick={() => emit('autoFormat')}>
+            <Button className='plugin-btn' onClick={() => emit('autoFormat')}>
               Auto format
             </Button>
-            <Button className='m-1' onClick={() => emit('formatOrder')}>
+            <Button className='plugin-btn' onClick={() => emit('formatOrder')}>
               Format order
             </Button>
-            <Button className='m-1' onClick={exportTexts}>
+            <Button className='plugin-btn' onClick={exportTexts}>
               Texts
             </Button>
           </div>
