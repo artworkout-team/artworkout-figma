@@ -212,12 +212,12 @@ function DisplayForm() {
                 step={5}
               />
             </Col>
-            <Col xs={2} className='p-0 mx-1'>
+            <Col xs={3}>
               <button
                 type='button'
                 className='btn btn-outline-light'
                 style={{
-                  width: '48px',
+                  width: '100%',
                   border: '1px solid lightgray',
                   color: 'darkgray',
                 }}
