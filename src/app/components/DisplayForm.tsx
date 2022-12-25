@@ -19,6 +19,7 @@ function DisplayForm() {
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
   const [steps, setSteps] = useState([])
+  const [suggestedBrushSize, setSuggestedBrushSize] = useState(0)
 
   const [mutex, setMutex] = useState(true)
 
@@ -28,6 +29,14 @@ function DisplayForm() {
 
   function onDisplayModeChange(event: FormEvent) {
     setDisplayMode((event.target as HTMLInputElement).value)
+  }
+
+  function onTemplateChange(event: FormEvent) {
+    const targetSelect = event.target as HTMLSelectElement
+    if (targetSelect.value === 'multistep-bg') {
+      setShadowSize(0)
+    }
+    setTemplate(targetSelect.value)
   }
 
   async function onListUpdate(selectedNode) {
@@ -56,6 +65,7 @@ function DisplayForm() {
       async (settings: {
         shadowSize: number
         brushSize: number
+        suggestedBrushSize: number
         stepCount: number
         stepNumber: number
         displayMode: string
@@ -64,6 +74,7 @@ function DisplayForm() {
         setMutex(true)
         setShadowSize(settings.shadowSize)
         setBrushSize(settings.brushSize)
+        setSuggestedBrushSize(settings.suggestedBrushSize)
         setStepCount(settings.stepCount)
         setStepNumber(settings.stepNumber)
         setDisplayMode(settings.displayMode)
@@ -166,10 +177,7 @@ function DisplayForm() {
               Template
             </Form.Label>
             <Col>
-              <Form.Select
-                value={template}
-                onChange={(e) => setTemplate(e.target.value)}
-              >
+              <Form.Select value={template} onChange={onTemplateChange}>
                 <option value=''></option>
                 <option value='multistep-brush'>brush</option>
                 <option value='multistep-bg'>bg</option>
@@ -203,6 +211,20 @@ function DisplayForm() {
                 onChange={(e) => setBrushSize(parseInt(e.target.value))}
                 step={5}
               />
+            </Col>
+            <Col xs={3}>
+              <button
+                type='button'
+                className='btn btn-outline-light'
+                style={{
+                  width: '100%',
+                  border: '1px solid lightgray',
+                  color: 'darkgray',
+                }}
+                onClick={() => setBrushSize(suggestedBrushSize)}
+              >
+                {suggestedBrushSize}
+              </button>
             </Col>
           </Form.Group>
         </Col>

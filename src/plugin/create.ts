@@ -168,9 +168,7 @@ function nameStepNode(step: GroupNode) {
   )
   let strokes = leaves.filter((n) => 'strokes' in n && n.strokes.length > 0)
   let multistepType = fills.length > 0 ? 'bg' : 'brush'
-  let strokeWeightsArr = strokes.map((node) => {
-    return node['strokeWeight'] || 0
-  })
+  let strokeWeightsArr = strokes.map((node) => node['strokeWeight'] || 0)
   let maxWeight = Math.max(...strokeWeightsArr)
   let weight: number = strokes.length > 0 ? maxWeight : 25
   step.name = `step s-multistep-${multistepType} bs-${weight}`
