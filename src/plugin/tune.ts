@@ -1,5 +1,5 @@
 import { emit, on } from '../events'
-import { getCurrentLesson, getTags } from './util'
+import { findLeafNodes, getCurrentLesson, getTags, isResultStep } from './util'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -93,6 +93,14 @@ function displayBrushSize(lesson: FrameNode, step: GroupNode) {
   group.y = lesson.y - 80
 }
 
+function getBrushSize(step: GroupNode) {
+  const leaves = findLeafNodes(step)
+  const strokes = leaves.filter((n) => 'strokes' in n && n.strokes.length > 0)
+  const strokeWeightsArr = strokes.map((node) => node['strokeWeight'] || 0)
+  const maxWeight = Math.max(...strokeWeightsArr)
+  return strokes.length > 0 ? maxWeight : 25
+}
+
 function updateDisplay(
   page: PageNode,
   settings: { displayMode: string; stepNumber: number }
@@ -109,9 +117,11 @@ function updateDisplay(
   const stepCount = lesson.children.filter((n) =>
     getTags(n).includes('step')
   ).length
+  const maxStrokeWeight = getBrushSize(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')),
     brushSize: parseInt(getTag(step, 'bs-')),
+    suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-'),
     stepCount,
     stepNumber,

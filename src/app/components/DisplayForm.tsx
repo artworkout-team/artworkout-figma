@@ -31,19 +31,20 @@ function DisplayForm() {
     setDisplayMode((event.target as HTMLInputElement).value)
   }
 
+  function onTemplateChange(event: FormEvent) {
+    const targetSelect = event.target as HTMLSelectElement
+    if (targetSelect.value === 'multistep-bg') {
+      setShadowSize(0)
+    }
+    setTemplate(targetSelect.value)
+  }
+
   async function onListUpdate(selectedNode) {
     let sns = await pluginApi.getSteps()
     setSteps(sns)
     let index = sns.findIndex((node) => node.id === selectedNode.id)
     setStepNumber(index + 1)
   }
-
-  useEffect(() => {
-    const getBrushSize = async () => await pluginApi.getBrushSize()
-    getBrushSize()
-      .then((bs) => setSuggestedBrushSize(bs))
-      .catch((err) => console.error(err))
-  }, [onListUpdate])
 
   useEffect(() => {
     if (!mutex) {
@@ -64,6 +65,7 @@ function DisplayForm() {
       async (settings: {
         shadowSize: number
         brushSize: number
+        suggestedBrushSize: number
         stepCount: number
         stepNumber: number
         displayMode: string
@@ -72,6 +74,7 @@ function DisplayForm() {
         setMutex(true)
         setShadowSize(settings.shadowSize)
         setBrushSize(settings.brushSize)
+        setSuggestedBrushSize(settings.suggestedBrushSize)
         setStepCount(settings.stepCount)
         setStepNumber(settings.stepNumber)
         setDisplayMode(settings.displayMode)
@@ -174,15 +177,7 @@ function DisplayForm() {
               Template
             </Form.Label>
             <Col>
-              <Form.Select
-                value={template}
-                onChange={(e) => {
-                  if (e.target.value === 'multistep-bg') {
-                    setShadowSize(0)
-                  }
-                  setTemplate(e.target.value)
-                }}
-              >
+              <Form.Select value={template} onChange={onTemplateChange}>
                 <option value=''></option>
                 <option value='multistep-brush'>brush</option>
                 <option value='multistep-bg'>bg</option>
@@ -208,7 +203,7 @@ function DisplayForm() {
             <Form.Label column xs={5}>
               Brush size (AD)
             </Form.Label>
-            <Col className='d-flex'>
+            <Col>
               <Form.Control
                 type='number'
                 min={0}
@@ -216,12 +211,13 @@ function DisplayForm() {
                 onChange={(e) => setBrushSize(parseInt(e.target.value))}
                 step={5}
               />
+            </Col>
+            <Col xs={2} className='p-0 mx-1'>
               <button
                 type='button'
                 className='btn btn-outline-light'
                 style={{
-                  marginLeft: '0.4rem',
-                  width: '50px',
+                  width: '48px',
                   border: '1px solid lightgray',
                   color: 'darkgray',
                 }}
