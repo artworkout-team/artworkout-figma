@@ -96,7 +96,7 @@ export function PublishTab() {
     courseObject.set('path', cp)
     courseObject.set('thumbnail', thumbnailFile)
     courseObject.set('author', userSnapshot.user)
-    courseObject.set('order', -1)
+    courseObject.set('order', debug ? -1 : 10)
     if (courseObject.isNew()) {
       courseObject.set('name', {
         en: capitalize(cp.split('-').join(' ')),
