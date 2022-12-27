@@ -1,5 +1,6 @@
 import { on } from '../events'
 import { print, getTags, findAll } from './util'
+import { updateDisplay } from './tune'
 
 interface LintError {
   page?: PageNode
@@ -450,6 +451,7 @@ function lintPage(page: PageNode) {
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
+  updateDisplay(page, { displayMode: 'all', stepNumber: 1 })
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),

@@ -101,7 +101,7 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
-function updateDisplay(
+export function updateDisplay(
   page: PageNode,
   settings: { displayMode: string; stepNumber: number }
 ) {
