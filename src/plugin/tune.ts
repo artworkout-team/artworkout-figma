@@ -101,6 +101,27 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
+function getClearLayerNumbers(step: GroupNode): number[] {
+  const prefix = 'clear-layer-'
+  const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
+  if (clearLayersStep.length !== 1) {
+    return []
+  }
+  const layerNumbers = clearLayersStep[0]
+    .slice(prefix.length)
+    .split(',')
+    .map(Number)
+  return layerNumbers
+}
+
+function getClearBeforeStep(step: GroupNode) {
+  if (
+    getTags(step).filter((tag) => tag.includes('clear-before')).length === 1
+  ) {
+    return step
+  }
+}
+
 export function updateDisplay(
   page: PageNode,
   settings: { displayMode: string; stepNumber: number }
@@ -118,6 +139,8 @@ export function updateDisplay(
     getTags(n).includes('step')
   ).length
   const maxStrokeWeight = getBrushSize(step)
+  const clearLayersStep = getClearLayerNumbers(step)
+  const clearBeforeStep = getClearBeforeStep(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')),
     brushSize: parseInt(getTag(step, 'bs-')),
@@ -148,6 +171,15 @@ export function updateDisplay(
       stepsByOrder(lesson).forEach((step, i) => {
         step.visible = i < stepNumber
       })
+      if (clearLayersStep.length > 0) {
+        clearLayersStep.forEach((layer) => {
+          lesson.children[layer].visible = false
+        })
+      } else if (clearBeforeStep) {
+        lesson.children.forEach((layer, i) => {
+          layer.visible = i > lesson.children.indexOf(clearBeforeStep)
+        })
+      }
       break
 
     case 'template':
