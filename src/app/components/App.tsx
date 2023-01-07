@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 import { emit, on } from '../../events'
 import { Tabs, Tab, Button, Stack } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -39,9 +39,35 @@ function App() {
     )
   }
 
+  async function importTexts() {
+    let failed = false
+    const regexp = /^"([^"]+)" = "(.*)";\s*$/g
+    const strings = textareaValue
+      .split('\n')
+      .filter((str) => str.trim().length > 0)
+      .map((str) => {
+        const matches = str.matchAll(regexp)
+        const match = matches.next().value
+        if (match) {
+          return match[2]
+        } else {
+          failed = true
+        }
+      })
+    if (!failed) {
+      await pluginApi.importTexts(strings)
+    } else {
+      await pluginApi.displayNotification('Invalid strings format')
+    }
+  }
+
   async function handleSplitByColor() {
     await pluginApi.splitByColor()
     emit('updateDisplay', { displayMode: 'all', stepNumber: 1 })
+  }
+
+  function handleTextAreaValue(event: ChangeEvent) {
+    setTextareaValue((event.target as HTMLTextAreaElement).value)
   }
 
   return (
@@ -91,12 +117,15 @@ function App() {
               Format order
             </Button>
             <Button className='plugin-btn' onClick={exportTexts}>
-              Texts
+              Export Texts
+            </Button>
+            <Button className='plugin-btn' onClick={importTexts}>
+              Import Texts
             </Button>
           </div>
           <textarea
             value={textareaValue}
-            onChange={() => {}}
+            onChange={handleTextAreaValue}
             onClick={selectError}
             id='output'
             style={{ whiteSpace: 'pre', overflow: 'auto' }}

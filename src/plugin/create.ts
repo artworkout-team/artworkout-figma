@@ -244,7 +244,7 @@ function replaceColor(
 }
 
 const black: RGB = { r: 0, g: 0, b: 0 }
-const nearBlack: RGB = { r: 23 / 255, g: 23 / 255, b: 23 / 255 }
+export const nearBlack: RGB = { r: 23 / 255, g: 23 / 255, b: 23 / 255 }
 const white: RGB = { r: 255 / 255, g: 255 / 255, b: 255 / 255 }
 const nearWhite: RGB = { r: 235 / 255, g: 235 / 255, b: 235 / 255 }
 

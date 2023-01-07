@@ -57,4 +57,8 @@ export function print(text: string) {
   emit('print', text)
 }
 
+export function displayNotification(message: string) {
+  figma.notify(message)
+}
+
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
