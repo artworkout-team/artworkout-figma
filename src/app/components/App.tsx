@@ -1,100 +1,23 @@
-import React, { ChangeEvent, useEffect, useState } from 'react'
-import { emit, on } from '../../events'
-import { Tabs, Tab, Button, Stack } from 'react-bootstrap'
+import React, { useEffect } from 'react'
+import { Tabs, Tab } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import DisplayForm from './DisplayForm'
 import InitParse from './InitParse'
 import { userStore } from '../models/user'
 import { PublishTab } from './PublishTab'
-import { pluginApi } from '../../rpc-api'
-import './App.css'
+import { FormatTab } from './FormatTab'
+import { CreateTab } from './CreateTab'
 
 function App() {
-  const [textareaValue, setTextareaValue] = useState('')
-  useEffect(() => {
-    return on('print', setTextareaValue)
-  })
-
   useEffect(() => {
     InitParse()
     userStore.loadUser()
   }, [])
 
-  function getLineNumber() {
-    let tArea = document.querySelector('#output') as HTMLTextAreaElement
-    return tArea.value.substr(0, tArea.selectionStart).split('\n').length
-  }
-
-  function selectError() {
-    emit('selectError', getLineNumber() - 1)
-  }
-
-  async function exportTexts() {
-    setTextareaValue(
-      (await pluginApi.exportTexts())
-        .map((s) => {
-          return `"${s}" = "${s}";`
-        })
-        .join('\n')
-    )
-  }
-
-  async function importTexts() {
-    let failed = false
-    const regexp = /^"([^"]+)" = "(.*)";\s*$/g
-    const strings = textareaValue
-      .split('\n')
-      .filter((str) => str.trim().length > 0)
-      .map((str) => {
-        const matches = str.matchAll(regexp)
-        const match = matches.next().value
-        if (match) {
-          return match[2]
-        } else {
-          failed = true
-        }
-      })
-    if (!failed) {
-      await pluginApi.importTexts(strings)
-    } else {
-      await pluginApi.displayNotification('Invalid strings format')
-    }
-  }
-
-  async function handleSplitByColor() {
-    await pluginApi.splitByColor()
-    emit('updateDisplay', { displayMode: 'all', stepNumber: 1 })
-  }
-
-  function handleTextAreaValue(event: ChangeEvent) {
-    setTextareaValue((event.target as HTMLTextAreaElement).value)
-  }
-
   return (
     <Tabs defaultActiveKey='tune' className='m-1'>
       <Tab eventKey='create' title='Create' className='m-2 text-center'>
-        <Button
-          onClick={async () => pluginApi.createLesson()}
-          className='plugin-btn'
-        >
-          Create lesson
-        </Button>
-        {/* <Button>Set animations (CONFIRM)</Button> */}
-        <Button
-          onClick={async () => pluginApi.separateStep()}
-          className='plugin-btn'
-        >
-          Separate step
-        </Button>
-        <Button onClick={handleSplitByColor} className='plugin-btn'>
-          Split by color
-        </Button>
-        <Button
-          onClick={async () => pluginApi.joinSteps()}
-          className='plugin-btn'
-        >
-          Join steps
-        </Button>
+        <CreateTab />
       </Tab>
 
       <Tab eventKey='tune' title='Tune' className='m-2'>
@@ -102,37 +25,7 @@ function App() {
       </Tab>
 
       <Tab eventKey='format' title='Format' className='m-2'>
-        <Stack gap={2}>
-          <div>
-            <Button className='plugin-btn' onClick={() => emit('lintCourse')}>
-              Lint course
-            </Button>
-            <Button className='plugin-btn' onClick={() => emit('lintPage')}>
-              Lint page
-            </Button>
-            <Button className='plugin-btn' onClick={() => emit('autoFormat')}>
-              Auto format
-            </Button>
-            <Button className='plugin-btn' onClick={() => emit('formatOrder')}>
-              Format order
-            </Button>
-            <Button className='plugin-btn' onClick={exportTexts}>
-              Export Texts
-            </Button>
-            <Button className='plugin-btn' onClick={importTexts}>
-              Import Texts
-            </Button>
-          </div>
-          <textarea
-            value={textareaValue}
-            onChange={handleTextAreaValue}
-            onClick={selectError}
-            id='output'
-            style={{ whiteSpace: 'pre', overflow: 'auto' }}
-            cols={83}
-            rows={18}
-          ></textarea>
-        </Stack>
+        <FormatTab />
       </Tab>
 
       <Tab eventKey='publish' title='Publish' className='m-2'>
