@@ -26,44 +26,22 @@ function getStyledSegments(node: TextNode) {
 
 function escape(str: string) {
   return str
-    .replaceAll('\\', '\\\\')
-    .replaceAll('"', '\\q')
-    .replaceAll('|', '\\l')
-    .replaceAll('\n', '\\n')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\|/g, '\\l')
+    .replace(/\n/g, '\\n')
 }
 
+const replacements = { '\\\\': '\\', '\\n': '\n', '\\"': '"', '\\l': '|' }
+
 function unescape(str: string) {
-  let strOut = ''
-  for (var i = 0; i < str.length; i++) {
-    const c = str[i]
-    if (c === '|' || c === '"') {
-      // forbidden char
-      return null
-    } else if (c === '\\') {
-      i++
-      if (i < str.length) {
-        const cNext = str[i]
-        if (cNext === '\\') {
-          strOut += '\\'
-        } else if (cNext === 'q') {
-          strOut += '"'
-        } else if (cNext === 'l') {
-          strOut += '|'
-        } else if (cNext === 'n') {
-          strOut += '\n'
-        } else {
-          // forbidden escaped symbol
-          return null
-        }
-      } else {
-        // unescaped slash at last position
-        return null
-      }
-    } else {
-      strOut += c
-    }
+  if (str.match(/\|/) || str.match(/(?<!\\)"/)) {
+    return null
   }
-  return strOut
+
+  return str.replace(/\\(\\|n|"|l)/g, function (replace) {
+    return replacements[replace]
+  })
 }
 
 function getFormattedText(node: TextNode) {
@@ -97,6 +75,25 @@ export function exportTexts() {
   )
 }
 
+async function loadFonts(texts: TextNode[]) {
+  const allFonts: { family: string; style: string }[] = []
+  texts.forEach((txt) => {
+    getStyledSegments(txt).map((s) => {
+      allFonts.push(s.fontName)
+    })
+  })
+  const uniqueFonts = allFonts.filter(
+    (value, index, self) =>
+      index ===
+      self.findIndex(
+        (t) => t.family === value.family && t.style === value.style
+      )
+  )
+  for (let font of uniqueFonts) {
+    await figma.loadFontAsync(font)
+  }
+}
+
 export async function importTexts(translations: {}) {
   if (Object.keys(translations).length === 0) {
     displayNotification('Empty input')
@@ -104,35 +101,35 @@ export async function importTexts(translations: {}) {
   }
 
   const texts = findTexts(figma.currentPage)
-  await figma.loadFontAsync({ family: 'Inter', style: 'Regular' })
-  await figma.loadFontAsync({ family: 'Montserrat', style: 'Regular' })
+  await loadFonts(texts as TextNode[])
   texts.forEach((txt: TextNode) => {
     const formattedText = getFormattedText(txt)
     const translation: string = translations[formattedText]
-    if (translation !== undefined) {
-      let errorMessage: string
-      const oldSegments = formattedText.split('|')
-      const newSegments = translation.split('|').map((str) => {
-        const result = unescape(str)
-        if (result === null) {
-          errorMessage = `Failed to unescape: ${str}`
-        }
-        return result
-      })
-      // special case: delete all text
-      if (newSegments.length === 1 && newSegments[0] === '') {
-        txt.characters = ''
-        return
+    if (translation === undefined) {
+      return
+    }
+    let errorMessage: string
+    const oldSegments = formattedText.split('|')
+    const newSegments = translation.split('|').map((str) => {
+      const result = unescape(str)
+      if (result === null) {
+        errorMessage = `Failed to unescape: ${str}`
       }
-      // do not allow segments length mismatch
-      if (newSegments.length !== oldSegments.length) {
-        errorMessage = `Segment count mismatch: expected ${oldSegments.length}, got ${newSegments.length}`
-      }
-      if (errorMessage) {
-        displayNotification(errorMessage)
-      } else {
-        importStyledSegments(newSegments, txt)
-      }
+      return result
+    })
+    // special case: delete all text
+    if (newSegments.length === 1 && newSegments[0] === '') {
+      txt.characters = ''
+      return
+    }
+    // do not allow segments length mismatch
+    if (newSegments.length !== oldSegments.length) {
+      errorMessage = `Wrong segment count (${newSegments.length} ≠ ${oldSegments.length}): ${formattedText}`
+    }
+    if (errorMessage) {
+      displayNotification(errorMessage)
+    } else {
+      importStyledSegments(newSegments, txt)
     }
   })
 }

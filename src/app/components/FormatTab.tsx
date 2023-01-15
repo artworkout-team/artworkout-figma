@@ -2,7 +2,7 @@ import React, { useEffect, useState, ChangeEvent } from 'react'
 import { Stack, Button } from 'react-bootstrap'
 import { emit, on } from '../../events'
 import { pluginApi } from '../../rpc-api'
-import './FormatTab.css'
+import './App.css'
 
 export function FormatTab() {
   const [textareaValue, setTextareaValue] = useState('')
@@ -26,13 +26,15 @@ export function FormatTab() {
 
   async function importTexts() {
     let errorMessage: string
-    const regexp = /^"([^"]+)" = "([^"]*)";$/g
+    const regexp = /^"(.+)"\s*=\s*"(.*)";$/g
     let texts = {}
     textareaValue
+      .replace(/\/\*.*?\*\//g, '')
       .split('\n')
-      .map((str) => str.trimEnd())
+      //.map((str) => str.split('//')[0])
+      .map((str) => str.trim())
       .filter((str) => str.length > 0)
-      .map((str) => {
+      .forEach((str) => {
         const match = str.matchAll(regexp).next().value
         if (match) {
           const key = match[1]
