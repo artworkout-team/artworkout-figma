@@ -117,12 +117,21 @@ function getClearLayerNumbers(step: GroupNode): number[] {
   return layerNumbers
 }
 
-function getClearBeforeStep(step: GroupNode) {
-  if (
-    getTags(step).filter((tag) => tag.includes('clear-before')).length === 1
-  ) {
-    return step
-  }
+function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
+  const currentLayerNumber = lesson.children.indexOf(step)
+  const clearLayerNumbers = new Set<number>()
+  lesson.children.forEach((layer, i) => {
+    if (layer.type === 'GROUP' && i <= currentLayerNumber) {
+      let clearIdxs: number[]
+      if (getTags(layer).includes('clear-before')) {
+        clearIdxs = [...Array(i).keys()].slice(1)
+      } else {
+        clearIdxs = getClearLayerNumbers(layer)
+      }
+      clearIdxs.forEach((idx) => clearLayerNumbers.add(idx))
+    }
+  })
+  return clearLayerNumbers
 }
 
 export function updateDisplay(
@@ -142,8 +151,6 @@ export function updateDisplay(
     getTags(n).includes('step')
   ).length
   const maxStrokeWeight = getBrushSize(step)
-  const clearLayersStep = getClearLayerNumbers(step)
-  const clearBeforeStep = getClearBeforeStep(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')),
     brushSize: parseInt(getTag(step, 'bs-')),
@@ -174,15 +181,9 @@ export function updateDisplay(
       stepsByOrder(lesson).forEach((step, i) => {
         step.visible = i < stepNumber
       })
-      if (clearLayersStep.length > 0) {
-        clearLayersStep.forEach((layer) => {
-          lesson.children[layer].visible = false
-        })
-      } else if (clearBeforeStep) {
-        lesson.children.forEach((layer, i) => {
-          layer.visible = i > lesson.children.indexOf(clearBeforeStep)
-        })
-      }
+      collectLayerNumbersToClear(lesson, step).forEach(
+        (i) => (lesson.children[i].visible = false)
+      )
       break
 
     case 'template':
