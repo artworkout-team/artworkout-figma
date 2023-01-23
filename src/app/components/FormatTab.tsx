@@ -2,7 +2,6 @@ import React, { useEffect, useState, ChangeEvent } from 'react'
 import { Stack, Button } from 'react-bootstrap'
 import { emit, on } from '../../events'
 import { pluginApi } from '../../rpc-api'
-import './App.css'
 
 export function FormatTab() {
   const [textareaValue, setTextareaValue] = useState('')

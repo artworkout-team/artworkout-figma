@@ -2,7 +2,6 @@ import React from 'react'
 import { Button } from 'react-bootstrap'
 import { pluginApi } from '../../rpc-api'
 import { emit } from '../../events'
-import './App.css'
 
 export function CreateTab() {
   async function handleSplitByColor() {

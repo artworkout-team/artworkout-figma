@@ -7,6 +7,7 @@ import { userStore } from '../models/user'
 import { PublishTab } from './PublishTab'
 import { FormatTab } from './FormatTab'
 import { CreateTab } from './CreateTab'
+import './App.css'
 
 function App() {
   useEffect(() => {
