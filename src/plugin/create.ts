@@ -1,3 +1,4 @@
+import { getSteps, setStepOrder } from './tune-rpc'
 import {
   findLeafNodes,
   getCurrentLesson,
@@ -5,6 +6,8 @@ import {
   getNodeIndex,
   getTags,
   isResultStep,
+  getStepNumber,
+  setStepNumber,
 } from './util'
 
 interface nodeParameters {
@@ -140,6 +143,8 @@ export function createLesson() {
   lesson.appendChild(settingsEllipse)
 
   originalImage.remove()
+  const newSteps = getSteps()
+  setStepOrder(newSteps)
 }
 
 function stringifyColor(color: RGB) {
@@ -187,6 +192,14 @@ function createStepNode(
   input.name = 'input'
   const step = figma.group([input], node, index)
   nameStepNode(step)
+  return step
+}
+
+function getLastStepNumber() {
+  const stepNumbers = getSteps()
+    .map((s) => getStepNumber(s))
+    .filter((s) => s !== undefined)
+  return Math.max(...stepNumbers)
 }
 
 export function separateStep() {
@@ -201,7 +214,15 @@ export function separateStep() {
   }
   const lesson = getCurrentLesson()
   const index = getNodeIndex(firstParentStep)
-  createStepNode(lesson, leaves, index)
+  const step = createStepNode(lesson, leaves, index)
+  const resultStep = lesson.children.find((n) =>
+    getTags(n).includes('s-multistep-result')
+  )
+  const lastStepNumber = getLastStepNumber()
+  if (lastStepNumber > 0) {
+    setStepNumber(resultStep, lastStepNumber + 1)
+    setStepNumber(step, lastStepNumber) // last step before result
+  }
 }
 
 function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
@@ -300,8 +321,8 @@ export function splitByColor() {
   }
 
   // Make sure the result is located at the end
-  const result = lesson.children.find(
-    (n) => n.name === 'step s-multistep-result'
+  const result = lesson.children.find((n) =>
+    getTags(n).includes('s-multistep-result')
   )
   if (result) {
     result.remove()
@@ -311,6 +332,15 @@ export function splitByColor() {
   // Remove original node if there are remains
   if (!parentStep.removed) {
     parentStep.remove()
+  }
+
+  // set order to steps
+  const newSteps = getSteps()
+  const lastStepNumber = getLastStepNumber()
+  if (lastStepNumber > 0) {
+    setStepOrder(newSteps, lastStepNumber)
+  } else {
+    setStepOrder(newSteps)
   }
 }
 
@@ -329,5 +359,9 @@ export function joinSteps() {
   const leaves = inputNodes.map((n) => n.children).flat()
   const lesson = getCurrentLesson()
   const index = getNodeIndex(steps[0])
-  createStepNode(lesson, leaves, index)
+  const firstStepNumber = getStepNumber(steps[0])
+  const joinedStep = createStepNode(lesson, leaves, index)
+  if (firstStepNumber) {
+    setStepNumber(joinedStep, firstStepNumber)
+  }
 }

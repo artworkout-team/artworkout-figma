@@ -1,4 +1,4 @@
-import { getTags, findLeafNodes, getCurrentLesson } from './util'
+import { getTags, findLeafNodes, getCurrentLesson, setStepNumber } from './util'
 
 export interface Step {
   id: string
@@ -63,12 +63,12 @@ export function getSteps(): Step[] {
   })
 }
 
-export function setStepOrder(steps: [{ id: string }]) {
+export function setStepOrder(steps: Step[], lastStepNumber: number = 1) {
   const lesson = getCurrentLesson()
   steps.forEach((step, i) => {
     const s = lesson.findOne((el) => el.id == step.id)
     if (s) {
-      s.name = s.name.replace(/o-\d+/, 'o-' + (i + 1))
+      setStepNumber(s, i + lastStepNumber)
     }
   })
 }

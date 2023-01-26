@@ -22,7 +22,7 @@ export function StepList({
     const newStepOrder = Array.from(steps)
     const [removed] = newStepOrder.splice(result.source.index, 1)
     newStepOrder.splice(result.destination.index, 0, removed)
-    await pluginApi.setStepOrder(newStepOrder as any)
+    await pluginApi.setStepOrder(newStepOrder)
     onUpdate(removed)
   }
 
