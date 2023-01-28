@@ -96,8 +96,8 @@ export function PublishTab() {
     courseObject.set('path', cp)
     courseObject.set('thumbnail', thumbnailFile)
     courseObject.set('author', userSnapshot.user)
-    courseObject.set('order', debug ? -1 : 10)
     if (courseObject.isNew()) {
+      courseObject.set('order', debug ? -1 : 10)
       courseObject.set('name', {
         en: capitalize(cp.split('-').join(' ')),
       }) // make all languages the same for now, just copy EN
