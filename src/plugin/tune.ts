@@ -41,7 +41,10 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
   const template = input.clone() as GroupNode
   template.name = 'tmp-template'
   template
-    .findAll((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
+    .findAll((el) => getTags(el).includes('rgb-template'))
+    .map((el) => findLeafNodes(el))
+    .flat()
+    .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
     .forEach((el: VectorNode) => {
       if (el.strokes.length > 0) {
         el.strokes = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
