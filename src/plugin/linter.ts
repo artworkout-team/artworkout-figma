@@ -181,7 +181,7 @@ function lintGroup(page: PageNode, node: GroupNode) {
   )
   tags.forEach((tag) => {
     assert(
-      /^blink$|^rgb-template$|^d\d+$|^r\d+$/.test(tag),
+      /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$/.test(tag),
       `Tag '${tag}' unknown`,
       page,
       node
@@ -299,8 +299,8 @@ function lintStep(page: PageNode, step: GroupNode) {
     ErrorLevel.INFO
   )
   assert(
-    !bs || bs >= 15 || brushName == 'pencil',
-    'Should not use bs<15',
+    !bs || bs >= 10 || brushName == 'pencil',
+    `Should not use bs<10. ${bs}<10`,
     page,
     step,
     ErrorLevel.INFO
@@ -327,8 +327,14 @@ function lintStep(page: PageNode, step: GroupNode) {
   )
   assert(order !== 'layers' || !!o, 'Must have o-N order number', page, step)
 
-  const sf = step.findOne((n: VectorNode) => n.strokes?.length > 0)
-  const ffs = step.findAll((n: VectorNode) => n.fills && n.fills[0])
+  const sf = step.findOne(
+    (n: VectorNode) =>
+      getTags(n).includes('rgb-template') && n.strokes?.length > 0
+  )
+  const ffs = step.findAll(
+    (n: VectorNode) =>
+      getTags(n).includes('rgb-template') && n.fills && n.fills[0]
+  )
   const bigFfs = ffs.filter((n: VectorNode) => n.width > 27 || n.height > 27)
   const ff = ffs.length > 0
 
@@ -429,14 +435,14 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
       assert(false, "Must be 'settings' or 'step'", page, step)
     }
   }
-  assert(
-    maxBs > (zoomScale - 1) * 12.8,
-    `zoom-scale ${zoomScale} must be ${Math.ceil(
-      maxBs / 12.8
-    )} for max bs ${maxBs} used`,
-    page,
-    node
-  )
+  // assert(
+  //   maxBs > (zoomScale - 1) * 12.8,
+  //   `zoom-scale ${zoomScale} must be ${Math.ceil(
+  //     maxBs / 12.8
+  //   )} for max bs ${maxBs} used`,
+  //   page,
+  //   node
+  // )
 }
 
 function lintThumbnail(page: PageNode, node: FrameNode) {
