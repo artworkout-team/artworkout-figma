@@ -119,18 +119,18 @@ function getClearLayerNumbers(step: GroupNode): number[] {
 
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentLayerNumber = lesson.children.indexOf(step)
-  const clearLayerNumbers = new Set<number>()
-  lesson.children.forEach((layer, i) => {
+  const clearLayerNumbers = lesson.children.reduce((acc, layer, i) => {
     if (layer.type === 'GROUP' && i <= currentLayerNumber) {
-      let clearIdxs: number[]
+      let clearIdxs = []
       if (getTags(layer).includes('clear-before')) {
-        clearIdxs = [...Array(i).keys()].slice(1)
+        clearIdxs.push([...Array(i).keys()].slice(1))
       } else {
-        clearIdxs = getClearLayerNumbers(layer)
+        clearIdxs.push(getClearLayerNumbers(layer))
       }
-      clearIdxs.forEach((idx) => clearLayerNumbers.add(idx))
+      clearIdxs.flat().forEach((idx) => acc.add(idx))
     }
-  })
+    return acc
+  }, new Set<number>())
   return clearLayerNumbers
 }
 
