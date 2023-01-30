@@ -1,5 +1,11 @@
 import { emit, on } from '../events'
-import { findLeafNodes, getCurrentLesson, getTags, isResultStep } from './util'
+import {
+  findLeafNodes,
+  getCurrentLesson,
+  getStepNumber,
+  getTags,
+  isResultStep,
+} from './util'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -104,7 +110,7 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
-function getClearLayerNumbers(step: GroupNode): number[] {
+function getClearLayerNumbers(step: SceneNode): number[] {
   const prefix = 'clear-layer-'
   const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
   if (clearLayersStep.length !== 1) {
@@ -117,20 +123,39 @@ function getClearLayerNumbers(step: GroupNode): number[] {
   return layerNumbers
 }
 
+function getLayerNumbersForClearBefore(lesson: FrameNode, step: SceneNode) {
+  const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
+  let stepsToClear: number[] = []
+  if (getTags(step).includes('clear-before')) {
+    stepsToClear = [...Array(getStepNumber(step)).keys()].slice(1)
+  }
+  return stepsToClear.map((stepNumber) => {
+    if (layersStepNumbers.includes(stepNumber)) {
+      return layersStepNumbers.indexOf(stepNumber)
+    }
+  })
+}
+
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentLayerNumber = lesson.children.indexOf(step)
-  const clearLayerNumbers = lesson.children.reduce(
-    (acc, layer: GroupNode, i) => {
-      if (i > currentLayerNumber) {
-        return acc
-      }
-      getTags(layer).includes('clear-before')
-        ? [...Array(i).keys()].slice(1).forEach((idx) => acc.add(idx))
-        : getClearLayerNumbers(layer).forEach((idx) => acc.add(idx))
+  const isResult = isResultStep(step)
+  const clearLayerNumbers = lesson.children.reduce((acc, layer, i) => {
+    if (
+      layer.type !== 'GROUP' ||
+      (i > currentLayerNumber && !isResult)
+      // result step can be on any position, but we treat is as the last step
+    ) {
       return acc
-    },
-    new Set<number>()
-  )
+    }
+    // calculate step numbers and convert to layers to clear
+    getLayerNumbersForClearBefore(lesson, layer).forEach((idx) => {
+      if (idx !== undefined) {
+        acc.add(idx)
+      }
+    })
+    getClearLayerNumbers(layer).forEach((idx) => acc.add(idx))
+    return acc
+  }, new Set<number>())
   return clearLayerNumbers
 }
 
@@ -181,9 +206,9 @@ export function updateDisplay(
       stepsByOrder(lesson).forEach((step, i) => {
         step.visible = i < stepNumber
       })
-      collectLayerNumbersToClear(lesson, step).forEach(
-        (i) => (lesson.children[i].visible = false)
-      )
+      collectLayerNumbersToClear(lesson, step).forEach((i) => {
+        lesson.children[i].visible = false
+      })
       break
 
     case 'template':
