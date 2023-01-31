@@ -80,69 +80,78 @@ function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => descendants(n as GroupNode))
 }
 
-function lintVector(page: PageNode, node: VectorNode) {
-  assert(node.opacity == 1, 'Must be opaque', page, node)
-  assert(node.visible, 'Must be visible', page, node)
-  let tags = getTags(node)
-  assert(
-    tags.length > 0,
-    'Name must not be empty. Use slash to /ignore.',
-    page,
-    node
-  )
-  tags.forEach((tag) => {
-    assert(
-      /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$/.test(
-        tag
-      ),
-      `Tag '${tag}' unknown. Use slash to /ignore.`,
-      page,
-      node
-    )
+function lintFills(node: VectorNode, page: PageNode, fills: Paint[], rgbt: string) {
+  fills.forEach((f) => {
+    console.log('fills', f)
+    assert(f.visible, 'Fill must be visible', page, node)
+    assert(!rgbt, 'Fill must be solid', page, node)
+    let f1 = f as SolidPaint
+
+    if (f.type === 'IMAGE'){
+      assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
+    }
+    if (f.type === 'GRADIENT_LINEAR'){
+      assert(f.gradientStops[0].color.r != 0 || f.gradientStops[0].color.g != 0 || f.gradientStops[0].color.b != 0, 'Fills gradient start color must not be black', page, node)
+      assert(f.gradientStops[1].color.r != 0 || f.gradientStops[1].color.g != 0 || f.gradientStops[1].color.b != 0, 'Fills gradient end color must not be black', page, node)
+
+      assert(f.gradientStops[0].color.r != 1 || f.gradientStops[0].color.g != 1 || f.gradientStops[0].color.b != 1, 'Fills gradient start color must not be white', page, node)
+      assert(f.gradientStops[1].color.r != 1 || f.gradientStops[1].color.g != 1 || f.gradientStops[1].color.b != 1, 'Fills gradient end color must not be white', page, node)
+    }
+    if (f.type === 'SOLID'){
+      assert(
+        f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
+        'Fill color must not be black',
+        page,
+        node
+      )
+      assert(
+        f1.color.r != 1 || f1.color.g != 1 || f1.color.b != 1,
+        'Fill color must not be white',
+        page,
+        node
+      )
+    }
   })
-  let fills = node.fills as Paint[]
-  let strokes = node.strokes
-  assert(
-    !fills.length || !strokes.length,
-    'Should not have fill+stroke',
-    page,
-    node,
-    ErrorLevel.WARN
-  )
+}
+
+function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[], rgbt: string) {
   strokes.forEach((s) => {
     assert(s.visible, 'Stroke must be visible', page, node)
-    assert(s.type == 'SOLID', 'Stroke must be solid', page, node)
-    let s1 = s as SolidPaint
-    assert(
-      s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0,
-      'Stroke color must not be black',
-      page,
-      node
-    )
-    assert(
-      s1.color.r != 1 || s1.color.g != 1 || s1.color.b != 1,
-      'Stroke color must not be white',
-      page,
-      node
-    )
+    assert(!rgbt, 'Stroke must be solid', page, node)
+    if (s.type === 'IMAGE'){
+      assert(s.opacity == 1, 'Image stroke must not be opaque', page, node)
+    }
+    if(s.type === 'SOLID') {
+      let s1 = s as SolidPaint
+      assert(
+        s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0,
+        'Stroke color must not be black',
+        page,
+        node
+      )
+      assert(
+        s1.color.r != 1 || s1.color.g != 1 || s1.color.b != 1,
+        'Stroke color must not be white',
+        page,
+        node
+      )
+    }
+
+    if (s.type === 'GRADIENT_LINEAR'){
+      assert(s.gradientStops[0].color.r != 0 || s.gradientStops[0].color.g != 0 || s.gradientStops[0].color.b != 0, 'Stroke gradient start color must not be black', page, node)
+      assert(s.gradientStops[s.gradientStops.length - 1].color.r != 0 || s.gradientStops[s.gradientStops.length -1].color.g != 0 || s.gradientStops[s.gradientStops.length -1].color.b != 0,
+        'Stroke gradient end color must not be black',
+        page,
+        node)
+
+      assert(s.gradientStops[0].color.r != 1 || s.gradientStops[0].color.g != 1 || s.gradientStops[0].color.b != 1, 'Stroke gradient start color must not be white', page, node)
+      assert(s.gradientStops[s.gradientStops.length - 1].color.r != 1 || s.gradientStops[s.gradientStops.length - 1].color.g != 1 || s.gradientStops[s.gradientStops.length - 1].color.b != 1,
+        'Stroke gradient end color must not be white',
+        page,
+        node)
+    }
   })
-  fills.forEach((f) => {
-    assert(f.visible, 'Fill must be visible', page, node)
-    assert(f.type == 'SOLID', 'Fill must be solid', page, node)
-    let f1 = f as SolidPaint
-    assert(
-      f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
-      'Fill color must not be black',
-      page,
-      node
-    )
-    assert(
-      f1.color.r != 1 || f1.color.g != 1 || f1.color.b != 1,
-      'Fill color must not be white',
-      page,
-      node
-    )
-  })
+
   assert(
     !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)),
     `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`,
@@ -157,9 +166,49 @@ function lintVector(page: PageNode, node: VectorNode) {
     node,
     ErrorLevel.INFO
   )
+}
+
+const validVectorTags = /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
+
+function lintVector(page: PageNode, node: VectorNode) {
+  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.visible, 'Must be visible', page, node)
+  let tags = getTags(node)
+
+  assert(
+    tags.length > 0,
+    'Name must not be empty. Use slash to /ignore.',
+    page,
+    node
+  )
+  tags.forEach((tag) => {
+    assert(
+      validVectorTags.test(
+        tag
+      ),
+      `Tag '${tag}' unknown. Use slash to /ignore.`,
+      page,
+      node
+    )
+  })
+  let fills = node.fills as Paint[]
+  let strokes = node.strokes as Paint[]
+  assert(
+    !fills.length || !strokes.length,
+    'Should not have fill+stroke',
+    page,
+    node,
+    ErrorLevel.WARN
+  )
+
   const rgbt = tags.find((s) => /^rgb-template$/.test(s))
   const anim = tags.find((s) => /^blink$|^draw-line$/.test(s))
+
+  lintStrokes(node, page, strokes, rgbt)
+  lintFills(node, page, fills, rgbt)
+
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
+
 }
 
 function lintGroup(page: PageNode, node: GroupNode) {
@@ -252,6 +301,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
     return
   }
+  console.log('linting step', step.name)
   assert(step.opacity == 1, 'Must be opaque', page, step)
   assert(step.visible, 'Must be visible', page, step)
   const tags = getTags(step)
@@ -429,6 +479,7 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     })
   }
   for (let step of node.children) {
+    console.log('step', step.name)
     if (step.name.startsWith('step')) {
       lintStep(page, step as GroupNode)
     } else if (!step.name.startsWith('settings')) {
@@ -457,6 +508,7 @@ function lintPage(page: PageNode) {
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
+
   updateDisplay(page, { displayMode: 'all', stepNumber: 1 })
   if (
     !assert(
@@ -479,6 +531,7 @@ function lintPage(page: PageNode) {
   )
   for (let node of page.children) {
     if (node.name == 'lesson') {
+      console.log('node type', node.type)
       lintTaskFrame(page, node as FrameNode)
     } else if (node.name == 'thumbnail') {
       lintThumbnail(page, node as FrameNode)
