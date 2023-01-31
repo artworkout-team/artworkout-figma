@@ -82,7 +82,6 @@ function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[], rgbt: string) {
   fills.forEach((f) => {
-    console.log('fills', f)
     assert(f.visible, 'Fill must be visible', page, node)
     assert(!rgbt, 'Fill must be solid', page, node)
     let f1 = f as SolidPaint
@@ -301,7 +300,6 @@ function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
     return
   }
-  console.log('linting step', step.name)
   assert(step.opacity == 1, 'Must be opaque', page, step)
   assert(step.visible, 'Must be visible', page, step)
   const tags = getTags(step)
@@ -479,7 +477,6 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     })
   }
   for (let step of node.children) {
-    console.log('step', step.name)
     if (step.name.startsWith('step')) {
       lintStep(page, step as GroupNode)
     } else if (!step.name.startsWith('settings')) {
@@ -531,7 +528,6 @@ function lintPage(page: PageNode) {
   )
   for (let node of page.children) {
     if (node.name == 'lesson') {
-      console.log('node type', node.type)
       lintTaskFrame(page, node as FrameNode)
     } else if (node.name == 'thumbnail') {
       lintThumbnail(page, node as FrameNode)
