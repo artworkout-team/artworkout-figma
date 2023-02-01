@@ -123,21 +123,9 @@ function getClearLayerNumbers(step: SceneNode): number[] {
   return layerNumbers
 }
 
-function getLayerNumbersForClearBefore(lesson: FrameNode, step: SceneNode) {
-  const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
-  let stepsToClear: number[] = []
-  if (getTags(step).includes('clear-before')) {
-    stepsToClear = [...Array(getStepNumber(step)).keys()].slice(1)
-  }
-  return stepsToClear.map((stepNumber) => {
-    if (layersStepNumbers.includes(stepNumber)) {
-      return layersStepNumbers.indexOf(stepNumber)
-    }
-  })
-}
-
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentLayerNumber = lesson.children.indexOf(step)
+  const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
   const isResult = isResultStep(step)
   const clearLayerNumbers = lesson.children.reduce((acc, layer, i) => {
     if (
@@ -148,11 +136,14 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
       return acc
     }
     // calculate step numbers and convert to layers to clear
-    getLayerNumbersForClearBefore(lesson, layer).forEach((idx) => {
-      if (idx !== undefined) {
-        acc.add(idx)
-      }
-    })
+    if (getTags(layer).includes('clear-before')) {
+      const stepsToClear = [...Array(getStepNumber(layer)).keys()].slice(1)
+      stepsToClear.forEach((stepNumber) => {
+        if (layersStepNumbers.includes(stepNumber)) {
+          acc.add(layersStepNumbers.indexOf(stepNumber))
+        }
+      })
+    }
     getClearLayerNumbers(layer).forEach((idx) => acc.add(idx))
     return acc
   }, new Set<number>())
