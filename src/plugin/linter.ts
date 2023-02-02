@@ -89,13 +89,6 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[], rgbt: strin
     if (f.type === 'IMAGE'){
       assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
     }
-    if (f.type === 'GRADIENT_LINEAR'){
-      assert(f.gradientStops[0].color.r != 0 || f.gradientStops[0].color.g != 0 || f.gradientStops[0].color.b != 0, 'Fills gradient start color must not be black', page, node)
-      assert(f.gradientStops[1].color.r != 0 || f.gradientStops[1].color.g != 0 || f.gradientStops[1].color.b != 0, 'Fills gradient end color must not be black', page, node)
-
-      assert(f.gradientStops[0].color.r != 1 || f.gradientStops[0].color.g != 1 || f.gradientStops[0].color.b != 1, 'Fills gradient start color must not be white', page, node)
-      assert(f.gradientStops[1].color.r != 1 || f.gradientStops[1].color.g != 1 || f.gradientStops[1].color.b != 1, 'Fills gradient end color must not be white', page, node)
-    }
     if (f.type === 'SOLID'){
       assert(
         f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
@@ -118,7 +111,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[], rgbt: s
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(!rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE'){
-      assert(s.opacity == 1, 'Image stroke must not be opaque', page, node)
+      assert(s.opacity == 1, 'Image stroke must be opaque', page, node)
     }
     if(s.type === 'SOLID') {
       let s1 = s as SolidPaint
@@ -134,20 +127,6 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[], rgbt: s
         page,
         node
       )
-    }
-
-    if (s.type === 'GRADIENT_LINEAR'){
-      assert(s.gradientStops[0].color.r != 0 || s.gradientStops[0].color.g != 0 || s.gradientStops[0].color.b != 0, 'Stroke gradient start color must not be black', page, node)
-      assert(s.gradientStops[s.gradientStops.length - 1].color.r != 0 || s.gradientStops[s.gradientStops.length -1].color.g != 0 || s.gradientStops[s.gradientStops.length -1].color.b != 0,
-        'Stroke gradient end color must not be black',
-        page,
-        node)
-
-      assert(s.gradientStops[0].color.r != 1 || s.gradientStops[0].color.g != 1 || s.gradientStops[0].color.b != 1, 'Stroke gradient start color must not be white', page, node)
-      assert(s.gradientStops[s.gradientStops.length - 1].color.r != 1 || s.gradientStops[s.gradientStops.length - 1].color.g != 1 || s.gradientStops[s.gradientStops.length - 1].color.b != 1,
-        'Stroke gradient end color must not be white',
-        page,
-        node)
     }
   })
 
