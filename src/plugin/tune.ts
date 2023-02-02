@@ -124,19 +124,13 @@ function getClearLayerNumbers(step: SceneNode): number[] {
 }
 
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
-  const currentLayerNumber = lesson.children.indexOf(step)
   const currentStepNumber = getStepNumber(step)
   const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
-  const isResult = isResultStep(step)
-  const clearLayerNumbers = lesson.children.reduce((acc, layer, i) => {
-    // result step can be on any position, but we treat is as the last step
-    if (layer.type !== 'GROUP' && !isResult) {
+  const clearLayerNumbers = lesson.children.reduce((acc, layer) => {
+    if (layer.type !== 'GROUP' || getStepNumber(layer) > currentStepNumber) {
       return acc
     }
-    if (
-      getTags(layer).includes('clear-before') &&
-      getStepNumber(layer) <= currentStepNumber
-    ) {
+    if (getTags(layer).includes('clear-before')) {
       // calculate step numbers and convert to layers to clear
       const stepsToClear = [...Array(getStepNumber(layer)).keys()].slice(1)
       stepsToClear.forEach((stepNumber) => {
@@ -144,9 +138,6 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
           acc.add(layersStepNumbers.indexOf(stepNumber))
         }
       })
-    }
-    if (i > currentLayerNumber) {
-      return acc
     }
     getClearLayerNumbers(layer).forEach((idx) => acc.add(idx))
     return acc
