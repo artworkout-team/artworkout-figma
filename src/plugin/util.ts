@@ -68,9 +68,10 @@ export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function getStepNumber(step: SceneNode | Step): number {
   const stepOrderTag = /^o-(\d+)$/
-  return getTags(step)
-    .filter((tag) => tag.match(stepOrderTag))
-    .map((tag) => Number(tag.match(stepOrderTag)[1]))[0]
+  const stepTag = getTags(step).find((tag) => tag.match(stepOrderTag))
+  if (stepTag) {
+    return Number(stepTag.match(stepOrderTag)[1])
+  }
 }
 
 export function setStepNumber(step: SceneNode, stepNumber: number) {
