@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { print, getTags, findAll } from './util'
+import { print, getTags, findAll, findTag } from './util'
 import { updateDisplay } from './tune'
 
 interface LintError {
@@ -80,7 +80,8 @@ function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => descendants(n as GroupNode))
 }
 
-function lintFills(node: VectorNode, page: PageNode, fills: Paint[], rgbt: string) {
+function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
+  const rgbt = findTag(node, /^rgb-template$/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(!rgbt, 'Fill must be solid', page, node)
@@ -106,7 +107,8 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[], rgbt: strin
   })
 }
 
-function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[], rgbt: string) {
+function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
+  const rgbt = findTag(node, /^rgb-template$/)
   strokes.forEach((s) => {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(!rgbt, 'Stroke must be solid', page, node)
@@ -179,11 +181,11 @@ function lintVector(page: PageNode, node: VectorNode) {
     ErrorLevel.WARN
   )
 
-  const rgbt = tags.find((s) => /^rgb-template$/.test(s))
-  const anim = tags.find((s) => /^blink$|^draw-line$/.test(s))
+  const rgbt = findTag(node, /^rgb-template$/)
+  const anim = findTag(node, /^draw-line$|^blink$/)
 
-  lintStrokes(node, page, strokes, rgbt)
-  lintFills(node, page, fills, rgbt)
+  lintStrokes(node, page, strokes)
+  lintFills(node, page, fills)
 
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
 
