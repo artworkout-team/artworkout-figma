@@ -1,5 +1,11 @@
 import { emit, on } from '../events'
-import { findLeafNodes, getCurrentLesson, getTags, isResultStep } from './util'
+import {
+  findLeafNodes,
+  getCurrentLesson,
+  getStepNumber,
+  getTags,
+  isResultStep,
+} from './util'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -104,7 +110,7 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
-function getClearLayerNumbers(step: GroupNode): number[] {
+function getClearLayerNumbers(step: SceneNode): number[] {
   const prefix = 'clear-layer-'
   const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
   if (clearLayersStep.length !== 1) {
@@ -117,12 +123,26 @@ function getClearLayerNumbers(step: GroupNode): number[] {
   return layerNumbers
 }
 
-function getClearBeforeStep(step: GroupNode) {
-  if (
-    getTags(step).filter((tag) => tag.includes('clear-before')).length === 1
-  ) {
-    return step
-  }
+function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
+  const currentStepNumber = getStepNumber(step)
+  const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
+  const clearLayerNumbers = lesson.children.reduce((acc, layer) => {
+    if (layer.type !== 'GROUP' || getStepNumber(layer) > currentStepNumber) {
+      return acc
+    }
+    if (getTags(layer).includes('clear-before')) {
+      // calculate step numbers and convert to layers to clear
+      const stepsToClear = [...Array(getStepNumber(layer)).keys()].slice(1)
+      stepsToClear.forEach((stepNumber) => {
+        if (layersStepNumbers.includes(stepNumber)) {
+          acc.add(layersStepNumbers.indexOf(stepNumber))
+        }
+      })
+    }
+    getClearLayerNumbers(layer).forEach((idx) => acc.add(idx))
+    return acc
+  }, new Set<number>())
+  return clearLayerNumbers
 }
 
 export function updateDisplay(
@@ -142,8 +162,6 @@ export function updateDisplay(
     getTags(n).includes('step')
   ).length
   const maxStrokeWeight = getBrushSize(step)
-  const clearLayersStep = getClearLayerNumbers(step)
-  const clearBeforeStep = getClearBeforeStep(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')),
     brushSize: parseInt(getTag(step, 'bs-')),
@@ -174,15 +192,9 @@ export function updateDisplay(
       stepsByOrder(lesson).forEach((step, i) => {
         step.visible = i < stepNumber
       })
-      if (clearLayersStep.length > 0) {
-        clearLayersStep.forEach((layer) => {
-          lesson.children[layer].visible = false
-        })
-      } else if (clearBeforeStep) {
-        lesson.children.forEach((layer, i) => {
-          layer.visible = i > lesson.children.indexOf(clearBeforeStep)
-        })
-      }
+      collectLayerNumbersToClear(lesson, step).forEach((i) => {
+        lesson.children[i].visible = false
+      })
       break
 
     case 'template':
