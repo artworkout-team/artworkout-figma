@@ -1643,10 +1643,26 @@ function getClearLayerNumbers(step) {
         .map(Number);
     return layerNumbers;
 }
-function getClearBeforeStep(step) {
-    if (Object(_util__WEBPACK_IMPORTED_MODULE_1__["getTags"])(step).filter((tag) => tag.includes('clear-before')).length === 1) {
-        return step;
-    }
+function collectLayerNumbersToClear(lesson, step) {
+    const currentStepNumber = Object(_util__WEBPACK_IMPORTED_MODULE_1__["getStepNumber"])(step);
+    const layersStepNumbers = lesson.children.map((s) => Object(_util__WEBPACK_IMPORTED_MODULE_1__["getStepNumber"])(s));
+    const clearLayerNumbers = lesson.children.reduce((acc, layer) => {
+        if (layer.type !== 'GROUP' || Object(_util__WEBPACK_IMPORTED_MODULE_1__["getStepNumber"])(layer) > currentStepNumber) {
+            return acc;
+        }
+        if (Object(_util__WEBPACK_IMPORTED_MODULE_1__["getTags"])(layer).includes('clear-before')) {
+            // calculate step numbers and convert to layers to clear
+            const stepsToClear = [...Array(Object(_util__WEBPACK_IMPORTED_MODULE_1__["getStepNumber"])(layer)).keys()].slice(1);
+            stepsToClear.forEach((stepNumber) => {
+                if (layersStepNumbers.includes(stepNumber)) {
+                    acc.add(layersStepNumbers.indexOf(stepNumber));
+                }
+            });
+        }
+        getClearLayerNumbers(layer).forEach((idx) => acc.add(idx));
+        return acc;
+    }, new Set());
+    return clearLayerNumbers;
 }
 function updateDisplay(page, settings) {
     lastPage = page;
@@ -1660,8 +1676,6 @@ function updateDisplay(page, settings) {
     page.selection = [step];
     const stepCount = lesson.children.filter((n) => Object(_util__WEBPACK_IMPORTED_MODULE_1__["getTags"])(n).includes('step')).length;
     const maxStrokeWeight = getBrushSize(step);
-    const clearLayersStep = getClearLayerNumbers(step);
-    const clearBeforeStep = getClearBeforeStep(step);
     Object(_events__WEBPACK_IMPORTED_MODULE_0__["emit"])('updateForm', {
         shadowSize: parseInt(getTag(step, 'ss-')),
         brushSize: parseInt(getTag(step, 'bs-')),
@@ -1690,16 +1704,9 @@ function updateDisplay(page, settings) {
             stepsByOrder(lesson).forEach((step, i) => {
                 step.visible = i < stepNumber;
             });
-            if (clearLayersStep.length > 0) {
-                clearLayersStep.forEach((layer) => {
-                    lesson.children[layer].visible = false;
-                });
-            }
-            else if (clearBeforeStep) {
-                lesson.children.forEach((layer, i) => {
-                    layer.visible = i > lesson.children.indexOf(clearBeforeStep);
-                });
-            }
+            collectLayerNumbersToClear(lesson, step).forEach((i) => {
+                lesson.children[i].visible = false;
+            });
             break;
         case 'template':
             displayBrushSize(lesson, step);
@@ -1753,7 +1760,7 @@ figma.on('selectionchange', () => {
 /*!****************************!*\
   !*** ./src/plugin/util.ts ***!
   \****************************/
-/*! exports provided: findAll, findLeafNodes, findParent, getNodeIndex, getCurrentLesson, getTags, addTag, findParentByTag, isResultStep, print, displayNotification, capitalize */
+/*! exports provided: findAll, findLeafNodes, findParent, getNodeIndex, getCurrentLesson, getTags, addTag, findParentByTag, isResultStep, print, displayNotification, capitalize, getStepNumber */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1770,6 +1777,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "print", function() { return print; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "displayNotification", function() { return displayNotification; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "capitalize", function() { return capitalize; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getStepNumber", function() { return getStepNumber; });
 /* harmony import */ var _events__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../events */ "./src/events.ts");
 
 function findAll(node, f) {
@@ -1823,6 +1831,13 @@ function displayNotification(message) {
     figma.notify(message);
 }
 const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+function getStepNumber(step) {
+    const stepOrderTag = /^o-(\d+)$/;
+    const stepTag = getTags(step).find((tag) => tag.match(stepOrderTag));
+    if (stepTag) {
+        return Number(stepTag.match(stepOrderTag)[1]);
+    }
+}
 
 
 /***/ }),
