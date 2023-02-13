@@ -84,13 +84,13 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
   const rgbt = findTag(node, /^rgb-template$/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
-    assert(!rgbt, 'Fill must be solid', page, node)
+    assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
     let f1 = f as SolidPaint
 
-    if (f.type === 'IMAGE'){
+    if (f.type === 'IMAGE') {
       assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
     }
-    if (f.type === 'SOLID'){
+    if (f.type === 'SOLID') {
       assert(
         f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
         'Fill color must not be black',
@@ -111,11 +111,11 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
   const rgbt = findTag(node, /^rgb-template$/)
   strokes.forEach((s) => {
     assert(s.visible, 'Stroke must be visible', page, node)
-    assert(!rgbt, 'Stroke must be solid', page, node)
-    if (s.type === 'IMAGE'){
+    assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
+    if (s.type === 'IMAGE') {
       assert(s.opacity == 1, 'Image stroke must be opaque', page, node)
     }
-    if(s.type === 'SOLID') {
+    if (s.type === 'SOLID') {
       let s1 = s as SolidPaint
       assert(
         s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0,
@@ -148,7 +148,8 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
   )
 }
 
-const validVectorTags = /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
+const validVectorTags =
+  /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
 
 function lintVector(page: PageNode, node: VectorNode) {
   assert(node.opacity == 1, 'Must be opaque', page, node)
@@ -163,9 +164,7 @@ function lintVector(page: PageNode, node: VectorNode) {
   )
   tags.forEach((tag) => {
     assert(
-      validVectorTags.test(
-        tag
-      ),
+      validVectorTags.test(tag),
       `Tag '${tag}' unknown. Use slash to /ignore.`,
       page,
       node
@@ -188,7 +187,6 @@ function lintVector(page: PageNode, node: VectorNode) {
   lintFills(node, page, fills)
 
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
-
 }
 
 function lintGroup(page: PageNode, node: GroupNode) {
