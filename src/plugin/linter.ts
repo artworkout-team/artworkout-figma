@@ -1,4 +1,3 @@
-import { on } from '../events'
 import { print, getTags, findAll, findTag } from './util'
 import { updateDisplay } from './tune'
 
@@ -53,16 +52,16 @@ export async function printErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
   let sortedErrors = errors.sort((a, b) => a.level - b.level)
     .map((e) => {
-    return {
-      ignore: e.ignore,
-      pageName: e.page?.name,
-      nodeName: e.node?.name,
-      nodeType: e.node?.type,
-      error: e.error,
-      level: e.level,
-      errorColor: e.level,
-    } as unknown as errorsForPrint
-  })
+      return {
+        ignore: e.ignore,
+        pageName: e.page?.name,
+        nodeName: e.node?.name,
+        nodeType: e.node?.type,
+        error: e.error,
+        level: e.level,
+        errorColor: e.level,
+      } as unknown as errorsForPrint
+    })
   if (savedErrors) {
     sortedErrors = sortedErrors.map((e) => {
       const savedError = savedErrors.find((s) => s.pageName === e.pageName && s.nodeName === e.nodeName && s.error === e.error)
@@ -82,6 +81,11 @@ export async function printErrors() {
     .join('\n')
   text += '\nDone'
   print(text)
+  selectError(0)
+  return {
+    tableErrors: sortedErrors ,
+    textErrors: text,
+  }
 }
 
 function assert(
