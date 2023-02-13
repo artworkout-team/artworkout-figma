@@ -43,6 +43,11 @@ export function getTags(node: BaseNode | Step) {
   return node.name.split(' ').filter(Boolean)
 }
 
+export function findTag(node: BaseNode | Step, tag: RegExp) {
+  const tags = getTags(node)
+  return tags.find((s) => tag.test(s))
+}
+
 export function addTag(node: BaseNode, tag: string) {
   node.name = getTags(node).concat([tag]).join(' ')
 }
@@ -65,3 +70,11 @@ export function displayNotification(message: string) {
 }
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+export function getStepNumber(step: SceneNode | Step): number {
+  const stepOrderTag = /^o-(\d+)$/
+  const stepTag = getTags(step).find((tag) => tag.match(stepOrderTag))
+  if (stepTag) {
+    return Number(stepTag.match(stepOrderTag)[1])
+  }
+}
