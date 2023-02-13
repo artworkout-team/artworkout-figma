@@ -1,12 +1,22 @@
-import { on } from '../events'
-import { print, getTags, findAll } from './util'
+import { getTags, findAll } from './util'
 import { updateDisplay } from './tune'
 
-interface LintError {
+export interface LintError {
+  ignore?: boolean
   page?: PageNode
   node?: SceneNode
   error: string
   level: ErrorLevel
+}
+
+export interface errorsForPrint {
+  ignore?: boolean
+  pageName?: string
+  nodeName?: string
+  nodeType?: string
+  error: string
+  level: ErrorLevel
+  errorColor: ErrorColor
 }
 
 let errors: LintError[] = []
@@ -14,13 +24,19 @@ let zoomScale = 1
 let maxBs = 12.8
 let order = 'steps'
 
-enum ErrorLevel {
+export enum ErrorLevel {
   ERROR,
   WARN,
   INFO,
 }
 
-function selectError(index: number) {
+export enum ErrorColor {
+  '#ff0000',
+  '#ff9900',
+  '#00ff00',
+}
+
+export function selectError(index: number) {
   if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
@@ -31,9 +47,30 @@ function selectError(index: number) {
   // }, 0)
 }
 
-function printErrors() {
-  errors.sort((a, b) => a.level - b.level)
-  selectError(0)
+export async function printErrors() {
+  figma.ui.resize(750, 400)
+  const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
+  let sortedErrors = errors.sort((a, b) => a.level - b.level)
+    .map((e) => {
+    return {
+      ignore: e.ignore,
+      pageName: e.page?.name,
+      nodeName: e.node?.name,
+      nodeType: e.node?.type,
+      error: e.error,
+      level: e.level,
+      errorColor: e.level,
+    } as unknown as errorsForPrint
+  })
+  if (savedErrors) {
+    sortedErrors = sortedErrors.map((e) => {
+      const savedError = savedErrors.find((s) => s.pageName === e.pageName && s.nodeName === e.nodeName && s.error === e.error)
+      if (savedError) {
+        e.ignore = savedError.ignore
+      }
+      return e
+    })
+  }
   let text = errors
     .map(
       (e) =>
@@ -43,7 +80,11 @@ function printErrors() {
     )
     .join('\n')
   text += '\nDone'
-  print(text)
+  selectError(0)
+  return {
+    tableErrors: sortedErrors ,
+    textErrors: text,
+  }
 }
 
 function assert(
@@ -109,7 +150,9 @@ function lintVector(page: PageNode, node: VectorNode) {
     node,
     ErrorLevel.WARN
   )
+
   strokes.forEach((s) => {
+    if(s.type !== 'SOLID') return
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID', 'Stroke must be solid', page, node)
     let s1 = s as SolidPaint
@@ -127,6 +170,7 @@ function lintVector(page: PageNode, node: VectorNode) {
     )
   })
   fills.forEach((f) => {
+    if(f.type !== 'SOLID') return
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID', 'Fill must be solid', page, node)
     let f1 = f as SolidPaint
@@ -453,7 +497,8 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-function lintPage(page: PageNode) {
+function lintPage(currentPage?: PageNode | null) {
+  const page = currentPage?  currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
@@ -533,17 +578,17 @@ function lintCourse() {
   }
 }
 
-on('selectError', selectError)
-on('lintCourse', () => {
+export function onLintCourse() {
   errors = []
   lintCourse()
-  printErrors()
-})
-on('lintPage', () => {
+  return printErrors()
+}
+export function onLintPage(currentPage?: PageNode | null) {
   errors = []
-  lintPage(figma.currentPage)
-  printErrors()
-})
+  lintPage(currentPage)
+  return printErrors()
+}
 
-// no hidden fill/stroke
-// no effects
+export function saveErrors(errorsForPrint: errorsForPrint[]) {
+  return figma.clientStorage.setAsync('errorsForPrint', errorsForPrint)
+}

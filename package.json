@@ -56,5 +56,8 @@
     "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.11.2",
     "ws": "^7.4.5"
+  },
+  "dependencies": {
+    "react-bootstrap-icons": "^1.10.2"
   }
 }

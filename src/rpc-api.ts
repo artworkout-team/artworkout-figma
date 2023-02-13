@@ -9,7 +9,8 @@ import {
   joinSteps,
 } from './plugin/create'
 import { displayNotification } from './plugin/util'
-
+import { onLintPage, onLintCourse, selectError, saveErrors } from './plugin/linter'
+import { selectionChanged, currentPageChanged, updateDisplay } from './plugin/tune'
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
   setSessionToken(token: string) {
@@ -29,7 +30,15 @@ export const pluginApi = createPluginAPI({
   separateStep,
   splitByColor,
   joinSteps,
+  onLintPage,
+  onLintCourse,
+  selectError,
+  saveErrors,
+  selectionChanged,
+  currentPageChanged,
+  updateDisplay,
 })
 
 // Figma UI app methods
-export const uiApi = createUIAPI({})
+export const uiApi = createUIAPI({
+})
