@@ -25,6 +25,7 @@ export function FormatTab() {
   }
 
   function selectError(errorIndex?: number) {
+    console.log('selectError', errorIndex)
     errorIndex ? pluginApi.selectError(errorIndex) : pluginApi.selectError(getLineNumber()- 1)
   }
 
@@ -105,7 +106,7 @@ export function FormatTab() {
       lastPageName = line.pageName
     }
     return (
-      <tr style={{backgroundColor: rowColor }} key={index} onChange={() => selectError(index)}>
+      <tr style={{backgroundColor: rowColor }} key={index} onClick={() => selectError(index)}>
         <th>
           <Form.Check type='checkbox' className={'th'} checked={line.ignore} onChange={() => onCheckBoxChange(index)} />
        </th>
