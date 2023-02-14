@@ -110,53 +110,53 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
-function getClearLayerOrders(step: SceneNode): number[] {
+function getClearLayerNumbers(step: SceneNode): number[] {
   const prefix = 'clear-layer-'
   const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
   if (clearLayersStep.length !== 1) {
     return []
   }
-  const layerOrders = clearLayersStep[0]
+  const layerNumbers = clearLayersStep[0]
     .slice(prefix.length)
     .split(',')
     .map(Number)
-  return layerOrders
+  return layerNumbers
 }
 
-function collectLayerOrdersToClear(lesson: FrameNode, step: GroupNode) {
+function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentStepOrder = getStepOrder(step)
-  const layersStepOrders = lesson.children.map((s) => getStepOrder(s))
-  const clearLayerOrders = lesson.children.reduce((acc, layer) => {
+  const layersStepOrderTags = lesson.children.map((s) => getStepOrder(s))
+  const clearLayerNumbers = lesson.children.reduce((acc, layer) => {
     if (layer.type !== 'GROUP' || getStepOrder(layer) > currentStepOrder) {
       return acc
     }
     if (getTags(layer).includes('clear-before')) {
-      // calculate step orders and convert to layers to clear
+      // calculate step order tags and convert to layers to clear
       const stepsToClear = [...Array(getStepOrder(layer)).keys()].slice(1)
       stepsToClear.forEach((stepOrder) => {
-        if (layersStepOrders.includes(stepOrder)) {
-          acc.add(layersStepOrders.indexOf(stepOrder))
+        if (layersStepOrderTags.includes(stepOrder)) {
+          acc.add(layersStepOrderTags.indexOf(stepOrder))
         }
       })
     }
-    getClearLayerOrders(layer).forEach((idx) => acc.add(idx))
+    getClearLayerNumbers(layer).forEach((idx) => acc.add(idx))
     return acc
   }, new Set<number>())
-  return clearLayerOrders
+  return clearLayerNumbers
 }
 
 export function updateDisplay(
   page: PageNode,
-  settings: { displayMode: string; stepOrder: number }
+  settings: { displayMode: string; stepNumber: number }
 ) {
   lastPage = page
   lastMode = settings.displayMode
-  const { displayMode, stepOrder: stepOrder } = settings
+  const { displayMode, stepNumber } = settings
   const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
     return
   }
-  const step = stepsByOrder(lesson)[stepOrder - 1] as GroupNode
+  const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
   page.selection = [step]
   const stepCount = lesson.children.filter((n) =>
     getTags(n).includes('step')
@@ -168,7 +168,7 @@ export function updateDisplay(
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-'),
     stepCount,
-    stepOrder,
+    stepNumber,
     displayMode,
   })
   deleteTmp()
@@ -190,9 +190,9 @@ export function updateDisplay(
     case 'previous':
       displayBrushSize(lesson, step)
       stepsByOrder(lesson).forEach((step, i) => {
-        step.visible = i < stepOrder
+        step.visible = i < stepNumber
       })
-      collectLayerOrdersToClear(lesson, step).forEach((i) => {
+      collectLayerNumbersToClear(lesson, step).forEach((i) => {
         lesson.children[i].visible = false
       })
       break
@@ -205,17 +205,17 @@ export function updateDisplay(
 }
 
 setTimeout(() => {
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepOrder: 1 })
+  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
 }, 1500)
 
 function updateProps(settings: {
   shadowSize: number
   brushSize: number
-  stepOrder: number
+  stepNumber: number
   template: string
 }) {
   const lesson = getCurrentLesson()
-  const step = stepsByOrder(lesson)[settings.stepOrder - 1] as GroupNode
+  const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
     (t) => !t.startsWith('ss-') && !t.startsWith('bs-') && !t.startsWith('s-')
   )
@@ -235,8 +235,8 @@ function updateProps(settings: {
 on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
 on('updateProps', updateProps)
 figma.on('currentpagechange', () => {
-  updateDisplay(lastPage, { displayMode: 'all', stepOrder: 1 })
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepOrder: 1 })
+  updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
 })
 figma.on('selectionchange', () => {
   const lesson = getCurrentLesson()
@@ -251,9 +251,6 @@ figma.on('selectionchange', () => {
   }
   //update step
   const step = figma.currentPage.selection[0] as GroupNode
-  const stepOrder = stepsByOrder(lesson).indexOf(step) + 1
-  updateDisplay(figma.currentPage, {
-    displayMode: lastMode,
-    stepOrder,
-  })
+  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+  updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
 })

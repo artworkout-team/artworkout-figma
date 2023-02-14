@@ -14,7 +14,7 @@ import { StepList } from './StepList'
 function DisplayForm() {
   const [displayMode, setDisplayMode] = useState('all')
   const [template, setTemplate] = useState('')
-  const [stepOrder, setStepOrder] = useState(1)
+  const [stepNumber, setStepNumber] = useState(1)
   const [stepCount, setStepCount] = useState(1)
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
@@ -23,8 +23,8 @@ function DisplayForm() {
 
   const [mutex, setMutex] = useState(true)
 
-  function onStepOrderChange(event: ChangeEvent) {
-    setStepOrder(parseInt((event.target as HTMLInputElement).value))
+  function onStepNumberChange(event: ChangeEvent) {
+    setStepNumber(parseInt((event.target as HTMLInputElement).value))
   }
 
   function onDisplayModeChange(event: FormEvent) {
@@ -43,24 +43,19 @@ function DisplayForm() {
     let sns = await pluginApi.getSteps()
     setSteps(sns)
     let index = sns.findIndex((node) => node.id === selectedNode.id)
-    setStepOrder(index + 1)
+    setStepNumber(index + 1)
   }
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateDisplay', { displayMode, stepOrder })
+      emit('updateDisplay', { displayMode, stepNumber })
     }
-  }, [stepOrder, displayMode])
+  }, [stepNumber, displayMode])
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateProps', {
-        shadowSize,
-        brushSize,
-        stepOrder,
-        template,
-      })
-      emit('updateDisplay', { displayMode, stepOrder })
+      emit('updateProps', { shadowSize, brushSize, stepNumber, template })
+      emit('updateDisplay', { displayMode, stepNumber })
     }
   }, [shadowSize, brushSize, template])
 
@@ -72,7 +67,7 @@ function DisplayForm() {
         brushSize: number
         suggestedBrushSize: number
         stepCount: number
-        stepOrder: number
+        stepNumber: number
         displayMode: string
         template: string
       }) => {
@@ -81,7 +76,7 @@ function DisplayForm() {
         setBrushSize(settings.brushSize)
         setSuggestedBrushSize(settings.suggestedBrushSize)
         setStepCount(settings.stepCount)
-        setStepOrder(settings.stepOrder)
+        setStepNumber(settings.stepNumber)
         setDisplayMode(settings.displayMode)
         setTemplate(settings.template)
         setSteps(await pluginApi.getSteps())
@@ -94,13 +89,14 @@ function DisplayForm() {
 
   useHotkeys(
     'j',
-    () => setStepOrder((prev) => (prev + 1 < stepCount ? prev + 1 : stepCount)),
+    () =>
+      setStepNumber((prev) => (prev + 1 < stepCount ? prev + 1 : stepCount)),
     { enableOnTags }
   )
-  useHotkeys('k', () => setStepOrder((prev) => (prev > 1 ? prev - 1 : 1)), {
+  useHotkeys('k', () => setStepNumber((prev) => (prev > 1 ? prev - 1 : 1)), {
     enableOnTags,
   })
-  useHotkeys('g', () => setStepOrder(1), { enableOnTags })
+  useHotkeys('g', () => setStepNumber(1), { enableOnTags })
   useHotkeys('q', () => setDisplayMode('all'), { enableOnTags })
   useHotkeys('c', () => setDisplayMode('current'), { enableOnTags })
   useHotkeys('p', () => setDisplayMode('previous'), { enableOnTags })
@@ -127,10 +123,10 @@ function DisplayForm() {
             <Col>
               <Form.Control
                 type='number'
-                value={stepOrder}
+                value={stepNumber}
                 min={1}
                 max={stepCount}
-                onChange={onStepOrderChange}
+                onChange={onStepNumberChange}
               />
             </Col>
           </Form.Group>
@@ -236,7 +232,7 @@ function DisplayForm() {
       <Row>
         <StepList
           steps={steps}
-          selectedStep={steps[stepOrder - 1]}
+          selectedStep={steps[stepNumber - 1]}
           onUpdate={onListUpdate}
         />
       </Row>

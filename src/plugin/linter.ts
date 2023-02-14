@@ -485,7 +485,7 @@ function lintPage(page: PageNode) {
     return
   }
 
-  updateDisplay(page, { displayMode: 'all', stepOrder: 1 })
+  updateDisplay(page, { displayMode: 'all', stepNumber: 1 })
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),
