@@ -6,7 +6,7 @@ import { emit } from '../../events'
 export function CreateTab() {
   async function handleSplitByColor() {
     await pluginApi.splitByColor()
-    emit('updateDisplay', { displayMode: 'all', stepNumber: 1 })
+    emit('updateDisplay', { displayMode: 'all', stepOrder: 1 })
   }
 
   return (

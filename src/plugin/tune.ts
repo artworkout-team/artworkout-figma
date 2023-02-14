@@ -127,16 +127,16 @@ function getClearBeforeStep(step: GroupNode) {
 
 export function updateDisplay(
   page: PageNode,
-  settings: { displayMode: string; stepNumber: number }
+  settings: { displayMode: string; stepOrder: number }
 ) {
   lastPage = page
   lastMode = settings.displayMode
-  const { displayMode, stepNumber } = settings
+  const { displayMode, stepOrder: stepOrder } = settings
   const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
     return
   }
-  const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
+  const step = stepsByOrder(lesson)[stepOrder - 1] as GroupNode
   page.selection = [step]
   const stepCount = lesson.children.filter((n) =>
     getTags(n).includes('step')
@@ -150,7 +150,7 @@ export function updateDisplay(
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-'),
     stepCount,
-    stepNumber,
+    stepOrder,
     displayMode,
   })
   deleteTmp()
@@ -172,7 +172,7 @@ export function updateDisplay(
     case 'previous':
       displayBrushSize(lesson, step)
       stepsByOrder(lesson).forEach((step, i) => {
-        step.visible = i < stepNumber
+        step.visible = i < stepOrder
       })
       if (clearLayersStep.length > 0) {
         clearLayersStep.forEach((layer) => {
@@ -193,17 +193,17 @@ export function updateDisplay(
 }
 
 setTimeout(() => {
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay(figma.currentPage, { displayMode: 'all', stepOrder: 1 })
 }, 1500)
 
 function updateProps(settings: {
   shadowSize: number
   brushSize: number
-  stepNumber: number
+  stepOrder: number
   template: string
 }) {
   const lesson = getCurrentLesson()
-  const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
+  const step = stepsByOrder(lesson)[settings.stepOrder - 1] as GroupNode
   let tags = getTags(step).filter(
     (t) => !t.startsWith('ss-') && !t.startsWith('bs-') && !t.startsWith('s-')
   )
@@ -223,8 +223,8 @@ function updateProps(settings: {
 on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
 on('updateProps', updateProps)
 figma.on('currentpagechange', () => {
-  updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay(lastPage, { displayMode: 'all', stepOrder: 1 })
+  updateDisplay(figma.currentPage, { displayMode: 'all', stepOrder: 1 })
 })
 figma.on('selectionchange', () => {
   const lesson = getCurrentLesson()
@@ -239,6 +239,9 @@ figma.on('selectionchange', () => {
   }
   //update step
   const step = figma.currentPage.selection[0] as GroupNode
-  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
-  updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
+  const stepOrder = stepsByOrder(lesson).indexOf(step) + 1
+  updateDisplay(figma.currentPage, {
+    displayMode: lastMode,
+    stepOrder,
+  })
 })

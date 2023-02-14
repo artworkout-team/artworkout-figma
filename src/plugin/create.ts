@@ -1,4 +1,4 @@
-import { getSteps, setStepOrder } from './tune-rpc'
+import { getSteps, tagUnorderedSteps } from './tune-rpc'
 import {
   findLeafNodes,
   getCurrentLesson,
@@ -6,8 +6,8 @@ import {
   getNodeIndex,
   getTags,
   isResultStep,
-  getStepNumber,
-  setStepNumber,
+  getStepOrder,
+  setStepOrder,
 } from './util'
 
 interface nodeParameters {
@@ -143,8 +143,7 @@ export function createLesson() {
   lesson.appendChild(settingsEllipse)
 
   originalImage.remove()
-  const newSteps = getSteps()
-  setStepOrder(newSteps)
+  tagUnorderedSteps()
 }
 
 function stringifyColor(color: RGB) {
@@ -195,11 +194,11 @@ function createStepNode(
   return step
 }
 
-function getLastStepNumber() {
-  const stepNumbers = getSteps()
-    .map((s) => getStepNumber(s))
+export function getLastStepOrder() {
+  const stepsOrder = getSteps()
+    .map((s) => getStepOrder(s))
     .filter((s) => s !== undefined)
-  return Math.max(...stepNumbers)
+  return Math.max(...stepsOrder)
 }
 
 export function separateStep() {
@@ -218,10 +217,10 @@ export function separateStep() {
   const resultStep = lesson.children.find((n) =>
     getTags(n).includes('s-multistep-result')
   )
-  const lastStepNumber = getLastStepNumber()
-  if (lastStepNumber > 0) {
-    setStepNumber(resultStep, lastStepNumber + 1)
-    setStepNumber(step, lastStepNumber) // last step before result
+  const lastStepOrder = getLastStepOrder()
+  if (lastStepOrder > 0) {
+    setStepOrder(resultStep, lastStepOrder + 1)
+    setStepOrder(step, lastStepOrder) // last step before result
   }
 }
 
@@ -334,14 +333,7 @@ export function splitByColor() {
     parentStep.remove()
   }
 
-  // set order to steps
-  const newSteps = getSteps()
-  const lastStepNumber = getLastStepNumber()
-  if (lastStepNumber > 0) {
-    setStepOrder(newSteps, lastStepNumber)
-  } else {
-    setStepOrder(newSteps)
-  }
+  tagUnorderedSteps()
 }
 
 export function joinSteps() {
@@ -359,9 +351,9 @@ export function joinSteps() {
   const leaves = inputNodes.map((n) => n.children).flat()
   const lesson = getCurrentLesson()
   const index = getNodeIndex(steps[0])
-  const firstStepNumber = getStepNumber(steps[0])
+  const firstStepOrder = getStepOrder(steps[0])
   const joinedStep = createStepNode(lesson, leaves, index)
-  if (firstStepNumber) {
-    setStepNumber(joinedStep, firstStepNumber)
+  if (firstStepOrder) {
+    setStepOrder(joinedStep, firstStepOrder)
   }
 }

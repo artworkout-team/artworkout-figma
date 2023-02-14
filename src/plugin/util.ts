@@ -66,7 +66,7 @@ export function displayNotification(message: string) {
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-export function getStepNumber(step: SceneNode | Step): number {
+export function getStepOrder(step: SceneNode | Step): number {
   const stepOrderTag = /^o-(\d+)$/
   const stepTag = getTags(step).find((tag) => tag.match(stepOrderTag))
   if (stepTag) {
@@ -74,8 +74,8 @@ export function getStepNumber(step: SceneNode | Step): number {
   }
 }
 
-export function setStepNumber(step: SceneNode, stepNumber: number) {
-  return getTags(step).some((tag) => /^o-\d+$/.test(tag))
-    ? (step.name = step.name.replace(/o-\d+/, `o-${stepNumber}`))
-    : (step.name += ` o-${stepNumber}`)
+export function setStepOrder(step: SceneNode, stepOrder: number) {
+  getTags(step).some((tag) => /^o-\d+$/.test(tag))
+    ? (step.name = step.name.replace(/o-\d+/, `o-${stepOrder}`))
+    : (step.name += ` o-${stepOrder}`)
 }

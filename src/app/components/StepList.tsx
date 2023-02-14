@@ -19,10 +19,10 @@ export function StepList({
     if (!result.destination) {
       return
     }
-    const newStepOrder = Array.from(steps)
-    const [removed] = newStepOrder.splice(result.source.index, 1)
-    newStepOrder.splice(result.destination.index, 0, removed)
-    await pluginApi.setStepOrder(newStepOrder)
+    const newStepsOrder = Array.from(steps)
+    const [removed] = newStepsOrder.splice(result.source.index, 1)
+    newStepsOrder.splice(result.destination.index, 0, removed)
+    await pluginApi.setStepsOrder(newStepsOrder)
     onUpdate(removed)
   }
 
