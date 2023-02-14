@@ -10,23 +10,23 @@ import {
 } from 'react-bootstrap'
 import { emit } from '../../events'
 import { pluginApi } from '../../rpc-api'
-import { ErrorColor, ErrorLevel, errorsForPrint } from '../../plugin/linter'
+import { ErrorLevel, LintError } from '../../plugin/linter'
 import { Circle } from 'react-bootstrap-icons'
 import './FormatTab.css'
 
+enum ErrorColor {
+  '#ff0000',
+  '#ff9900',
+  '#00ff00',
+}
+
 export function FormatTab() {
   const [textareaValue, setTextareaValue] = useState<string>()
-  const [tableValue, setTableValue] = useState<errorsForPrint[]>()
+  const [tableValue, setTableValue] = useState<LintError[]>()
   let lastPageName: string = undefined
 
-  function getLineNumber() {
-    let tArea = document.querySelector('#output') as HTMLTextAreaElement
-    return tArea.value.substr(0, tArea.selectionStart).split('\n').length
-  }
-
   function selectError(errorIndex?: number) {
-    console.log('selectError', errorIndex)
-    errorIndex ? pluginApi.selectError(errorIndex) : pluginApi.selectError(getLineNumber()- 1)
+    pluginApi.selectError(errorIndex)
   }
 
   async function exportTexts() {
@@ -36,17 +36,15 @@ export function FormatTab() {
   }
 
   async function lintPage() {
-    const errors = await pluginApi.onLintPage()
-    setTableValue(errors.tableErrors)
-    setTextareaValue(errors.textErrors)
-    await pluginApi.saveErrors(errors.tableErrors)
+    const errors = await pluginApi.lintPage()
+    setTableValue(errors)
+    await pluginApi.saveErrors(errors)
   }
 
   async function lintCourse() {
-    const errors = await pluginApi.onLintCourse()
-    setTableValue(errors.tableErrors)
-    setTextareaValue(errors.textErrors)
-    await pluginApi.saveErrors(errors.tableErrors)
+    const errors = await pluginApi.lintCourse()
+    setTableValue(errors)
+    await pluginApi.saveErrors(errors)
   }
 
   async function importTexts() {
@@ -99,39 +97,39 @@ export function FormatTab() {
   )
 
 
-  function renderLine(line: errorsForPrint, index: number) {
+  function renderRow(row: LintError, index: number) {
     let rowColor = 'white'
-    if (lastPageName !== undefined && line.pageName !== lastPageName) {
+    if (lastPageName !== undefined && row.pageName !== lastPageName) {
       rowColor = '#d3d3d3'
-      lastPageName = line.pageName
+      lastPageName = row.pageName
     }
     return (
       <tr style={{backgroundColor: rowColor }} key={index} onClick={() => selectError(index)}>
         <th>
-          <Form.Check type='checkbox' className={'th'} checked={line.ignore} onChange={() => onCheckBoxChange(index)} />
+          <Form.Check type='checkbox' className={'th'} checked={row.ignore} onChange={() => onCheckBoxChange(index)} />
        </th>
-        <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(ErrorLevel[line.level])}>
+        <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(ErrorLevel[row.level])}>
           <th className="th">
             <Circle
               size={20}
-              style={{ flex: 1, backgroundColor: ErrorColor[line.errorColor], borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',  alignSelf: 'center' }}
+              style={{ flex: 1, backgroundColor: ErrorColor[row.level], borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',  alignSelf: 'center' }}
             />
           </th>
       </OverlayTrigger>
       <OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Page name')}>
-      <th className={'th'}>{line.pageName}</th>
+      <th className={'th'}>{row.pageName}</th>
         </OverlayTrigger>
-      <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(line.error)}>
-        <th className={'th-error'}>{line.error}</th>
+      <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(row.error)}>
+        <th className={'th-error'}>{row.error}</th>
       </OverlayTrigger>
-        { line.nodeType ?
+        { row.nodeType ?
           (<OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Node type')}>
-            <th className={'th'}>{line.nodeType}</th>
+            <th className={'th'}>{row.nodeType}</th>
           </OverlayTrigger>)
           : null}
-      { line.nodeName ?
+      { row.nodeName ?
         (<OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Node name')}>
-          <th className={'th'}>{line.nodeName}</th>
+          <th className={'th'}>{row.nodeName}</th>
         </OverlayTrigger>)
         : null}
       </tr>
@@ -164,7 +162,7 @@ export function FormatTab() {
       <Table hover size="sm">
         <tbody>
           {tableValue?.length ?
-            tableValue.map((item, index) => renderLine(item, index))
+            tableValue.map((item, index) => renderRow(item, index))
             :
             <tr> Done  </tr>
           }

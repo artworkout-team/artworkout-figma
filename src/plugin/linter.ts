@@ -1,4 +1,4 @@
-import { print, getTags, findAll, findTag } from './util'
+import { getTags, findAll, findTag } from './util'
 import { updateDisplay } from './tune'
 
 export interface LintError {
@@ -7,16 +7,9 @@ export interface LintError {
   node?: SceneNode
   error: string
   level: ErrorLevel
-}
-
-export interface errorsForPrint {
-  ignore?: boolean
   pageName?: string
   nodeName?: string
   nodeType?: string
-  error: string
-  level: ErrorLevel
-  errorColor: ErrorColor
 }
 
 let errors: LintError[] = []
@@ -28,12 +21,6 @@ export enum ErrorLevel {
   ERROR,
   WARN,
   INFO,
-}
-
-export enum ErrorColor {
-  '#ff0000',
-  '#ff9900',
-  '#00ff00',
 }
 
 export function selectError(index: number) {
@@ -60,7 +47,7 @@ export async function printErrors() {
         error: e.error,
         level: e.level,
         errorColor: e.level,
-      } as unknown as errorsForPrint
+      } as LintError
     })
   if (savedErrors) {
     sortedErrors = sortedErrors.map((e) => {
@@ -71,21 +58,8 @@ export async function printErrors() {
       return e
     })
   }
-  let text = errors
-    .map(
-      (e) =>
-        `${ErrorLevel[e.level]}\t| ${e.error} | PAGE:${e.page?.name || ''} ${
-          e.node?.type
-        }:${e.node?.name || ''}`
-    )
-    .join('\n')
-  text += '\nDone'
-  print(text)
   selectError(0)
-  return {
-    tableErrors: sortedErrors ,
-    textErrors: text,
-  }
+  return sortedErrors
 }
 
 function assert(
@@ -523,7 +497,10 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-function lintPage(currentPage?: PageNode | null) {
+export function lintPage(currentPage?: PageNode | null, isCourseLinting?: boolean) {
+  if (!isCourseLinting) {
+    errors = []
+  }
   const page = currentPage?  currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
     return
@@ -564,6 +541,7 @@ function lintPage(currentPage?: PageNode | null) {
       )
     }
   }
+  return printErrors()
 }
 
 function lintIndex(page: PageNode) {
@@ -584,7 +562,8 @@ function lintIndex(page: PageNode) {
   lintThumbnail(page, page.children[0] as FrameNode)
 }
 
-function lintCourse() {
+export function lintCourse() {
+  errors = []
   assert(
     /^COURSE-[a-z\-0-9]+$/.test(figma.root.name),
     `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`
@@ -601,21 +580,11 @@ function lintCourse() {
     assert(false, `Page name '${p.name}' must be unique`, p)
   )
   for (let page of figma.root.children) {
-    lintPage(page)
+    lintPage(page, true)
   }
-}
-
-export function onLintCourse() {
-  errors = []
-  lintCourse()
-  return printErrors()
-}
-export function onLintPage(currentPage?: PageNode | null) {
-  errors = []
-  lintPage(currentPage)
   return printErrors()
 }
 
-export function saveErrors(errorsForPrint: errorsForPrint[]) {
+export function saveErrors(errorsForPrint: LintError[]) {
   return figma.clientStorage.setAsync('errorsForPrint', errorsForPrint)
 }

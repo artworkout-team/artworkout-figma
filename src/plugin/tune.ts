@@ -152,7 +152,6 @@ export function updateDisplay(
   lastPage = page
   lastMode = settings.displayMode
   const { displayMode, stepNumber } = settings
-  console.log('page', page)
   const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
     return
