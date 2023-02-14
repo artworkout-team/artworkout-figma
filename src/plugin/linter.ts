@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { print, getTags, findAll } from './util'
+import { print, getTags, findAll, findTag } from './util'
 import { updateDisplay } from './tune'
 
 interface LintError {
@@ -80,69 +80,58 @@ function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => descendants(n as GroupNode))
 }
 
-function lintVector(page: PageNode, node: VectorNode) {
-  assert(node.opacity == 1, 'Must be opaque', page, node)
-  assert(node.visible, 'Must be visible', page, node)
-  let tags = getTags(node)
-  assert(
-    tags.length > 0,
-    'Name must not be empty. Use slash to /ignore.',
-    page,
-    node
-  )
-  tags.forEach((tag) => {
-    assert(
-      /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$/.test(
-        tag
-      ),
-      `Tag '${tag}' unknown. Use slash to /ignore.`,
-      page,
-      node
-    )
-  })
-  let fills = node.fills as Paint[]
-  let strokes = node.strokes
-  assert(
-    !fills.length || !strokes.length,
-    'Should not have fill+stroke',
-    page,
-    node,
-    ErrorLevel.WARN
-  )
-  strokes.forEach((s) => {
-    assert(s.visible, 'Stroke must be visible', page, node)
-    assert(s.type == 'SOLID', 'Stroke must be solid', page, node)
-    let s1 = s as SolidPaint
-    assert(
-      s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0,
-      'Stroke color must not be black',
-      page,
-      node
-    )
-    assert(
-      s1.color.r != 1 || s1.color.g != 1 || s1.color.b != 1,
-      'Stroke color must not be white',
-      page,
-      node
-    )
-  })
+function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
+  const rgbt = findTag(node, /^rgb-template$/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
-    assert(f.type == 'SOLID', 'Fill must be solid', page, node)
+    assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
     let f1 = f as SolidPaint
-    assert(
-      f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
-      'Fill color must not be black',
-      page,
-      node
-    )
-    assert(
-      f1.color.r != 1 || f1.color.g != 1 || f1.color.b != 1,
-      'Fill color must not be white',
-      page,
-      node
-    )
+
+    if (f.type === 'IMAGE') {
+      assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
+    }
+    if (f.type === 'SOLID') {
+      assert(
+        f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
+        'Fill color must not be black',
+        page,
+        node
+      )
+      assert(
+        f1.color.r != 1 || f1.color.g != 1 || f1.color.b != 1,
+        'Fill color must not be white',
+        page,
+        node
+      )
+    }
   })
+}
+
+function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
+  const rgbt = findTag(node, /^rgb-template$/)
+  strokes.forEach((s) => {
+    assert(s.visible, 'Stroke must be visible', page, node)
+    assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
+    if (s.type === 'IMAGE') {
+      assert(s.opacity == 1, 'Image stroke must be opaque', page, node)
+    }
+    if (s.type === 'SOLID') {
+      let s1 = s as SolidPaint
+      assert(
+        s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0,
+        'Stroke color must not be black',
+        page,
+        node
+      )
+      assert(
+        s1.color.r != 1 || s1.color.g != 1 || s1.color.b != 1,
+        'Stroke color must not be white',
+        page,
+        node
+      )
+    }
+  })
+
   assert(
     !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)),
     `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`,
@@ -157,8 +146,46 @@ function lintVector(page: PageNode, node: VectorNode) {
     node,
     ErrorLevel.INFO
   )
-  const rgbt = tags.find((s) => /^rgb-template$/.test(s))
-  const anim = tags.find((s) => /^blink$|^draw-line$/.test(s))
+}
+
+const validVectorTags =
+  /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
+
+function lintVector(page: PageNode, node: VectorNode) {
+  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.visible, 'Must be visible', page, node)
+  let tags = getTags(node)
+
+  assert(
+    tags.length > 0,
+    'Name must not be empty. Use slash to /ignore.',
+    page,
+    node
+  )
+  tags.forEach((tag) => {
+    assert(
+      validVectorTags.test(tag),
+      `Tag '${tag}' unknown. Use slash to /ignore.`,
+      page,
+      node
+    )
+  })
+  let fills = node.fills as Paint[]
+  let strokes = node.strokes as Paint[]
+  assert(
+    !fills.length || !strokes.length,
+    'Should not have fill+stroke',
+    page,
+    node,
+    ErrorLevel.WARN
+  )
+
+  const rgbt = findTag(node, /^rgb-template$/)
+  const anim = findTag(node, /^draw-line$|^blink$/)
+
+  lintStrokes(node, page, strokes)
+  lintFills(node, page, fills)
+
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
 }
 
@@ -457,6 +484,7 @@ function lintPage(page: PageNode) {
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
+
   updateDisplay(page, { displayMode: 'all', stepOrder: 1 })
   if (
     !assert(

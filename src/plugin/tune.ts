@@ -1,5 +1,11 @@
 import { emit, on } from '../events'
-import { findLeafNodes, getCurrentLesson, getTags, isResultStep } from './util'
+import {
+  findLeafNodes,
+  getCurrentLesson,
+  getStepOrder,
+  getTags,
+  isResultStep,
+} from './util'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -104,25 +110,39 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
-function getClearLayerNumbers(step: GroupNode): number[] {
+function getClearLayerOrders(step: SceneNode): number[] {
   const prefix = 'clear-layer-'
   const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
   if (clearLayersStep.length !== 1) {
     return []
   }
-  const layerNumbers = clearLayersStep[0]
+  const layerOrders = clearLayersStep[0]
     .slice(prefix.length)
     .split(',')
     .map(Number)
-  return layerNumbers
+  return layerOrders
 }
 
-function getClearBeforeStep(step: GroupNode) {
-  if (
-    getTags(step).filter((tag) => tag.includes('clear-before')).length === 1
-  ) {
-    return step
-  }
+function collectLayerOrdersToClear(lesson: FrameNode, step: GroupNode) {
+  const currentStepOrder = getStepOrder(step)
+  const layersStepOrders = lesson.children.map((s) => getStepOrder(s))
+  const clearLayerOrders = lesson.children.reduce((acc, layer) => {
+    if (layer.type !== 'GROUP' || getStepOrder(layer) > currentStepOrder) {
+      return acc
+    }
+    if (getTags(layer).includes('clear-before')) {
+      // calculate step orders and convert to layers to clear
+      const stepsToClear = [...Array(getStepOrder(layer)).keys()].slice(1)
+      stepsToClear.forEach((stepOrder) => {
+        if (layersStepOrders.includes(stepOrder)) {
+          acc.add(layersStepOrders.indexOf(stepOrder))
+        }
+      })
+    }
+    getClearLayerOrders(layer).forEach((idx) => acc.add(idx))
+    return acc
+  }, new Set<number>())
+  return clearLayerOrders
 }
 
 export function updateDisplay(
@@ -142,8 +162,6 @@ export function updateDisplay(
     getTags(n).includes('step')
   ).length
   const maxStrokeWeight = getBrushSize(step)
-  const clearLayersStep = getClearLayerNumbers(step)
-  const clearBeforeStep = getClearBeforeStep(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')),
     brushSize: parseInt(getTag(step, 'bs-')),
@@ -174,15 +192,9 @@ export function updateDisplay(
       stepsByOrder(lesson).forEach((step, i) => {
         step.visible = i < stepOrder
       })
-      if (clearLayersStep.length > 0) {
-        clearLayersStep.forEach((layer) => {
-          lesson.children[layer].visible = false
-        })
-      } else if (clearBeforeStep) {
-        lesson.children.forEach((layer, i) => {
-          layer.visible = i > lesson.children.indexOf(clearBeforeStep)
-        })
-      }
+      collectLayerOrdersToClear(lesson, step).forEach((i) => {
+        lesson.children[i].visible = false
+      })
       break
 
     case 'template':
