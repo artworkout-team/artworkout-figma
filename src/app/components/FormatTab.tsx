@@ -23,6 +23,7 @@ enum ErrorColor {
 export function FormatTab() {
   const [textareaValue, setTextareaValue] = useState<string>()
   const [tableValue, setTableValue] = useState<LintError[]>()
+
   let lastPageName: string = undefined
 
   function selectError(errorIndex?: number) {
@@ -157,6 +158,12 @@ export function FormatTab() {
         </Button>
         <Button className='plugin-btn' onClick={importTexts}>
           Import Texts
+        </Button>
+        <Button className='plugin-btn' onClick={() => pluginApi.minimizeUi()}>
+          Minimize
+        </Button>
+        <Button className='plugin-btn' onClick={() => pluginApi.maximizeUi()}>
+          Maximize
         </Button>
       </div>
       <Table hover size="sm">

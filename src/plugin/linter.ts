@@ -35,7 +35,6 @@ export function selectError(index: number) {
 }
 
 export async function printErrors() {
-  figma.ui.resize(750, 400)
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
   let sortedErrors = errors.sort((a, b) => a.level - b.level)
     .map((e) => {
@@ -587,4 +586,12 @@ export function lintCourse() {
 
 export function saveErrors(errorsForPrint: LintError[]) {
   return figma.clientStorage.setAsync('errorsForPrint', errorsForPrint)
+}
+
+export function maximizeUi() {
+  figma.ui.resize(1000, 400)
+}
+
+export function minimizeUi() {
+  figma.ui.resize(340, 450)
 }
