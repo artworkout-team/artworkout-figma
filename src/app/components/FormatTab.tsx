@@ -159,12 +159,6 @@ export function FormatTab() {
         <Button className='plugin-btn' onClick={importTexts}>
           Import Texts
         </Button>
-        <Button className='plugin-btn' onClick={() => pluginApi.minimizeUi()}>
-          Minimize
-        </Button>
-        <Button className='plugin-btn' onClick={() => pluginApi.maximizeUi()}>
-          Maximize
-        </Button>
       </div>
       <Table hover size="sm">
         <tbody>

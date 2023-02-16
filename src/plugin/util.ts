@@ -78,3 +78,11 @@ export function getStepNumber(step: SceneNode | Step): number {
     return Number(stepTag.match(stepOrderTag)[1])
   }
 }
+
+export function resizeUi(isWide: boolean) {
+  if (isWide) {
+    figma.ui.resize(900, 450)
+  } else {
+    figma.ui.resize(350, 450)
+  }
+}

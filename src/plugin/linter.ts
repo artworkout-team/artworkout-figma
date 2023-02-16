@@ -587,11 +587,3 @@ export function lintCourse() {
 export function saveErrors(errorsForPrint: LintError[]) {
   return figma.clientStorage.setAsync('errorsForPrint', errorsForPrint)
 }
-
-export function maximizeUi() {
-  figma.ui.resize(1000, 400)
-}
-
-export function minimizeUi() {
-  figma.ui.resize(340, 450)
-}

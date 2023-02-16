@@ -8,8 +8,8 @@ import {
   splitByColor,
   joinSteps,
 } from './plugin/create'
-import { displayNotification } from './plugin/util'
-import { lintPage, lintCourse, selectError, saveErrors, maximizeUi, minimizeUi } from './plugin/linter'
+import { displayNotification, resizeUi } from './plugin/util'
+import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
 import { selectionChanged, currentPageChanged, updateDisplay } from './plugin/tune'
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
@@ -37,8 +37,7 @@ export const pluginApi = createPluginAPI({
   updateDisplay,
   lintPage,
   lintCourse,
-  maximizeUi,
-  minimizeUi,
+  resizeUi,
 })
 
 // Figma UI app methods
