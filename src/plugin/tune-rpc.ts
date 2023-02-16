@@ -75,17 +75,9 @@ export function setStepsOrder(steps: Step[]) {
 }
 
 export function tagUnorderedSteps() {
-  let startWith = getLastStepOrder()
-  if (startWith < 1) {
-    startWith = 1
-  }
+  let startWith = getLastStepOrder() + 1
   const lesson = getCurrentLesson()
-  getSteps()
+  stepsByOrder(lesson)
     .filter((s) => !getTags(s).some((t) => t.startsWith('o-')))
-    .forEach((step, i) => {
-      const s = lesson.findOne((el) => el.id == step.id)
-      if (s) {
-        setStepOrder(s, i + startWith)
-      }
-    })
+    .forEach((step, i) => setStepOrder(step, i + startWith))
 }

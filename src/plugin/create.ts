@@ -198,7 +198,7 @@ export function getLastStepOrder() {
   const stepsOrder = getSteps()
     .map((s) => getStepOrder(s))
     .filter((s) => s !== undefined)
-  return Math.max(...stepsOrder)
+  return Math.max(...stepsOrder, 0)
 }
 
 export function separateStep() {
