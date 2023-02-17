@@ -2,7 +2,7 @@ import { emit, on } from '../events'
 import {
   findLeafNodes,
   getCurrentLesson,
-  getStepNumber,
+  getStepOrder,
   getTags,
   isResultStep,
 } from './util'
@@ -124,18 +124,18 @@ function getClearLayerNumbers(step: SceneNode): number[] {
 }
 
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
-  const currentStepNumber = getStepNumber(step)
-  const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
+  const currentStepOrder = getStepOrder(step)
+  const layersStepOrderTags = lesson.children.map((s) => getStepOrder(s))
   const clearLayerNumbers = lesson.children.reduce((acc, layer) => {
-    if (layer.type !== 'GROUP' || getStepNumber(layer) > currentStepNumber) {
+    if (layer.type !== 'GROUP' || getStepOrder(layer) > currentStepOrder) {
       return acc
     }
     if (getTags(layer).includes('clear-before')) {
-      // calculate step numbers and convert to layers to clear
-      const stepsToClear = [...Array(getStepNumber(layer)).keys()].slice(1)
-      stepsToClear.forEach((stepNumber) => {
-        if (layersStepNumbers.includes(stepNumber)) {
-          acc.add(layersStepNumbers.indexOf(stepNumber))
+      // calculate step order tags and convert to layers to clear
+      const stepsToClear = [...Array(getStepOrder(layer)).keys()].slice(1)
+      stepsToClear.forEach((stepOrder) => {
+        if (layersStepOrderTags.includes(stepOrder)) {
+          acc.add(layersStepOrderTags.indexOf(stepOrder))
         }
       })
     }
