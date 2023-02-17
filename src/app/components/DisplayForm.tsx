@@ -1,11 +1,20 @@
 import React, {
   ChangeEvent,
   FormEvent,
-  Fragment,
   useEffect,
   useState,
 } from 'react'
-import { Form, Row, Col } from 'react-bootstrap'
+import {
+  Form,
+  Row,
+  Col,
+  ButtonGroup,
+  Button,
+  OverlayTrigger,
+  Tooltip,
+  ButtonToolbar,
+  Dropdown,
+} from 'react-bootstrap'
 import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
@@ -20,6 +29,9 @@ function DisplayForm() {
   const [brushSize, setBrushSize] = useState(0)
   const [steps, setSteps] = useState([])
   const [suggestedBrushSize, setSuggestedBrushSize] = useState(0)
+
+  const [clearLayers, setClearLayers] = useState([])
+  const [clearBefore, setClearBefore] = useState(false)
 
   const [mutex, setMutex] = useState(true)
 
@@ -46,6 +58,34 @@ function DisplayForm() {
     setStepNumber(index + 1)
   }
 
+  function onClearLayerChange(event: FormEvent) {
+    const targetSelect = event.target as HTMLSelectElement
+    let newClearLayer = clearLayers
+    if (newClearLayer.includes(targetSelect.value)) {
+      newClearLayer = newClearLayer.filter(
+        (item) => item !== targetSelect.value
+      )
+    } else {
+      newClearLayer.push(targetSelect.value)
+    }
+    setClearLayers([...newClearLayer])
+  }
+
+  function onClearBeforeChange() {
+    // clear all layers before current step via index and set clearLayers to [] if not empty
+    let newClearLayer
+    if (clearBefore) {
+      newClearLayer = []
+      setClearBefore(false)
+    } else {
+      newClearLayer = steps
+        .slice(0, stepNumber - 1)
+        .map((step, index) => index + 1)
+        setClearBefore(true)
+    }
+      setClearLayers([...newClearLayer])
+  }
+
   useEffect(() => {
     if (!mutex) {
       emit('updateDisplay', { displayMode, stepNumber })
@@ -53,11 +93,12 @@ function DisplayForm() {
   }, [stepNumber, displayMode])
 
   useEffect(() => {
+    console.log('clearBefore', clearBefore)
     if (!mutex) {
-      emit('updateProps', { shadowSize, brushSize, stepNumber, template })
+      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearBefore, clearLayers })
       emit('updateDisplay', { displayMode, stepNumber })
     }
-  }, [shadowSize, brushSize, template])
+  }, [shadowSize, brushSize, template, clearLayers, clearBefore])
 
   useEffect(() => {
     on(
@@ -112,64 +153,109 @@ function DisplayForm() {
     { enableOnTags }
   )
 
-  return (
-    <>
-      <Row className='mb-2'>
-        <Col xs={5}>
-          <Form.Group as={Row}>
-            <Form.Label column xs={5}>
-              Step (JK)
-            </Form.Label>
-            <Col>
-              <Form.Control
-                type='number'
-                value={stepNumber}
-                min={1}
-                max={stepCount}
-                onChange={onStepNumberChange}
-              />
-            </Col>
-          </Form.Group>
-        </Col>
-        <Col>
+  const renderStepOptions = (
+    <Form.Group as={Row}>
+      <Col xs={5}>
+        <Form.Group as={Row}>
+          <Form.Label column xs={5}>
+            Step (JK)
+          </Form.Label>
+          <Col>
+            <Form.Control
+              type="number"
+              value={stepNumber}
+              min={1}
+              max={stepCount}
+              onChange={onStepNumberChange}
+            />
+          </Col>
+        </Form.Group>
+      </Col>
+      <Col xs={5}>
+        <ButtonToolbar>
+          <ButtonGroup>
+            <OverlayTrigger
+              placement={'top'}
+              overlay={<Tooltip id="button-tooltip-2">(Q) All</Tooltip>}>
+              <Button id={'displayModeAll'} value={'all'} onClick={onDisplayModeChange}>Q</Button>
+            </OverlayTrigger>
+            <OverlayTrigger
+              placement={'top'}
+              overlay={<Tooltip id="button-tooltip-2">(C)urrent</Tooltip>}>
+              <Button id={'displayModeCurrent'} value={'current'} onClick={onDisplayModeChange}>C</Button>
+            </OverlayTrigger>
+            <OverlayTrigger
+              placement={'top'}
+              overlay={<Tooltip id="button-tooltip-2">(P)revious</Tooltip>}>
+              <Button id={'displayModePrevious'} value={'previous'} onClick={onDisplayModeChange}>P</Button>
+            </OverlayTrigger>
+            <OverlayTrigger
+              placement={'top'}
+              overlay={<Tooltip id="button-tooltip-2">(T)emplate</Tooltip>}>
+              <Button id={'displayModeTemplate'} value={'template'} onClick={onDisplayModeChange}>T</Button>
+            </OverlayTrigger>
+          </ButtonGroup>
+        </ButtonToolbar>
+      </Col>
+    </Form.Group>
+  )
+
+
+
+  const renderDropdownElement = (step, index) => {
+    //is this the right way to do this?
+    const stepNumber = index + 1
+    //is clearLayer include step number? if so, checked is true
+    const checked = clearLayers.includes(stepNumber)
+    return (
+      <Dropdown.Item
+        href={`#/action ${stepNumber}`}
+        id={index}
+        value={stepNumber}
+      >
+      <Row>
+        <Col xs={3}>
           <Form.Check
-            id='displayModeAll'
-            type='radio'
-            name='displayMode'
-            value='all'
-            label='(Q) All'
-            onChange={onDisplayModeChange}
-            checked={displayMode == 'all'}
-          />
-          <Form.Check
-            id='displayModeCurrent'
-            type='radio'
-            name='displayMode'
-            value='current'
-            label='(C)urrent'
-            onChange={onDisplayModeChange}
-            checked={displayMode == 'current'}
-          />
-          <Form.Check
-            id='displayModePrevious'
-            type='radio'
-            name='displayMode'
-            value='previous'
-            label='(P)revious'
-            onChange={onDisplayModeChange}
-            checked={displayMode == 'previous'}
-          />
-          <Form.Check
-            id='displayModeTemplate'
-            type='radio'
-            name='displayMode'
-            value='template'
-            label='(T)emplate'
-            onChange={onDisplayModeChange}
-            checked={displayMode == 'template'}
-          />
+            inline
+            checked={checked}
+            label={`step ${stepNumber}`}
+            value={stepNumber}
+            onChange={onClearLayerChange}
+            />
         </Col>
       </Row>
+    </Dropdown.Item>
+    )
+  }
+
+  const renderClearLayerDropdown = (
+    <Dropdown as={ButtonGroup} autoClose={false}>
+      <Dropdown.Toggle id="dropdown-autoclose-false">
+        Clear layer
+      </Dropdown.Toggle>
+      <Dropdown.Menu>
+        <Dropdown.Item href="#/action-0">
+          <Row>
+            <Col xs={3}>
+              <Form.Check
+                inline
+                label={'Clear before'}
+                onChange={onClearBeforeChange}
+              />
+            </Col>
+          </Row>
+        </Dropdown.Item>
+        <Dropdown.Divider/>
+        {steps.map((step, index) => renderDropdownElement(step, index))}
+      </Dropdown.Menu>
+    </Dropdown>
+  )
+
+
+  return (
+    <>
+      {renderStepOptions}
+      {renderClearLayerDropdown}
       <Row>
         <Col>
           <Form.Group as={Row} className='mb-2'>

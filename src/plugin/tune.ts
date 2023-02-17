@@ -213,6 +213,8 @@ function updateProps(settings: {
   brushSize: number
   stepNumber: number
   template: string
+  clearBefore: boolean
+  clearLayers: number[]
 }) {
   const lesson = getCurrentLesson()
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
@@ -227,6 +229,18 @@ function updateProps(settings: {
   }
   if (settings.brushSize) {
     tags.push(`bs-${settings.brushSize}`)
+  }
+  // if clear before is checked, remove all clear-layer tags and add clear-before tag
+  // if clear before is not checked, remove clear-before tag and add clear-layer tags if it exists
+  if (settings.clearBefore) {
+    tags = tags.filter((t) => !t.startsWith('clear-layer-'))
+    tags.push('clear-before')
+  }
+  else{
+    tags = tags.filter((t) => t !== 'clear-before')
+    if(settings.clearLayers.length > 0){
+      tags.push(`clear-layer-${settings.clearLayers.join(',')}`)
+    }
   }
 
   step.name = tags.join(' ')
