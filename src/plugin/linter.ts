@@ -12,7 +12,7 @@ export interface LintError {
   nodeType?: string
 }
 
-let errors: LintError[] = []
+let appendErrors: LintError[] = []
 let zoomScale = 1
 let maxBs = 12.8
 let order = 'steps'
@@ -24,19 +24,19 @@ export enum ErrorLevel {
 }
 
 export function selectError(index: number) {
-  if (errors[index]?.page) {
-    figma.currentPage = errors[index].page
+  if (appendErrors[index]?.page) {
+    figma.currentPage = appendErrors[index].page
   }
   // setTimeout(() => { // crashes, probably because of selection happening from the DisplayForm
-  if (errors[index]?.node) {
-    errors[index].page.selection = [errors[index].node]
+  if (appendErrors[index]?.node) {
+    appendErrors[index].page.selection = [appendErrors[index].node]
   }
   // }, 0)
 }
 
 export async function printErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
-  let sortedErrors = errors.sort((a, b) => a.level - b.level)
+  let sortedErrors = appendErrors.sort((a, b) => a.level - b.level)
     .map((e) => {
       return {
         ignore: e.ignore,
@@ -69,7 +69,7 @@ function assert(
   level: ErrorLevel = ErrorLevel.ERROR
 ) {
   if (!val) {
-    errors.push({ node, page, error, level })
+    appendErrors.push({ node, page, error, level })
   }
   return val
 }
@@ -498,7 +498,7 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
 
 export function lintPage(currentPage?: PageNode | null, isCourseLinting?: boolean) {
   if (!isCourseLinting) {
-    errors = []
+    appendErrors = []
   }
   const page = currentPage?  currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
@@ -562,7 +562,7 @@ function lintIndex(page: PageNode) {
 }
 
 export function lintCourse() {
-  errors = []
+  appendErrors = []
   assert(
     /^COURSE-[a-z\-0-9]+$/.test(figma.root.name),
     `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`
