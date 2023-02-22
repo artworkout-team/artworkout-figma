@@ -293,7 +293,6 @@ function updateProps(settings: {
       !t.startsWith('resize-brush') &&
       !t.startsWith('brush-name-')
   )
-  console.log(settings.brushType)
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
   }
