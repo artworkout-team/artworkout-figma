@@ -163,6 +163,7 @@ export function updateDisplay(
     getTags(n).includes('step')
   ).length
   const maxStrokeWeight = getBrushSize(step)
+  const brushType = getTag(step, 'brush-name-') === '0' ? '' : getTag(step, 'brush-name-')
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')),
     brushSize: parseInt(getTag(step, 'bs-')),
@@ -179,7 +180,7 @@ export function updateDisplay(
       t.startsWith('allow-undo') ||
       t.startsWith('layer') ||
       t.startsWith('resize-brush')) || [],
-    brushType: getTag(step, 'brush-name-'),
+    brushType,
   })
   deleteTmp()
   switch (displayMode) {

@@ -8,7 +8,7 @@ import {
   splitByColor,
   joinSteps,
 } from './plugin/create'
-import { displayNotification, getStepNumber } from './plugin/util'
+import { displayNotification } from './plugin/util'
 
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
@@ -29,7 +29,6 @@ export const pluginApi = createPluginAPI({
   separateStep,
   splitByColor,
   joinSteps,
-  getStepNumber,
 })
 
 // Figma UI app methods

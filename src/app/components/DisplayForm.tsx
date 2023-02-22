@@ -31,7 +31,7 @@ function DisplayForm() {
   const [brushSize, setBrushSize] = useState(0)
   const [steps, setSteps] = useState([])
   const [suggestedBrushSize, setSuggestedBrushSize] = useState(0)
-  const [brushType, setBrushType] = useState('pencil')
+  const [brushType, setBrushType] = useState('')
 
   const [clearLayers, setClearLayers] = useState<string[]>([])
   const [clearBefore, setClearBefore] = useState(false)
@@ -192,11 +192,11 @@ function DisplayForm() {
         setStepNumber(settings.stepNumber)
         setDisplayMode(settings.displayMode)
         setTemplate(settings.template)
-        setSteps(await pluginApi.getSteps())
         setClearBefore(settings.clearBefore)
         setClearLayers(settings.clearLayers)
         setAnotherTags(settings.anotherTags)
         setBrushType(settings.brushType)
+        setSteps(await pluginApi.getSteps())
         setMutex(false)
       }
     )
