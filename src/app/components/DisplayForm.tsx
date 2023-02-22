@@ -19,7 +19,6 @@ import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
 import { StepList } from './StepList'
-import './DisplayForm.css'
 import { ArrowLeft, ArrowRight, ArrowsMove, ArrowUp, Lightbulb, Magic, Pencil } from 'react-bootstrap-icons'
 
 function DisplayForm() {
