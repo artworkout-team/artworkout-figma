@@ -1,5 +1,6 @@
 import { emit, on } from '../events'
 import {
+  descendantsWithoutSelf,
   findLeafNodes,
   getCurrentLesson,
   getStepNumber,
@@ -170,6 +171,15 @@ export function updateDisplay(
     stepCount,
     stepNumber,
     displayMode,
+    clearBefore: getTags(step).includes('clear-before'),
+    clearLayers: getClearLayerNumbers(step).map((n)=> n.toString()) || [],
+    anotherTags: getTags(step).filter((t) =>
+      t.startsWith('fixed-size') ||
+      t.startsWith('share-button') ||
+      t.startsWith('allow-undo') ||
+      t.startsWith('layer') ||
+      t.startsWith('resize-brush')) || [],
+    brushType: getTag(step, 'brush-name-'),
   })
   deleteTmp()
   switch (displayMode) {
@@ -208,19 +218,82 @@ setTimeout(() => {
   updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
 }, 1500)
 
+function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
+  if((/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(figma.currentPage.selection[0].type))) {
+    let selectionTags = getTags(figma.currentPage.selection[0])
+    selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
+    selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
+    if(tag) {
+      selectionTags.push(tag)
+      if (delay) {
+        selectionTags.push(`d${delay}`)
+      }
+      if (repeat) {
+        selectionTags.push(`r${repeat}`)
+      }
+      figma.currentPage.selection[0].name = selectionTags.join(' ')
+    } else {
+      figma.currentPage.selection[0].name = selectionTags.join(' ')
+    }
+  } else {
+    if (tag) {
+      descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+        if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
+          let selectionTags = getTags(v)
+          selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
+          selectionTags.push(tag)
+          selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
+          if (delay) {
+            selectionTags.push(`d${delay}`)
+          }
+          if (repeat) {
+            selectionTags.push(`r${repeat}`)
+          }
+          v.name = selectionTags.join(' ')
+        }
+      })
+    } else {
+      descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+        if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
+          let selectionTags = getTags(v)
+          selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
+          selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
+          v.name = selectionTags.join(' ')
+        }
+      })
+    }
+  }
+}
+
 function updateProps(settings: {
   shadowSize: number
   brushSize: number
   stepNumber: number
   template: string
-  clearBefore: boolean
   clearLayers: number[]
+  clearBefore: boolean
+  anotherTags: string[]
+  brushType: string
+  animationTag: string
+  delay: number
+  repeat: number
 }) {
   const lesson = getCurrentLesson()
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
-    (t) => !t.startsWith('ss-') && !t.startsWith('bs-') && !t.startsWith('s-')
+    (t) => !t.startsWith('ss-') &&
+      !t.startsWith('bs-') &&
+      !t.startsWith('s-') &&
+      !t.startsWith('clear-layer-') &&
+      !t.startsWith('clear-before') &&
+      !t.startsWith('fixed-size') &&
+      !t.startsWith('share-button') &&
+      !t.startsWith('allow-undo') &&
+      !t.startsWith('layer') &&
+      !t.startsWith('resize-brush') &&
+      !t.startsWith('brush-name-')
   )
+  console.log(settings.brushType)
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
   }
@@ -230,18 +303,22 @@ function updateProps(settings: {
   if (settings.brushSize) {
     tags.push(`bs-${settings.brushSize}`)
   }
-  // if clear before is checked, remove all clear-layer tags and add clear-before tag
-  // if clear before is not checked, remove clear-before tag and add clear-layer tags if it exists
-  if (settings.clearBefore) {
-    tags = tags.filter((t) => !t.startsWith('clear-layer-'))
-    tags.push('clear-before')
+  if (settings.brushType) {
+    tags.push(`brush-name-${settings.brushType}`)
   }
-  else{
-    tags = tags.filter((t) => t !== 'clear-before')
-    if(settings.clearLayers.length > 0){
+  if(settings.clearLayers.length > 0) {
+    if (settings.clearBefore) {
+      tags.push('clear-before')
+    } else {
+      //replace clear-layer tag
       tags.push(`clear-layer-${settings.clearLayers.join(',')}`)
     }
   }
+  if (settings.anotherTags.length > 0) {
+    tags = tags.concat(settings.anotherTags)
+  }
+
+  addAnimationTag(step, settings.animationTag, settings.delay, settings.repeat)
 
   step.name = tags.join(' ')
 }
