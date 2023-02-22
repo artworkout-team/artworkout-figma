@@ -102,7 +102,6 @@ function DisplayForm() {
         setClearBefore(true)
       }
       else{
-        //add all steps before current step to clearLayers
         newClearLayer = steps.reduce((acc, cur, index) => {
             if (index + 1 < stepNumber) {
               acc.push((index + 1).toString())

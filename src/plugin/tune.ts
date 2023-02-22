@@ -309,7 +309,6 @@ function updateProps(settings: {
     if (settings.clearBefore) {
       tags.push('clear-before')
     } else {
-      //replace clear-layer tag
       tags.push(`clear-layer-${settings.clearLayers.join(',')}`)
     }
   }
