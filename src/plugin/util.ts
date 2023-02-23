@@ -84,3 +84,17 @@ export function setStepOrder(step: SceneNode, stepOrder: number) {
     ? (step.name = step.name.replace(/o-\d+/, `o-${stepOrder}`))
     : (step.name += ` o-${stepOrder}`)
 }
+
+function descendants(node: GroupNode): SceneNode[] {
+  if (!node.children) {
+    return [node]
+  }
+  return [node, ...node.children.flatMap((n) => descendants(n as GroupNode))]
+}
+
+export function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
+  if (!node.children) {
+    return []
+  }
+  return node.children.flatMap((n) => descendants(n as GroupNode))
+}

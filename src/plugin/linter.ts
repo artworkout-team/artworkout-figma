@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { print, getTags, findAll, findTag } from './util'
+import { print, getTags, findAll, findTag, descendantsWithoutSelf } from './util'
 import { updateDisplay } from './tune'
 
 interface LintError {
@@ -64,20 +64,6 @@ function deepNodes(node: GroupNode): SceneNode[] {
     return [node]
   }
   return node.children.flatMap((n) => deepNodes(n as GroupNode))
-}
-
-function descendants(node: GroupNode): SceneNode[] {
-  if (!node.children) {
-    return [node]
-  }
-  return [node, ...node.children.flatMap((n) => descendants(n as GroupNode))]
-}
-
-function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
-  if (!node.children) {
-    return []
-  }
-  return node.children.flatMap((n) => descendants(n as GroupNode))
 }
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {

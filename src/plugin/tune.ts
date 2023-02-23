@@ -1,5 +1,6 @@
 import { emit, on } from '../events'
 import {
+  descendantsWithoutSelf,
   findLeafNodes,
   getCurrentLesson,
   getStepOrder,
@@ -194,6 +195,11 @@ export function updateDisplay(
       })
       collectLayerNumbersToClear(lesson, step).forEach((i) => {
         lesson.children[i].visible = false
+      })
+      descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+        if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) && !getTags(v).includes('rgb-template')) {
+          v.visible = false
+        }
       })
       break
 
