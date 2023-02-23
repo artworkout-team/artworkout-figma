@@ -177,6 +177,9 @@ export function updateDisplay(
     case 'all':
       lesson.children.forEach((step) => {
         step.visible = true
+        descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+            v.visible = true
+        })
       })
       break
 
@@ -184,6 +187,9 @@ export function updateDisplay(
       displayBrushSize(lesson, step)
       lesson.children.forEach((step) => {
         step.visible = false
+        descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+          v.visible = true
+        })
       })
       step.visible = true
       break
