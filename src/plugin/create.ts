@@ -231,43 +231,6 @@ function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
   map.get(key).push(node)
 }
 
-function replaceColor(
-  nodesByColor: Map<string, SceneNode[]>,
-  oldColor: RGB,
-  newColor: RGB
-) {
-  const oldColorKey = stringifyColor(oldColor)
-  const newColorKey = stringifyColor(newColor)
-
-  if (nodesByColor.has(oldColorKey)) {
-    const updatedColors = nodesByColor.get(oldColorKey).map((n) => {
-      if ('fills' in n && n.fills !== figma.mixed && n.fills.length > 0) {
-        n.fills = [
-          {
-            type: 'SOLID',
-            color: newColor,
-          },
-        ]
-      } else if ('strokes' in n && n.strokes.length > 0) {
-        n.strokes = [
-          {
-            type: 'SOLID',
-            color: newColor,
-          },
-        ]
-      }
-      return n
-    })
-    nodesByColor.set(newColorKey, updatedColors)
-    nodesByColor.delete(oldColorKey)
-  }
-}
-
-const black: RGB = { r: 0, g: 0, b: 0 }
-const nearBlack: RGB = { r: 23 / 255, g: 23 / 255, b: 23 / 255 }
-const white: RGB = { r: 255 / 255, g: 255 / 255, b: 255 / 255 }
-const nearWhite: RGB = { r: 235 / 255, g: 235 / 255, b: 235 / 255 }
-
 export function splitByColor() {
   const selection: readonly SceneNode[] = figma.currentPage.selection
   if (!selection.length) {
@@ -302,12 +265,6 @@ export function splitByColor() {
       unknownNodes.push(n)
     }
   })
-
-  // make sure color is not black or white
-  replaceColor(fillsByColor, black, nearBlack)
-  replaceColor(strokesByColor, black, nearBlack)
-  replaceColor(fillsByColor, white, nearWhite)
-  replaceColor(strokesByColor, white, nearWhite)
 
   for (let fills of fillsByColor.values()) {
     createStepNode(lesson, fills)
