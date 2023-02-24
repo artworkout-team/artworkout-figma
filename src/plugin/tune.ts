@@ -1,6 +1,5 @@
 import { emit, on } from '../events'
 import {
-  descendantsWithoutSelf,
   findLeafNodes,
   getCurrentLesson,
   getStepOrder,
@@ -124,6 +123,25 @@ function getClearLayerNumbers(step: SceneNode): number[] {
   return layerNumbers
 }
 
+function showOnlyRGBTemplate(group: GroupNode) {
+    if(getTags(group).includes('settings')){
+      group.visible = false
+      return
+    }
+    if (getTags(group).includes('rgb-template') || (/GROUP|BOOLEAN_OPERATION/.test(group.type) && !group.children)) {
+      return
+    }
+    group.children.forEach((v) => {
+      if (/GROUP|BOOLEAN_OPERATION/.test(v.type) && group.children) {
+        return showOnlyRGBTemplate(v as GroupNode)
+      }
+      if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) && !getTags(v).includes('rgb-template')) {
+        return v.visible = false
+      }
+    })
+}
+
+
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentStepOrder = getStepOrder(step)
   const layersStepOrderTags = lesson.children.map((s) => getStepOrder(s))
@@ -177,9 +195,6 @@ export function updateDisplay(
     case 'all':
       lesson.children.forEach((step) => {
         step.visible = true
-        descendantsWithoutSelf(step as GroupNode).forEach((v) => {
-            v.visible = true
-        })
       })
       break
 
@@ -187,9 +202,6 @@ export function updateDisplay(
       displayBrushSize(lesson, step)
       lesson.children.forEach((step) => {
         step.visible = false
-        descendantsWithoutSelf(step as GroupNode).forEach((v) => {
-          v.visible = true
-        })
       })
       step.visible = true
       break
@@ -202,11 +214,7 @@ export function updateDisplay(
       collectLayerNumbersToClear(lesson, step).forEach((i) => {
         lesson.children[i].visible = false
       })
-      descendantsWithoutSelf(step as GroupNode).forEach((v) => {
-        if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) && !getTags(v).includes('rgb-template')) {
-          v.visible = false
-        }
-      })
+      lesson.children.forEach((step)=> showOnlyRGBTemplate(step as GroupNode))
       break
 
     case 'template':

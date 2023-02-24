@@ -85,7 +85,7 @@ export function setStepOrder(step: SceneNode, stepOrder: number) {
     : (step.name += ` o-${stepOrder}`)
 }
 
-function descendants(node: GroupNode): SceneNode[] {
+export function descendants(node: GroupNode): SceneNode[] {
   if (!node.children) {
     return [node]
   }
