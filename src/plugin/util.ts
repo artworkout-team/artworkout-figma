@@ -85,16 +85,16 @@ export function setStepOrder(step: SceneNode, stepOrder: number) {
     : (step.name += ` o-${stepOrder}`)
 }
 
-export function descendants(node: GroupNode): SceneNode[] {
+export function getAllTree(node: GroupNode): SceneNode[] {
   if (!node.children) {
     return [node]
   }
-  return [node, ...node.children.flatMap((n) => descendants(n as GroupNode))]
+  return [node, ...node.children.flatMap((n) => getAllTree(n as GroupNode))]
 }
 
 export function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
   if (!node.children) {
     return []
   }
-  return node.children.flatMap((n) => descendants(n as GroupNode))
+  return node.children.flatMap((n) => getAllTree(n as GroupNode))
 }
