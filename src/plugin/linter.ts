@@ -100,24 +100,8 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
-    let f1 = f as SolidPaint
-
     if (f.type === 'IMAGE') {
       assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
-    }
-    if (f.type === 'SOLID') {
-      assert(
-        f1.color.r != 0 || f1.color.g != 0 || f1.color.b != 0,
-        'Fill color must not be black',
-        page,
-        node
-      )
-      assert(
-        f1.color.r != 1 || f1.color.g != 1 || f1.color.b != 1,
-        'Fill color must not be white',
-        page,
-        node
-      )
     }
   })
 }
@@ -129,21 +113,6 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
       assert(s.opacity == 1, 'Image stroke must be opaque', page, node)
-    }
-    if (s.type === 'SOLID') {
-      let s1 = s as SolidPaint
-      assert(
-        s1.color.r != 0 || s1.color.g != 0 || s1.color.b != 0,
-        'Stroke color must not be black',
-        page,
-        node
-      )
-      assert(
-        s1.color.r != 1 || s1.color.g != 1 || s1.color.b != 1,
-        'Stroke color must not be white',
-        page,
-        node
-      )
     }
   })
 
