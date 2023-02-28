@@ -32,8 +32,8 @@ function deleteTmp() {
     .forEach((el) => el.remove())
 }
 
-let lastPage = figma.currentPage
 let lastMode = 'all'
+let lastPage: PageNode
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
   lesson.children.forEach((step) => {
@@ -204,10 +204,6 @@ export function updateDisplay(
   }
 }
 
-setTimeout(() => {
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
-}, 1500)
-
 function updateProps(settings: {
   shadowSize: number
   brushSize: number
@@ -234,11 +230,17 @@ function updateProps(settings: {
 
 on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
 on('updateProps', updateProps)
-figma.on('currentpagechange', () => {
-  updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
-})
-figma.on('selectionchange', () => {
+
+export function currentPageChanged(pageNode: any) {
+  if (figma && !lastPage){
+    lastPage = figma.currentPage
+  }
+    updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
+    updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
+    lastPage = pageNode
+}
+
+export function selectionChanged() {
   const lesson = getCurrentLesson()
   const selection = figma.currentPage.selection[0]
   if (
@@ -253,4 +255,4 @@ figma.on('selectionchange', () => {
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
   updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
-})
+}
