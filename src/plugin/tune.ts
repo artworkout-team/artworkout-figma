@@ -16,7 +16,7 @@ function getOrder(step: SceneNode) {
 
 function getTag(step, tag) {
   const v = getTags(step).find((t) => t.startsWith(tag))
-  return v ? v.replace(tag, '') : '0'
+  return v ? v.replace(tag, '') : null
 }
 
 function stepsByOrder(lesson: FrameNode) {
@@ -163,12 +163,12 @@ export function updateDisplay(
     getTags(n).includes('step')
   ).length
   const maxStrokeWeight = getBrushSize(step)
-  const brushType = getTag(step, 'brush-name-') === '0' ? '' : getTag(step, 'brush-name-')
+  const brushType = getTag(step, 'brush-name-') || ''
   emit('updateForm', {
-    shadowSize: parseInt(getTag(step, 'ss-')),
-    brushSize: parseInt(getTag(step, 'bs-')),
+    shadowSize: parseInt(getTag(step, 'ss-')) || 0,
+    brushSize: parseInt(getTag(step, 'bs-')) || 0,
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
-    template: getTag(step, 's-'),
+    template: getTag(step, 's-') || 0,
     stepCount,
     stepNumber,
     displayMode,

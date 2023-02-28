@@ -14,6 +14,8 @@ import {
   Tooltip,
   ButtonToolbar,
   Dropdown,
+  Accordion, 
+  ToggleButton,
 } from 'react-bootstrap'
 import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
@@ -39,7 +41,7 @@ function DisplayForm() {
   const [delay, setDelay] = useState<number>(0)
   const [repeat, setRepeat] = useState<number>(0)
 
-  const [anotherTags, setAnotherTags] = useState<string[]>([])
+  const [otherTags, setOtherTags] = useState<string[]>([])
 
   const [mutex, setMutex] = useState(true)
 
@@ -114,10 +116,10 @@ function DisplayForm() {
     }
 
   function onAnotherTagChange(tag: string) {
-    if(anotherTags.includes(tag)) {
-      setAnotherTags(anotherTags.filter(item => item !== tag))
+    if(otherTags.includes(tag)) {
+      setOtherTags(otherTags.filter(item => item !== tag))
     } else {
-      setAnotherTags([...anotherTags, tag])
+      setOtherTags([...otherTags, tag])
     }
   }
 
@@ -144,7 +146,7 @@ function DisplayForm() {
         template,
         clearLayers,
         clearBefore,
-        anotherTags,
+        anotherTags: otherTags,
         brushType,
         animationTag,
         delay,
@@ -162,10 +164,10 @@ function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, anotherTags, brushType })
+      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, anotherTags: otherTags, brushType })
       emit('updateDisplay', { displayMode, stepNumber })
     }
-  }, [shadowSize, brushSize, template, clearLayers, anotherTags, brushType])
+  }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
 
   useEffect(() => {
     on(
@@ -193,7 +195,7 @@ function DisplayForm() {
         setTemplate(settings.template)
         setClearBefore(settings.clearBefore)
         setClearLayers(settings.clearLayers)
-        setAnotherTags(settings.anotherTags)
+        setOtherTags(settings.anotherTags)
         setBrushType(settings.brushType)
         setSteps(await pluginApi.getSteps())
         setMutex(false)
@@ -202,13 +204,9 @@ function DisplayForm() {
   }, []) // once
 
   const enableOnTags: any = ['INPUT', 'TEXTAREA', 'SELECT']
-  const anotherTagsList: any = [
-    {tag: 'fixed-size', name: 'Fixed size'},
+  const otherTagsList: any = [
     {tag: 'share-button', name: 'Share button'},
     {tag:'allow-undo', name: 'Allow undo'},
-    {tag: 'layer', name: 'Layer'},
-    {tag: 'resize-brush', name: 'Resize brush'},
-
   ]
 
   useHotkeys(
@@ -239,10 +237,14 @@ function DisplayForm() {
   const renderStepOptions = (
     <Form.Group as={Row}>
       <Col>
-        <Form.Group as={Row}>
-          <Form.Label column xs={5}>
-            Step (JK)
-          </Form.Label>
+        <Form.Group as={Row} className={'justify-content-center'}>
+          <OverlayTrigger
+            placement={'bottom'}
+            overlay={<Tooltip id="button-tooltip-current">JK</Tooltip>}>
+            <Form.Label column xs={5}>
+              Step
+            </Form.Label>
+          </OverlayTrigger>
           <Col>
             <Form.Control
               type="number"
@@ -255,30 +257,28 @@ function DisplayForm() {
         </Form.Group>
       </Col>
       <Col>
-        <ButtonToolbar>
           <ButtonGroup>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip className={'tooltip'} style={{position: 'fixed'}} id="button-tooltip-all">(Q) All</Tooltip>}>
-              <Button id={'displayModeAll'} value={'all'} onClick={onDisplayModeChange}>Q</Button>
+              <ToggleButton  variant="outline-primary"  type='radio' checked={displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-current">(C)urrent</Tooltip>}>
-              <Button id={'displayModeCurrent'} value={'current'} onClick={onDisplayModeChange}>C</Button>
+              <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-previous">(P)revious</Tooltip>}>
-              <Button id={'displayModePrevious'} value={'previous'} onClick={onDisplayModeChange}>P</Button>
+              <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-template">(T)emplate</Tooltip>}>
-              <Button id={'displayModeTemplate'} value={'template'} onClick={onDisplayModeChange}>T</Button>
+              <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
             </OverlayTrigger>
           </ButtonGroup>
-        </ButtonToolbar>
       </Col>
     </Form.Group>
   )
@@ -307,30 +307,30 @@ function DisplayForm() {
   }
 
   const renderAnotherTagsElement = (tag, index) => {
-return (
-      <Dropdown.Item
-        href={`#/action ${tag.tag}`}
-        id={index}
-        value={tag.tag}
-        key={index+1}
-      >
-      <Row>
-        <Col xs={3}>
-          <Form.Check
-            inline
-            checked={anotherTags.includes(tag.tag)}
-            label={tag.name}
-            onChange={() => onAnotherTagChange(tag.tag)}
-            />
-        </Col>
-      </Row>
-    </Dropdown.Item>
+    return (
+        <Dropdown.Item
+          href={`#/action ${tag.tag}`}
+          id={index}
+          value={tag.tag}
+          key={index+1}
+        >
+        <Row>
+          <Col xs={3}>
+            <Form.Check
+              inline
+              checked={otherTags.includes(tag.tag)}
+              label={tag.name}
+              onChange={() => onAnotherTagChange(tag.tag)}
+              />
+          </Col>
+        </Row>
+      </Dropdown.Item>
     )
   }
 
   const renderClearLayerDropdown = (
-    <Dropdown className={'mb-2'}  autoClose={false}>
-      <Dropdown.Toggle id="dropdown-autoclose-false" style={{flex: 1 , width: '100%'}}>
+    <Dropdown className={'mb-2'} autoClose={'outside'}>
+      <Dropdown.Toggle id="dropdown-autoclose-outside">
         Clear layer
       </Dropdown.Toggle>
       <Dropdown.Menu>
@@ -353,12 +353,12 @@ return (
   )
 
   const renderAnotherTagsDropdown = (
-    <Dropdown className={'mb-2'}  autoClose={false}>
-      <Dropdown.Toggle id="dropdown-autoclose-false" style={{flex: 1 , width: '100%'}}>
+    <Dropdown className={'mb-2'}  autoClose={'outside'}>
+      <Dropdown.Toggle id="dropdown-autoclose-outside">
         Another tags
       </Dropdown.Toggle>
       <Dropdown.Menu>
-        {anotherTagsList.map((step, index) => renderAnotherTagsElement(step, index))}
+        {otherTagsList.map((step, index) => renderAnotherTagsElement(step, index))}
       </Dropdown.Menu>
     </Dropdown>
   )
@@ -366,19 +366,19 @@ return (
   const renderAnimationsButtons = (
     <Col>
     <ButtonToolbar className={'mb-2'}>
-      <ButtonGroup size={'sm'} className={'me-2'}>
+      <ButtonGroup size={'sm'} >
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-blink">Blink</Tooltip>}>
           <Button value={'blink'} id={'blink'} onClick={()=> onAnimationTagChange('blink')}>
-            <Lightbulb size={'10'}/>
+            <Lightbulb size={'8'}/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-appear">Appear</Tooltip>}>
           <Button value={'appear'} id={'appear'} onClick={()=> onAnimationTagChange('appear')}>
-            <Magic size={'10'}/>
+            <Magic size={'8'}/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
@@ -388,37 +388,33 @@ return (
             <Pencil size={'10'}/>
           </Button>
         </OverlayTrigger>
-      </ButtonGroup>
-      <ButtonGroup size={'sm'} className={'me-2'}>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-fly-bottom">Fly from bottom</Tooltip>}>
           <Button value={'fly-bottom'} id={'fly-bottom'} onClick={() => onAnimationTagChange('fly-from-bottom')}>
-            <ArrowUp size={'10'}/>
+            <ArrowUp size={'8'}/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-fly-left">Fly from left</Tooltip>}>
           <Button value={'fly-left'} id={'fly-left'} onClick={() => onAnimationTagChange('fly-from-left')}>
-            <ArrowRight size={'10'}/>
+            <ArrowRight size={'8'}/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-fly-right">Fly from right</Tooltip>}>
           <Button value={'fly-right' } id={'fly-right'} onClick={() => onAnimationTagChange('fly-from-right')}>
-            <ArrowLeft size={'10'}/>
+            <ArrowLeft size={'8'}/>
           </Button>
         </OverlayTrigger>
-      </ButtonGroup>
-      <ButtonGroup size={'sm'}>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-1">Wiggle-1</Tooltip>}>
           <Button value={'wiggle-1'} id={'wiggle-1'} onClick={() => onAnimationTagChange('wiggle-1')}>
-            <ArrowsMove size={'10'}/>
-            <Form.Label style={{fontSize: 8, padding: 0, margin: 0}}>
+            <ArrowsMove size={'8'}/>
+            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               1
             </Form.Label>
           </Button>
@@ -427,8 +423,8 @@ return (
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-2">Wiggle-2</Tooltip>}>
           <Button value={'wiggle-2'} id={'wiggle-2'} onClick={() => onAnimationTagChange('wiggle-2')}>
-            <ArrowsMove size={'10'}/>
-            <Form.Label style={{fontSize: 8, padding: 0, margin: 0}}>
+            <ArrowsMove size={'8'}/>
+            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               2
             </Form.Label>
           </Button>
@@ -437,8 +433,8 @@ return (
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-3">Wiggle-3</Tooltip>}>
           <Button value={'wiggle-3'} id={'wiggle-3'} onClick={() => onAnimationTagChange('wiggle-3')}>
-            <ArrowsMove size={'10'}/>
-            <Form.Label style={{fontSize: 8, padding: 0, margin: 0}}>
+            <ArrowsMove size={'8'}/>
+            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               3
             </Form.Label>
           </Button>
@@ -447,8 +443,8 @@ return (
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-4">Wiggle-4</Tooltip>}>
           <Button value={'wiggle-4'} id={'wiggle-4'} onClick={() => onAnimationTagChange('wiggle-4')}>
-            <ArrowsMove size={'10'}/>
-            <Form.Label style={{fontSize: 8, padding: 0, margin: 0}}>
+            <ArrowsMove size={'8'}/>
+            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               4
             </Form.Label>
           </Button>
@@ -457,7 +453,7 @@ return (
     </ButtonToolbar>
       <Row>
         <Col>
-          <Form.Group as={Row} className={'mb-1'}>
+          <Form.Group as={Row} className={'mb-2'}>
             <Form.Label column xs={5}>
               Delay
             </Form.Label>
@@ -491,7 +487,7 @@ return (
           </Form.Group>
         </Col>
       </Row>
-      </Col>
+    </Col>
   )
 
   return (
@@ -501,14 +497,6 @@ return (
           <Form.Group as={Row} className='mb-2'>
             <Col>
             {renderStepOptions}
-            </Col>
-          </Form.Group>
-          <Form.Group as={Row} className='mb-2'>
-            <Col>
-              {renderClearLayerDropdown}
-            </Col>
-            <Col>
-              {renderAnotherTagsDropdown}
             </Col>
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
@@ -581,9 +569,28 @@ return (
           </Form.Group>
         </Col>
       </Row>
-      <Row>
-      {renderAnimationsButtons}
-      </Row>
+      <Accordion flush className='mb-2'>
+        <Accordion.Item eventKey="0">
+          <Accordion.Header>
+            <Form.Label className={'m-0 p-0'}>
+              Advanced
+            </Form.Label>
+          </Accordion.Header>
+          <Accordion.Body>
+          <Form.Group as={Row} className='mb-2'>
+            <Col style={{width: '50%'}}>
+              {renderClearLayerDropdown}
+            </Col>
+            <Col style={{width: '50%'}}>
+              {renderAnotherTagsDropdown}
+            </Col>
+          </Form.Group>
+          <Row>
+          {renderAnimationsButtons}
+          </Row>
+         </Accordion.Body>
+        </Accordion.Item>
+      </Accordion>
       <Row>
         <StepList
           steps={steps}
