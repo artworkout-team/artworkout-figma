@@ -3,7 +3,7 @@ import {
   descendantsWithoutSelf,
   findLeafNodes,
   getCurrentLesson,
-  getStepNumber,
+  getStepOrder,
   getTags,
   isResultStep,
 } from './util'
@@ -33,8 +33,8 @@ function deleteTmp() {
     .forEach((el) => el.remove())
 }
 
-let lastPage = figma.currentPage
 let lastMode = 'all'
+let lastPage: PageNode
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
   lesson.children.forEach((step) => {
@@ -125,18 +125,18 @@ function getClearLayerNumbers(step: SceneNode): number[] {
 }
 
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
-  const currentStepNumber = getStepNumber(step)
-  const layersStepNumbers = lesson.children.map((s) => getStepNumber(s))
+  const currentStepOrder = getStepOrder(step)
+  const layersStepOrderTags = lesson.children.map((s) => getStepOrder(s))
   const clearLayerNumbers = lesson.children.reduce((acc, layer) => {
-    if (layer.type !== 'GROUP' || getStepNumber(layer) > currentStepNumber) {
+    if (layer.type !== 'GROUP' || getStepOrder(layer) > currentStepOrder) {
       return acc
     }
     if (getTags(layer).includes('clear-before')) {
-      // calculate step numbers and convert to layers to clear
-      const stepsToClear = [...Array(getStepNumber(layer)).keys()].slice(1)
-      stepsToClear.forEach((stepNumber) => {
-        if (layersStepNumbers.includes(stepNumber)) {
-          acc.add(layersStepNumbers.indexOf(stepNumber))
+      // calculate step order tags and convert to layers to clear
+      const stepsToClear = [...Array(getStepOrder(layer)).keys()].slice(1)
+      stepsToClear.forEach((stepOrder) => {
+        if (layersStepOrderTags.includes(stepOrder)) {
+          acc.add(layersStepOrderTags.indexOf(stepOrder))
         }
       })
     }
@@ -309,7 +309,7 @@ function updateProps(settings: {
   if (settings.clearBefore) {
     tags.push('clear-before')
   }
-  
+
   if (settings.otherTags.length > 0) {
     tags = tags.concat(settings.otherTags)
   }
@@ -320,11 +320,17 @@ function updateProps(settings: {
 
 on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
 on('updateProps', updateProps)
-figma.on('currentpagechange', () => {
-  updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
-})
-figma.on('selectionchange', () => {
+
+export function currentPageChanged(pageNode: any) {
+  if (figma && !lastPage){
+    lastPage = figma.currentPage
+  }
+    updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
+    updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
+    lastPage = pageNode
+}
+
+export function selectionChanged() {
   const lesson = getCurrentLesson()
   const selection = figma.currentPage.selection[0]
   if (
@@ -339,4 +345,4 @@ figma.on('selectionchange', () => {
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
   updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
-})
+}

@@ -2,3 +2,11 @@
   margin: 0.25rem;
   min-width: 130px;
 }
+.resize-button{
+  position: fixed;
+  top: 5px;
+  right: 5px;
+  background-color: white;
+  border: none;
+  z-index: 10;
+}

@@ -1,3 +1,4 @@
+import { getSteps, tagUnorderedSteps } from './tune-rpc'
 import {
   findLeafNodes,
   getCurrentLesson,
@@ -5,6 +6,8 @@ import {
   getNodeIndex,
   getTags,
   isResultStep,
+  getStepOrder,
+  setStepOrder,
 } from './util'
 
 interface nodeParameters {
@@ -140,6 +143,7 @@ export function createLesson() {
   lesson.appendChild(settingsEllipse)
 
   originalImage.remove()
+  tagUnorderedSteps()
 }
 
 function stringifyColor(color: RGB) {
@@ -187,6 +191,14 @@ function createStepNode(
   input.name = 'input'
   const step = figma.group([input], node, index)
   nameStepNode(step)
+  return step
+}
+
+export function getLastStepOrder() {
+  const stepsOrder = getSteps()
+    .map((s) => getStepOrder(s))
+    .filter((s) => s !== undefined)
+  return Math.max(...stepsOrder, 0)
 }
 
 export function separateStep() {
@@ -201,7 +213,15 @@ export function separateStep() {
   }
   const lesson = getCurrentLesson()
   const index = getNodeIndex(firstParentStep)
-  createStepNode(lesson, leaves, index)
+  const step = createStepNode(lesson, leaves, index)
+  const resultStep = lesson.children.find((n) =>
+    getTags(n).includes('s-multistep-result')
+  )
+  const lastStepOrder = getLastStepOrder()
+  if (lastStepOrder > 0) {
+    setStepOrder(resultStep, lastStepOrder + 1)
+    setStepOrder(step, lastStepOrder) // last step before result
+  }
 }
 
 function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
@@ -210,43 +230,6 @@ function addToMap(map: Map<string, SceneNode[]>, key: string, node: SceneNode) {
   }
   map.get(key).push(node)
 }
-
-function replaceColor(
-  nodesByColor: Map<string, SceneNode[]>,
-  oldColor: RGB,
-  newColor: RGB
-) {
-  const oldColorKey = stringifyColor(oldColor)
-  const newColorKey = stringifyColor(newColor)
-
-  if (nodesByColor.has(oldColorKey)) {
-    const updatedColors = nodesByColor.get(oldColorKey).map((n) => {
-      if ('fills' in n && n.fills !== figma.mixed && n.fills.length > 0) {
-        n.fills = [
-          {
-            type: 'SOLID',
-            color: newColor,
-          },
-        ]
-      } else if ('strokes' in n && n.strokes.length > 0) {
-        n.strokes = [
-          {
-            type: 'SOLID',
-            color: newColor,
-          },
-        ]
-      }
-      return n
-    })
-    nodesByColor.set(newColorKey, updatedColors)
-    nodesByColor.delete(oldColorKey)
-  }
-}
-
-const black: RGB = { r: 0, g: 0, b: 0 }
-const nearBlack: RGB = { r: 23 / 255, g: 23 / 255, b: 23 / 255 }
-const white: RGB = { r: 255 / 255, g: 255 / 255, b: 255 / 255 }
-const nearWhite: RGB = { r: 235 / 255, g: 235 / 255, b: 235 / 255 }
 
 export function splitByColor() {
   const selection: readonly SceneNode[] = figma.currentPage.selection
@@ -283,12 +266,6 @@ export function splitByColor() {
     }
   })
 
-  // make sure color is not black or white
-  replaceColor(fillsByColor, black, nearBlack)
-  replaceColor(strokesByColor, black, nearBlack)
-  replaceColor(fillsByColor, white, nearWhite)
-  replaceColor(strokesByColor, white, nearWhite)
-
   for (let fills of fillsByColor.values()) {
     createStepNode(lesson, fills)
   }
@@ -300,8 +277,8 @@ export function splitByColor() {
   }
 
   // Make sure the result is located at the end
-  const result = lesson.children.find(
-    (n) => n.name === 'step s-multistep-result'
+  const result = lesson.children.find((n) =>
+    getTags(n).includes('s-multistep-result')
   )
   if (result) {
     result.remove()
@@ -312,6 +289,8 @@ export function splitByColor() {
   if (!parentStep.removed) {
     parentStep.remove()
   }
+
+  tagUnorderedSteps()
 }
 
 export function joinSteps() {
@@ -329,5 +308,9 @@ export function joinSteps() {
   const leaves = inputNodes.map((n) => n.children).flat()
   const lesson = getCurrentLesson()
   const index = getNodeIndex(steps[0])
-  createStepNode(lesson, leaves, index)
+  const firstStepOrder = getStepOrder(steps[0])
+  const joinedStep = createStepNode(lesson, leaves, index)
+  if (firstStepOrder) {
+    setStepOrder(joinedStep, firstStepOrder)
+  }
 }

@@ -1,4 +1,5 @@
-import { getTags, findLeafNodes, getCurrentLesson } from './util'
+import { getLastStepOrder } from './create'
+import { getTags, findLeafNodes, getCurrentLesson, setStepOrder } from './util'
 
 export interface Step {
   id: string
@@ -63,12 +64,20 @@ export function getSteps(): Step[] {
   })
 }
 
-export function setStepOrder(steps: [{ id: string }]) {
+export function setStepsOrder(steps: Step[]) {
   const lesson = getCurrentLesson()
   steps.forEach((step, i) => {
     const s = lesson.findOne((el) => el.id == step.id)
     if (s) {
-      s.name = s.name.replace(/o-\d+/, 'o-' + (i + 1))
+      setStepOrder(s, i + 1)
     }
   })
+}
+
+export function tagUnorderedSteps() {
+  let startWith = getLastStepOrder() + 1
+  const lesson = getCurrentLesson()
+  stepsByOrder(lesson)
+    .filter((s) => !getTags(s).some((t) => t.startsWith('o-')))
+    .forEach((step, i) => setStepOrder(step, i + startWith))
 }
