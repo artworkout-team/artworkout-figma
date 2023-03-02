@@ -8,8 +8,8 @@ import { PublishTab } from './PublishTab'
 import { FormatTab } from './FormatTab'
 import { CreateTab } from './CreateTab'
 import './App.css'
-import { AspectRatio } from 'react-bootstrap-icons'
 import { pluginApi } from '../../rpc-api'
+import { ResizeIcon } from './assets/resizeIcon'
 
 function App() {
   const [wideMode, setWideMode] = useState(true)
@@ -43,7 +43,9 @@ function App() {
           <PublishTab />
         </Tab>
       </Tabs>
-        <AspectRatio className='resize-button' size={12} style={{color: '#000', opacity: 0.5}} onClick={()=> toggleWideMode()}/>
+      <button onClick={toggleWideMode} className='resize-button'>
+        <ResizeIcon />
+      </button>
   </div>
   )
 }
