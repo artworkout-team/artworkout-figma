@@ -9,7 +9,7 @@ import { FormatTab } from './FormatTab'
 import { CreateTab } from './CreateTab'
 import './App.css'
 import { pluginApi } from '../../rpc-api'
-import { ResizeIcon } from './icons/resizeIcon'
+import { ResizeIcon } from './assets/resizeIcon'
 
 function App() {
   const [wideMode, setWideMode] = useState(true)
