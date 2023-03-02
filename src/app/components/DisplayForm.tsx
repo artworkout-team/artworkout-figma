@@ -21,7 +21,7 @@ import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
 import { StepList } from './StepList'
-import { ArrowLeft, ArrowRight, ArrowsMove, ArrowUp, Lightbulb, Magic, Pencil } from 'react-bootstrap-icons'
+import { Pencil, ArrowUp, ArrowMove, Lightbulb, ArrowLeft, MagicWand, ArrowRight } from './assets/bootstrapIcons'
 
 function DisplayForm() {
   const [displayMode, setDisplayMode] = useState('all')
@@ -115,7 +115,7 @@ function DisplayForm() {
       }
     }
 
-  function onAnotherTagChange(tag: string) {
+  function onOtherTagsChange(tag: string) {
     if(otherTags.includes(tag)) {
       setOtherTags(otherTags.filter(item => item !== tag))
     } else {
@@ -146,7 +146,7 @@ function DisplayForm() {
         template,
         clearLayers,
         clearBefore,
-        anotherTags: otherTags,
+        otherTags,
         brushType,
         animationTag,
         delay,
@@ -164,7 +164,7 @@ function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, anotherTags: otherTags, brushType })
+      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, otherTags, brushType })
       emit('updateDisplay', { displayMode, stepNumber })
     }
   }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
@@ -182,7 +182,7 @@ function DisplayForm() {
         template: string
         clearBefore: boolean
         clearLayers: string[]
-        anotherTags: string[]
+        otherTags: string[]
         brushType: string
       }) => {
         setMutex(true)
@@ -195,7 +195,7 @@ function DisplayForm() {
         setTemplate(settings.template)
         setClearBefore(settings.clearBefore)
         setClearLayers(settings.clearLayers)
-        setOtherTags(settings.anotherTags)
+        setOtherTags(settings.otherTags)
         setBrushType(settings.brushType)
         setSteps(await pluginApi.getSteps())
         setMutex(false)
@@ -306,7 +306,7 @@ function DisplayForm() {
     )
   }
 
-  const renderAnotherTagsElement = (tag, index) => {
+  const renderOtherTagsElement = (tag, index) => {
     return (
         <Dropdown.Item
           href={`#/action ${tag.tag}`}
@@ -320,7 +320,7 @@ function DisplayForm() {
               inline
               checked={otherTags.includes(tag.tag)}
               label={tag.name}
-              onChange={() => onAnotherTagChange(tag.tag)}
+              onChange={() => onOtherTagsChange(tag.tag)}
               />
           </Col>
         </Row>
@@ -352,68 +352,68 @@ function DisplayForm() {
     </Dropdown>
   )
 
-  const renderAnotherTagsDropdown = (
+  const renderOtherTagsDropdown = (
     <Dropdown className={'mb-2'}  autoClose={'outside'}>
       <Dropdown.Toggle id="dropdown-autoclose-outside">
-        Another tags
+        Other tags
       </Dropdown.Toggle>
       <Dropdown.Menu>
-        {otherTagsList.map((step, index) => renderAnotherTagsElement(step, index))}
+        {otherTagsList.map((step, index) => renderOtherTagsElement(step, index))}
       </Dropdown.Menu>
     </Dropdown>
   )
 
   const renderAnimationsButtons = (
-    <Col>
+    <Col style={{width: '100%'}}>
     <ButtonToolbar className={'mb-2'}>
       <ButtonGroup size={'sm'} >
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-blink">Blink</Tooltip>}>
           <Button value={'blink'} id={'blink'} onClick={()=> onAnimationTagChange('blink')}>
-            <Lightbulb size={'8'}/>
+            <Lightbulb/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-appear">Appear</Tooltip>}>
           <Button value={'appear'} id={'appear'} onClick={()=> onAnimationTagChange('appear')}>
-            <Magic size={'8'}/>
+            <MagicWand/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-draw-line">Draw line</Tooltip>}>
           <Button value={'draw-line'} id={'draw-line'} onClick={() => onAnimationTagChange('draw-line')}>
-            <Pencil size={'10'}/>
+            <Pencil/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-fly-bottom">Fly from bottom</Tooltip>}>
           <Button value={'fly-bottom'} id={'fly-bottom'} onClick={() => onAnimationTagChange('fly-from-bottom')}>
-            <ArrowUp size={'8'}/>
+            <ArrowUp/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-fly-left">Fly from left</Tooltip>}>
           <Button value={'fly-left'} id={'fly-left'} onClick={() => onAnimationTagChange('fly-from-left')}>
-            <ArrowRight size={'8'}/>
+            <ArrowRight/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-fly-right">Fly from right</Tooltip>}>
           <Button value={'fly-right' } id={'fly-right'} onClick={() => onAnimationTagChange('fly-from-right')}>
-            <ArrowLeft size={'8'}/>
+            <ArrowLeft/>
           </Button>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-1">Wiggle-1</Tooltip>}>
           <Button value={'wiggle-1'} id={'wiggle-1'} onClick={() => onAnimationTagChange('wiggle-1')}>
-            <ArrowsMove size={'8'}/>
+            <ArrowMove/>
             <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               1
             </Form.Label>
@@ -423,7 +423,7 @@ function DisplayForm() {
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-2">Wiggle-2</Tooltip>}>
           <Button value={'wiggle-2'} id={'wiggle-2'} onClick={() => onAnimationTagChange('wiggle-2')}>
-            <ArrowsMove size={'8'}/>
+            <ArrowMove/>
             <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               2
             </Form.Label>
@@ -433,7 +433,7 @@ function DisplayForm() {
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-3">Wiggle-3</Tooltip>}>
           <Button value={'wiggle-3'} id={'wiggle-3'} onClick={() => onAnimationTagChange('wiggle-3')}>
-            <ArrowsMove size={'8'}/>
+            <ArrowMove/>
             <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               3
             </Form.Label>
@@ -443,7 +443,7 @@ function DisplayForm() {
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-wiggle-4">Wiggle-4</Tooltip>}>
           <Button value={'wiggle-4'} id={'wiggle-4'} onClick={() => onAnimationTagChange('wiggle-4')}>
-            <ArrowsMove size={'8'}/>
+            <ArrowMove/>
             <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
               4
             </Form.Label>
@@ -578,11 +578,11 @@ function DisplayForm() {
           </Accordion.Header>
           <Accordion.Body>
           <Form.Group as={Row} className='mb-2'>
-            <Col style={{width: '50%'}}>
+            <Col style={{width: '45%'}}>
               {renderClearLayerDropdown}
             </Col>
-            <Col style={{width: '50%'}}>
-              {renderAnotherTagsDropdown}
+            <Col style={{width: '45%'}}>
+              {renderOtherTagsDropdown}
             </Col>
           </Form.Group>
           <Row>
