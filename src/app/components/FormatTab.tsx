@@ -11,7 +11,6 @@ import {
 import { emit } from '../../events'
 import { pluginApi } from '../../rpc-api'
 import { ErrorLevel, LintError } from '../../plugin/linter'
-import { Circle } from 'react-bootstrap-icons'
 import './FormatTab.css'
 
 enum ErrorColor {
@@ -111,10 +110,13 @@ export function FormatTab() {
        </th>
         <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(ErrorLevel[row.level])}>
           <th className="th">
-            <Circle
-              size={20}
-              style={{ flex: 1, backgroundColor: ErrorColor[row.level], borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',  alignSelf: 'center' }}
-            />
+            <div
+              className='round-icon'
+              style={{
+                background: ErrorColor[row.level],
+                border: `3px solid ${ErrorColor[row.level]}`,
+              }}
+            ></div>
           </th>
       </OverlayTrigger>
       <OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Page name')}>
