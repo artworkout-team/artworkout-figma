@@ -90,7 +90,11 @@ async function loadFonts(texts: TextNode[]) {
       )
   )
   for (let font of uniqueFonts) {
-    await figma.loadFontAsync(font)
+    try {
+      await figma.loadFontAsync(font)
+    } catch (e) {
+      console.log(e)
+    }
   }
 }
 
