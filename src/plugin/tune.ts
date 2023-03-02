@@ -164,6 +164,7 @@ export function updateDisplay(
   ).length
   const maxStrokeWeight = getBrushSize(step)
   const brushType = getTag(step, 'brush-name-') || ''
+  let layerNumbersToClear = getTags(step).includes('clear-before') ? [...Array(stepNumber).keys()].slice(1) : getClearLayerNumbers(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')) || 0,
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
@@ -173,13 +174,10 @@ export function updateDisplay(
     stepNumber,
     displayMode,
     clearBefore: getTags(step).includes('clear-before'),
-    clearLayers: getClearLayerNumbers(step).map((n)=> n.toString()) || [],
-    anotherTags: getTags(step).filter((t) =>
-      t.startsWith('fixed-size') ||
+    clearLayers: layerNumbersToClear.map((n)=> n.toString()) || [],
+    otherTags: getTags(step).filter((t) =>
       t.startsWith('share-button') ||
-      t.startsWith('allow-undo') ||
-      t.startsWith('layer') ||
-      t.startsWith('resize-brush')) || [],
+      t.startsWith('allow-undo')) || [],
     brushType,
   })
   deleteTmp()
@@ -273,7 +271,7 @@ function updateProps(settings: {
   template: string
   clearLayers: number[]
   clearBefore: boolean
-  anotherTags: string[]
+  otherTags: string[]
   brushType: string
   animationTag: string
   delay: number
@@ -287,11 +285,8 @@ function updateProps(settings: {
       !t.startsWith('s-') &&
       !t.startsWith('clear-layer-') &&
       !t.startsWith('clear-before') &&
-      !t.startsWith('fixed-size') &&
       !t.startsWith('share-button') &&
       !t.startsWith('allow-undo') &&
-      !t.startsWith('layer') &&
-      !t.startsWith('resize-brush') &&
       !t.startsWith('brush-name-')
   )
   if (settings.template) {
@@ -307,18 +302,19 @@ function updateProps(settings: {
     tags.push(`brush-name-${settings.brushType}`)
   }
   if(settings.clearLayers.length > 0) {
-    if (settings.clearBefore) {
-      tags.push('clear-before')
-    } else {
+    if (!settings.clearBefore) {
       tags.push(`clear-layer-${settings.clearLayers.join(',')}`)
     }
   }
-  if (settings.anotherTags.length > 0) {
-    tags = tags.concat(settings.anotherTags)
+  if (settings.clearBefore) {
+    tags.push('clear-before')
+  }
+  
+  if (settings.otherTags.length > 0) {
+    tags = tags.concat(settings.otherTags)
   }
 
   addAnimationTag(step, settings.animationTag, settings.delay, settings.repeat)
-
   step.name = tags.join(' ')
 }
 
