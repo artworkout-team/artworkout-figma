@@ -1,6 +1,6 @@
 import { emit, on } from '../events'
 import {
-  descendantsWithoutSelf,
+  descendants,
   findLeafNodes,
   getCurrentLesson,
   getStepOrder,
@@ -256,7 +256,7 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
     }
   } else {
     if (tag) {
-      descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+      descendants(step as GroupNode).forEach((v) => {
         if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
           let selectionTags = getTags(v)
           selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
@@ -272,7 +272,7 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
         }
       })
     } else {
-      descendantsWithoutSelf(step as GroupNode).forEach((v) => {
+      descendants(step as GroupNode).forEach((v) => {
         if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
           let selectionTags = getTags(v)
           selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))

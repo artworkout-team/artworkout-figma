@@ -1,5 +1,4 @@
-import { on } from '../events'
-import { print, getTags, findAll, findTag, descendants } from './util'
+import { getTags, findAll, findTag, descendants } from './util'
 import { updateDisplay } from './tune'
 
 export interface LintError {
