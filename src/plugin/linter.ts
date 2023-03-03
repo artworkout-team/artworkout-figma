@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { print, getTags, findAll, findTag, descendantsWithoutSelf } from './util'
+import { print, getTags, findAll, findTag, descendants } from './util'
 import { updateDisplay } from './tune'
 
 interface LintError {
@@ -181,7 +181,7 @@ function lintInput(page: PageNode, node: GroupNode) {
   assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
   assert(node.name == 'input', "Must be 'input'", page, node)
-  descendantsWithoutSelf(node as GroupNode).forEach((v) => {
+  descendants(node as GroupNode).forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
     } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
@@ -258,7 +258,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   const brushName = tags
     .find((s) => /^brush-name-\w+$/.test(s))
     ?.replace('brush-name-', '')
-  const terminalNodes = descendantsWithoutSelf(step).filter(
+  const terminalNodes = descendants(step).filter(
     (v) => v['children'] == undefined
   )
   const maxSize = terminalNodes.reduce((acc, v) => {

@@ -92,7 +92,7 @@ export function getAllTree(node: GroupNode): SceneNode[] {
   return [node, ...node.children.flatMap((n) => getAllTree(n as GroupNode))]
 }
 
-export function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
+export function descendants(node: GroupNode): SceneNode[] {
   if (!node.children) {
     return []
   }
