@@ -1,26 +1,50 @@
-import React, { useEffect, useState, ChangeEvent } from 'react'
-import { Stack, Button } from 'react-bootstrap'
-import { emit, on } from '../../events'
+import React, { useState, ChangeEvent } from 'react'
+import {
+  Stack,
+  Button,
+  Form,
+  Table,
+  OverlayTrigger,
+  Tooltip,
+  Accordion,
+} from 'react-bootstrap'
+import { emit } from '../../events'
 import { pluginApi } from '../../rpc-api'
+import { ErrorLevel, LintError } from '../../plugin/linter'
+import './FormatTab.css'
+
+enum ErrorColor {
+  '#ff0000',
+  '#ff9900',
+  '#00ff00',
+}
 
 export function FormatTab() {
-  const [textareaValue, setTextareaValue] = useState('')
+  const [textareaValue, setTextareaValue] = useState<string>()
+  const [tableValue, setTableValue] = useState<LintError[]>()
 
-  useEffect(() => on('print', setTextareaValue))
+  let lastPageName: string = undefined
 
-  function getLineNumber() {
-    let tArea = document.querySelector('#output') as HTMLTextAreaElement
-    return tArea.value.substr(0, tArea.selectionStart).split('\n').length
-  }
-
-  function selectError() {
-    emit('selectError', getLineNumber() - 1)
+  function selectError(errorIndex?: number) {
+    pluginApi.selectError(errorIndex)
   }
 
   async function exportTexts() {
     setTextareaValue(
       (await pluginApi.exportTexts()).map((s) => `"${s}" = "${s}";`).join('\n')
     )
+  }
+
+  async function lintPage() {
+    const errors = await pluginApi.lintPage()
+    setTableValue(errors)
+    await pluginApi.saveErrors(errors)
+  }
+
+  async function lintCourse() {
+    const errors = await pluginApi.lintCourse()
+    setTableValue(errors)
+    await pluginApi.saveErrors(errors)
   }
 
   async function importTexts() {
@@ -58,13 +82,71 @@ export function FormatTab() {
     setTextareaValue((event.target as HTMLTextAreaElement).value)
   }
 
+  async function onCheckBoxChange(index: number) {
+    let newTableValue = [...tableValue]
+    newTableValue[index].ignore = !newTableValue[index].ignore
+    setTableValue(newTableValue)
+    await pluginApi.saveErrors(newTableValue)
+  }
+
+
+  const renderTooltip = (error: string) => (
+    <Tooltip id="button-tooltip">
+      {error}
+    </Tooltip>
+  )
+
+
+  function renderRow(row: LintError, index: number) {
+    let rowColor = 'white'
+    if (lastPageName !== undefined && row.pageName !== lastPageName) {
+      rowColor = '#d3d3d3'
+      lastPageName = row.pageName
+    }
+    return (
+      <tr style={{backgroundColor: rowColor }} key={index} onClick={() => selectError(index)}>
+        <th>
+          <Form.Check type='checkbox' className={'th'} checked={row.ignore} onChange={() => onCheckBoxChange(index)} />
+       </th>
+        <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(ErrorLevel[row.level])}>
+          <th className="th">
+            <div
+              className='round-icon'
+              style={{
+                background: ErrorColor[row.level],
+                border: `3px solid ${ErrorColor[row.level]}`,
+              }}
+            ></div>
+          </th>
+      </OverlayTrigger>
+      <OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Page name')}>
+      <th className={'th'}>{row.pageName}</th>
+        </OverlayTrigger>
+      <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(row.error)}>
+        <th className={'th-error'}>{row.error}</th>
+      </OverlayTrigger>
+        { row.nodeType ?
+          (<OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Node type')}>
+            <th className={'th'}>{row.nodeType}</th>
+          </OverlayTrigger>)
+          : null}
+      { row.nodeName ?
+        (<OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Node name')}>
+          <th className={'th'}>{row.nodeName}</th>
+        </OverlayTrigger>)
+        : null}
+      </tr>
+    )
+  }
+
   return (
-    <Stack gap={2}>
+    <Stack gap={2} className={'stack'} >
+      <div className={'content'}>
       <div>
-        <Button className='plugin-btn' onClick={() => emit('lintCourse')}>
+        <Button className='plugin-btn' onClick={() => lintCourse()}>
           Lint course
         </Button>
-        <Button className='plugin-btn' onClick={() => emit('lintPage')}>
+        <Button className='plugin-btn' onClick={() => lintPage()}>
           Lint page
         </Button>
         <Button className='plugin-btn' onClick={() => emit('autoFormat')}>
@@ -80,15 +162,32 @@ export function FormatTab() {
           Import Texts
         </Button>
       </div>
-      <textarea
-        value={textareaValue}
-        onChange={handleTextAreaValue}
-        onClick={selectError}
-        id='output'
-        style={{ whiteSpace: 'pre', overflow: 'auto' }}
-        cols={83}
-        rows={18}
-      ></textarea>
+      <Table hover size="sm">
+        <tbody>
+          {tableValue?.length ?
+            tableValue.map((item, index) => renderRow(item, index))
+            :
+            <tr> Done  </tr>
+          }
+        </tbody>
+      </Table>
+      </div>
+      <Accordion className={'text-area-spoiler'}>
+        <Accordion.Item eventKey="0">
+          <Accordion.Header>Text area</Accordion.Header>
+          <Accordion.Body>
+            <textarea
+              value={textareaValue}
+              onChange={handleTextAreaValue}
+              onClick={() => selectError()}
+              id='output'
+              style={{ whiteSpace: 'pre', overflow: 'auto' }}
+              cols={83}
+              rows={18}
+            ></textarea>
+          </Accordion.Body>
+        </Accordion.Item>
+      </Accordion>
     </Stack>
   )
 }

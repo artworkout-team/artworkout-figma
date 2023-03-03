@@ -1,0 +1,31 @@
+.th-error {
+    word-break: break-all;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: normal;
+    max-width: 150px;
+}
+.th{
+    max-width: 100px;
+    white-space: nowrap;
+    align-content: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: normal;
+    word-break: break-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.text-area-spoiler{
+    width: 150px;
+}
+.stack{
+    height: 100%;
+    align-content: center;
+    justify-content: space-between;
+}
+.content{
+    align-content: center;
+    justify-content: center;
+}

@@ -61,12 +61,25 @@ export function isResultStep(node: BaseNode) {
 }
 
 export function print(text: string) {
-  figma.ui.resize(700, 400)
   emit('print', text)
 }
 
 export function displayNotification(message: string) {
   figma.notify(message)
+}
+
+export function descendants(node: GroupNode): SceneNode[] {
+  if (!node.children) {
+    return [node]
+  }
+  return [node, ...node.children.flatMap((n) => descendants(n as GroupNode))]
+}
+
+export function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
+  if (!node.children) {
+    return []
+  }
+  return node.children.flatMap((n) => descendants(n as GroupNode))
 }
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -76,6 +89,14 @@ export function getStepOrder(step: SceneNode | Step): number {
   const stepTag = getTags(step).find((tag) => tag.match(stepOrderTag))
   if (stepTag) {
     return Number(stepTag.match(stepOrderTag)[1])
+  }
+}
+
+export function resizeUi(isWide: boolean) {
+  if (isWide) {
+    figma.ui.resize(900, 450)
+  } else {
+    figma.ui.resize(340, 450)
   }
 }
 
