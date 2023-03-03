@@ -68,20 +68,6 @@ export function displayNotification(message: string) {
   figma.notify(message)
 }
 
-export function descendants(node: GroupNode): SceneNode[] {
-  if (!node.children) {
-    return [node]
-  }
-  return [node, ...node.children.flatMap((n) => descendants(n as GroupNode))]
-}
-
-export function descendantsWithoutSelf(node: GroupNode): SceneNode[] {
-  if (!node.children) {
-    return []
-  }
-  return node.children.flatMap((n) => descendants(n as GroupNode))
-}
-
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function getStepOrder(step: SceneNode | Step): number {
@@ -104,4 +90,18 @@ export function setStepOrder(step: SceneNode, stepOrder: number) {
   getTags(step).some((tag) => /^o-\d+$/.test(tag))
     ? (step.name = step.name.replace(/o-\d+/, `o-${stepOrder}`))
     : (step.name += ` o-${stepOrder}`)
+}
+
+export function getAllTree(node: GroupNode): SceneNode[] {
+  if (!node.children) {
+    return [node]
+  }
+  return [node, ...node.children.flatMap((n) => getAllTree(n as GroupNode))]
+}
+
+export function descendants(node: GroupNode): SceneNode[] {
+  if (!node.children) {
+    return []
+  }
+  return node.children.flatMap((n) => getAllTree(n as GroupNode))
 }
