@@ -119,7 +119,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
 }
 
 const validVectorTags =
-  /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^Vector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
+  /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^[vV]ector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
 
 function lintVector(page: PageNode, node: VectorNode) {
   assert(node.opacity == 1, 'Must be opaque', page, node)
@@ -159,6 +159,8 @@ function lintVector(page: PageNode, node: VectorNode) {
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
 }
 
+const validGroupTags = /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
+
 function lintGroup(page: PageNode, node: GroupNode) {
   assert(
     !/BOOLEAN_OPERATION/.test(node.type),
@@ -178,7 +180,7 @@ function lintGroup(page: PageNode, node: GroupNode) {
   )
   tags.forEach((tag) => {
     assert(
-      /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$/.test(tag),
+      validGroupTags.test(tag),
       `Tag '${tag}' unknown`,
       page,
       node
@@ -212,6 +214,8 @@ function lintInput(page: PageNode, node: GroupNode) {
   })
 }
 
+const validSettingsTags = /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/
+
 function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.type == 'ELLIPSE', "Must be 'ELLIPSE' type'", page, node)
   assert(node.opacity == 1, 'Must be opaque', page, node)
@@ -219,7 +223,7 @@ function lintSettings(page: PageNode, node: EllipseNode) {
   const tags = getTags(node)
   tags.forEach((tag) => {
     assert(
-      /^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/.test(
+      validSettingsTags.test(
         tag
       ),
       `Tag '${tag}' unknown`,
@@ -245,6 +249,8 @@ function lintSettings(page: PageNode, node: EllipseNode) {
   )
 }
 
+const validStepTags = /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$/
+
 function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
     return
@@ -254,7 +260,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   const tags = getTags(step)
   tags.forEach((tag) => {
     assert(
-      /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$/.test(
+      validStepTags.test(
         tag
       ),
       `Tag '${tag}' unknown. Use slash to /ignore.`,

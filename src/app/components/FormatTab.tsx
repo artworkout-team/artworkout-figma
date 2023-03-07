@@ -16,7 +16,7 @@ import './FormatTab.css'
 enum ErrorColor {
   '#ff0000',
   '#ff9900',
-  '#00ff00',
+  '#ffff00',
 }
 
 export function FormatTab() {

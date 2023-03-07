@@ -80,9 +80,9 @@ export function getStepOrder(step: SceneNode | Step): number {
 
 export function resizeUi(isWide: boolean) {
   if (isWide) {
-    figma.ui.resize(900, 450)
+    figma.ui.resize(900, 470)
   } else {
-    figma.ui.resize(340, 450)
+    figma.ui.resize(340, 470)
   }
 }
 

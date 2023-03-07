@@ -333,8 +333,9 @@ function updateProps(settings: {
   if (settings.otherTags.length > 0) {
     tags = tags.concat(settings.otherTags)
   }
-
-  addAnimationTag(step, settings.animationTag, settings.delay, settings.repeat)
+  if(settings.animationTag !== undefined) {
+    addAnimationTag(step, settings.animationTag, settings.delay, settings.repeat)
+  }
   step.name = tags.join(' ')
 }
 
