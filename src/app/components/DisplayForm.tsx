@@ -37,7 +37,7 @@ function DisplayForm() {
   const [clearLayers, setClearLayers] = useState<string[]>([])
   const [clearBefore, setClearBefore] = useState(false)
 
-  const [animationTag, setAnimationTag] = useState<string>('')
+  const [animationTag, setAnimationTag] = useState<string>(undefined)
   const [delay, setDelay] = useState<number>(0)
   const [repeat, setRepeat] = useState<number>(0)
 
@@ -164,7 +164,7 @@ function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, otherTags, brushType })
+      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, otherTags, brushType  })
       emit('updateDisplay', { displayMode, stepNumber })
     }
   }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
@@ -197,6 +197,7 @@ function DisplayForm() {
         setClearLayers(settings.clearLayers)
         setOtherTags(settings.otherTags)
         setBrushType(settings.brushType)
+        setAnimationTag(undefined)
         setSteps(await pluginApi.getSteps())
         setMutex(false)
       }
@@ -454,10 +455,14 @@ function DisplayForm() {
       <Row>
         <Col>
           <Form.Group as={Row} className={'mb-2'}>
-            <Form.Label column xs={5}>
-              Delay
-            </Form.Label>
-            <Col>
+            <OverlayTrigger
+              placement={'bottom'}
+              overlay={<Tooltip id="button-tooltip-wiggle-4">Delay</Tooltip>}>
+              <Form.Label column className={'col-2'}>
+                D
+              </Form.Label>
+            </OverlayTrigger>
+            <Col className={'col-4'}>
               <Form.Control
                 disabled={animationTag === ''}
                 type='number'
@@ -468,12 +473,14 @@ function DisplayForm() {
                 step={1}
               />
             </Col>
-          </Form.Group>
-          <Form.Group as={Row} className={'mb-3'}>
-            <Form.Label column xs={5}>
-              Repeat
-            </Form.Label>
-            <Col>
+            <OverlayTrigger
+              placement={'bottom'}
+              overlay={<Tooltip id="button-tooltip-wiggle-4">Repeat</Tooltip>}>
+              <Form.Label column className={'col-2'}>
+                R
+              </Form.Label>
+            </OverlayTrigger>
+            <Col className={'col-4'}>
               <Form.Control
                 disabled={animationTag === ''}
                 type='number'
@@ -518,8 +525,7 @@ function DisplayForm() {
               </Form.Label>
               <Col>
                 <Form.Select value={brushType} onChange={onBrushTypeChange}>
-                  <option value=''></option>
-                  <option value='pen'>pen</option>
+                  <option value=''>pen</option>
                   <option value='pencil'>pencil</option>
                   <option value='marker'>marker</option>
                 </Form.Select>
