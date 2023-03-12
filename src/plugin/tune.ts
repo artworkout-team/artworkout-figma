@@ -1,6 +1,5 @@
 import { emit, on } from '../events'
 import {
-  descendants,
   findLeafNodes,
   getCurrentLesson,
   getStepOrder,
@@ -238,11 +237,11 @@ setTimeout(() => {
 }, 1500)
 
 function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
-  if((/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(figma.currentPage.selection[0].type))) {
+  if(figma.currentPage.selection) {
     let selectionTags = getTags(figma.currentPage.selection[0])
     selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
     selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
-    if(tag) {
+    if (tag) {
       selectionTags.push(tag)
       if (delay) {
         selectionTags.push(`d${delay}`)
@@ -253,33 +252,6 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
       figma.currentPage.selection[0].name = selectionTags.join(' ')
     } else {
       figma.currentPage.selection[0].name = selectionTags.join(' ')
-    }
-  } else {
-    if (tag) {
-      descendants(step as GroupNode).forEach((v) => {
-        if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
-          let selectionTags = getTags(v)
-          selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
-          selectionTags.push(tag)
-          selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
-          if (delay) {
-            selectionTags.push(`d${delay}`)
-          }
-          if (repeat) {
-            selectionTags.push(`r${repeat}`)
-          }
-          v.name = selectionTags.join(' ')
-        }
-      })
-    } else {
-      descendants(step as GroupNode).forEach((v) => {
-        if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
-          let selectionTags = getTags(v)
-          selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
-          selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
-          v.name = selectionTags.join(' ')
-        }
-      })
     }
   }
 }
@@ -361,6 +333,7 @@ export function selectionChanged() {
   ) {
     return
   }
+
   //update step
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1

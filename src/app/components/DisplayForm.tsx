@@ -9,7 +9,6 @@ import {
   Row,
   Col,
   ButtonGroup,
-  Button,
   OverlayTrigger,
   Tooltip,
   ButtonToolbar,
@@ -21,9 +20,18 @@ import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
 import { StepList } from './StepList'
-import { Pencil, ArrowUp, ArrowMove, Lightbulb, ArrowLeft, MagicWand, ArrowRight } from './assets/bootstrapIcons'
+import {
+  Pencil,
+  Lightbulb,
+  MagicWand,
+  FlipIcon
+} from "./assets/bootstrapIcons"
 
-function DisplayForm() {
+export function animationTest () {
+  console.log("animationTest")
+}
+
+export function DisplayForm() {
   const [displayMode, setDisplayMode] = useState('all')
   const [template, setTemplate] = useState('')
   const [stepNumber, setStepNumber] = useState(1)
@@ -184,6 +192,7 @@ function DisplayForm() {
         clearLayers: string[]
         otherTags: string[]
         brushType: string
+        animation: string
       }) => {
         setMutex(true)
         setShadowSize(settings.shadowSize)
@@ -197,6 +206,7 @@ function DisplayForm() {
         setClearLayers(settings.clearLayers)
         setOtherTags(settings.otherTags)
         setBrushType(settings.brushType)
+        setAnimationTag(settings.animation)
         setSteps(await pluginApi.getSteps())
         setMutex(false)
       }
@@ -370,94 +380,44 @@ function DisplayForm() {
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-blink">Blink</Tooltip>}>
-          <Button value={'blink'} id={'blink'} onClick={()=> onAnimationTagChange('blink')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='blink'} value={'blink'} id={'blink'} onChange={()=> onAnimationTagChange('blink')}>
             <Lightbulb/>
-          </Button>
+          </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-appear">Appear</Tooltip>}>
-          <Button value={'appear'} id={'appear'} onClick={()=> onAnimationTagChange('appear')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='appear'}  value={'appear'} id={'appear'} onChange={()=> onAnimationTagChange('appear')}>
             <MagicWand/>
-          </Button>
+          </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-draw-line">Draw line</Tooltip>}>
-          <Button value={'draw-line'} id={'draw-line'} onClick={() => onAnimationTagChange('draw-line')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='draw-line'} value={'draw-line'} id={'draw-line'} onChange={() => onAnimationTagChange('draw-line')}>
             <Pencil/>
-          </Button>
+          </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-fly-bottom">Fly from bottom</Tooltip>}>
-          <Button value={'fly-bottom'} id={'fly-bottom'} onClick={() => onAnimationTagChange('fly-from-bottom')}>
-            <ArrowUp/>
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-fly-left">Fly from left</Tooltip>}>
-          <Button value={'fly-left'} id={'fly-left'} onClick={() => onAnimationTagChange('fly-from-left')}>
-            <ArrowRight/>
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-fly-right">Fly from right</Tooltip>}>
-          <Button value={'fly-right' } id={'fly-right'} onClick={() => onAnimationTagChange('fly-from-right')}>
-            <ArrowLeft/>
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-wiggle-1">Wiggle-1</Tooltip>}>
-          <Button value={'wiggle-1'} id={'wiggle-1'} onClick={() => onAnimationTagChange('wiggle-1')}>
-            <ArrowMove/>
-            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
-              1
-            </Form.Label>
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-wiggle-2">Wiggle-2</Tooltip>}>
-          <Button value={'wiggle-2'} id={'wiggle-2'} onClick={() => onAnimationTagChange('wiggle-2')}>
-            <ArrowMove/>
-            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
-              2
-            </Form.Label>
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-wiggle-3">Wiggle-3</Tooltip>}>
-          <Button value={'wiggle-3'} id={'wiggle-3'} onClick={() => onAnimationTagChange('wiggle-3')}>
-            <ArrowMove/>
-            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
-              3
-            </Form.Label>
-          </Button>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement={'bottom'}
-          overlay={<Tooltip id="button-tooltip-wiggle-4">Wiggle-4</Tooltip>}>
-          <Button value={'wiggle-4'} id={'wiggle-4'} onClick={() => onAnimationTagChange('wiggle-4')}>
-            <ArrowMove/>
-            <Form.Label style={{fontSize: 6, padding: 0, margin: 0}}>
-              4
-            </Form.Label>
-          </Button>
+          overlay={<Tooltip id="button-tooltip-draw-line">Draw line flip</Tooltip>}>
+          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='draw-line-flip'} value={'draw-line-flip'} id={'draw-line-flip'} onChange={() => onAnimationTagChange('draw-line-flip')}>
+            <FlipIcon/>
+          </ToggleButton>
         </OverlayTrigger>
       </ButtonGroup>
     </ButtonToolbar>
       <Row>
         <Col>
           <Form.Group as={Row} className={'mb-2'}>
-            <Form.Label column xs={5}>
-              Delay
-            </Form.Label>
-            <Col>
+            <OverlayTrigger
+              placement={'bottom'}
+              overlay={<Tooltip id="button-tooltip-wiggle-4">Delay</Tooltip>}>
+              <Form.Label column className={'col-2'}>
+                D
+              </Form.Label>
+            </OverlayTrigger>
+            <Col className={'col-4'}>
               <Form.Control
                 disabled={animationTag === ''}
                 type='number'
@@ -468,12 +428,14 @@ function DisplayForm() {
                 step={1}
               />
             </Col>
-          </Form.Group>
-          <Form.Group as={Row} className={'mb-3'}>
-            <Form.Label column xs={5}>
-              Repeat
-            </Form.Label>
-            <Col>
+            <OverlayTrigger
+              placement={'bottom'}
+              overlay={<Tooltip id="button-tooltip-wiggle-4">Repeat</Tooltip>}>
+              <Form.Label column className={'col-2'}>
+                R
+              </Form.Label>
+            </OverlayTrigger>
+            <Col className={'col-4'}>
               <Form.Control
                 disabled={animationTag === ''}
                 type='number'

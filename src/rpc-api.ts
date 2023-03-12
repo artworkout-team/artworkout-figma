@@ -11,6 +11,7 @@ import {
 import { displayNotification, resizeUi } from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
 import { selectionChanged, currentPageChanged, updateDisplay } from './plugin/tune'
+import { animationTest } from "./app/components/DisplayForm"
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
   setSessionToken(token: string) {
