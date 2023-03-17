@@ -156,7 +156,7 @@ function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      setAnimationTag('')
+      setAnimationTag(undefined)
       setDelay(0)
       setRepeat(0)
     }
