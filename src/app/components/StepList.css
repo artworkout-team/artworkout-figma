@@ -17,7 +17,7 @@
 }
 
 .round-icon-container {
-  justify-content: center;
+  justify-content: space-around;
   background: #fff;
   height: 24px;
   width: 40px;
@@ -32,4 +32,8 @@
 .result-icon {
   font-size: 1rem;
   font-weight: 700;
+}
+.layer-number{
+  font-size: 0.7rem;
+  color: #000;
 }
