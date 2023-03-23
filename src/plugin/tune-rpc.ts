@@ -8,6 +8,7 @@ export interface Step {
     fillsColor: string
     strokesColor: string
   }
+  layerNumber: number
 }
 
 function getOrder(step: SceneNode) {
@@ -60,7 +61,7 @@ function getColors(node: GroupNode) {
 export function getSteps(): Step[] {
   const lesson = getCurrentLesson()
   return stepsByOrder(lesson).map((step: GroupNode) => {
-    return { id: step.id, name: step.name, colors: getColors(step) }
+    return { id: step.id, name: step.name, colors: getColors(step), layerNumber: lesson.children.indexOf(step) + 1}
   })
 }
 

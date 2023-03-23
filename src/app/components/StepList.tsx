@@ -52,6 +52,9 @@ export function StepList({
                     >
                       {stepNode.name.substring(5).replace(/s-multistep-/, '')}
                       <div className='round-icon-container'>
+                        <div className='layer-number'>
+                          {stepNode.layerNumber}
+                        </div>
                         {!getTags(stepNode).includes('s-multistep-result') ? (
                           <div
                             className='round-icon'
