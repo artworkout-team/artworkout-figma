@@ -14,7 +14,7 @@ import {
   Tooltip,
   ButtonToolbar,
   Dropdown,
-  Accordion, 
+  Accordion,
   ToggleButton,
 } from 'react-bootstrap'
 import { emit, on } from '../../events'
@@ -27,6 +27,7 @@ function DisplayForm() {
   const [displayMode, setDisplayMode] = useState('all')
   const [template, setTemplate] = useState('')
   const [stepNumber, setStepNumber] = useState(1)
+  const [nextBrushStep, setNextBrushStep] = useState(false)
   const [stepCount, setStepCount] = useState(1)
   const [shadowSize, setShadowSize] = useState(0)
   const [brushSize, setBrushSize] = useState(0)
@@ -131,9 +132,13 @@ function DisplayForm() {
     }
   }
 
+  function onNextBrushStepClick() {
+    setNextBrushStep(true)
+  }
+
   useEffect(() => {
     if (!mutex) {
-      emit('updateDisplay', { displayMode, stepNumber })
+      emit('updateDisplay', { displayMode, stepNumber, nextBrushStep })
     }
   }, [stepNumber, displayMode])
 
@@ -164,8 +169,14 @@ function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
+      emit('updateDisplay', { displayMode, stepNumber, nextBrushStep })
+    }
+  }, [nextBrushStep])
+
+  useEffect(() => {
+    if (!mutex) {
       emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, otherTags, brushType  })
-      emit('updateDisplay', { displayMode, stepNumber })
+      emit('updateDisplay', { displayMode, stepNumber, nextBrushStep: false })
     }
   }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
 
@@ -199,6 +210,7 @@ function DisplayForm() {
         setBrushType(settings.brushType)
         setAnimationTag(undefined)
         setSteps(await pluginApi.getSteps())
+        setNextBrushStep(false)
         setMutex(false)
       }
     )
@@ -224,6 +236,8 @@ function DisplayForm() {
   useHotkeys('c', () => setDisplayMode('current'), { enableOnTags })
   useHotkeys('p', () => setDisplayMode('previous'), { enableOnTags })
   useHotkeys('t', () => setDisplayMode('template'), { enableOnTags })
+  useHotkeys('n', () => onNextBrushStepClick(), { enableOnTags })
+
   useHotkeys('d', () => setBrushSize((prev) => (prev += 5)), { enableOnTags })
   useHotkeys('a', () => setBrushSize((prev) => (prev - 5 > 0 ? prev - 5 : 0)), {
     enableOnTags,
@@ -237,7 +251,7 @@ function DisplayForm() {
 
   const renderStepOptions = (
     <Form.Group as={Row}>
-      <Col>
+      <Col style={{maxWidth: '40%'}}>
         <Form.Group as={Row} className={'justify-content-center'}>
           <OverlayTrigger
             placement={'bottom'}
@@ -258,28 +272,39 @@ function DisplayForm() {
         </Form.Group>
       </Col>
       <Col>
-          <ButtonGroup>
+        <Form.Group as={Row}>
+         <Col>
+          <ButtonGroup className={'mr-2'} size={'sm'}>
             <OverlayTrigger
               placement={'bottom'}
-              overlay={<Tooltip className={'tooltip'} style={{position: 'fixed'}} id="button-tooltip-all">(Q) All</Tooltip>}>
-              <ToggleButton  variant="outline-primary"  type='radio' checked={displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
-            </OverlayTrigger>
-            <OverlayTrigger
-              placement={'bottom'}
-              overlay={<Tooltip id="button-tooltip-current">(C)urrent</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
-            </OverlayTrigger>
-            <OverlayTrigger
-              placement={'bottom'}
-              overlay={<Tooltip id="button-tooltip-previous">(P)revious</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
-            </OverlayTrigger>
-            <OverlayTrigger
-              placement={'bottom'}
-              overlay={<Tooltip id="button-tooltip-template">(T)emplate</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
+              overlay={<Tooltip id="button-tooltip-template">(N)ext brush step</Tooltip>}>
+              <Button variant="outline-primary"  id={'displayModeNextBrushStep'} value={'next'} onClick={()=> onNextBrushStepClick()}>N</Button>
             </OverlayTrigger>
           </ButtonGroup>
+            <ButtonGroup className={'ml-2'}>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={<Tooltip className={'tooltip'} style={{position: 'fixed'}} id="button-tooltip-all">(Q) All</Tooltip>}>
+                <ToggleButton  variant="outline-primary"  type='radio' checked={displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={<Tooltip id="button-tooltip-current">(C)urrent</Tooltip>}>
+                <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={<Tooltip id="button-tooltip-previous">(P)revious</Tooltip>}>
+                <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={<Tooltip id="button-tooltip-template">(T)emplate</Tooltip>}>
+                <ToggleButton variant="outline-primary" type='radio' checked={displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
+              </OverlayTrigger>
+            </ButtonGroup>
+          </Col>
+        </Form.Group>
       </Col>
     </Form.Group>
   )

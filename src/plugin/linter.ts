@@ -1,5 +1,5 @@
 import { getTags, findAll, findTag, descendants } from './util'
-import { updateDisplay } from './tune'
+import { setDisplayModeToAll } from './tune'
 
 export interface LintError {
   ignore?: boolean
@@ -456,16 +456,17 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-export function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) {
+export async function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) {
   if (!appendErrors) {
     errors = []
+    await setDisplayModeToAll()
   }
   const page = currentPage?  currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
 
-  updateDisplay(page, { displayMode: 'all', stepNumber: 1 })
+  //updateDisplay(page, { displayMode: 'all', stepNumber: 1, nextBrushStep: false })
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),
@@ -521,8 +522,9 @@ function lintIndex(page: PageNode) {
   lintThumbnail(page, page.children[0] as FrameNode)
 }
 
-export function lintCourse() {
+export async function lintCourse() {
   errors = []
+  await setDisplayModeToAll()
   assert(
     /^COURSE-[a-z\-0-9]+$/.test(figma.root.name),
     `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`

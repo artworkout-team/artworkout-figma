@@ -5,6 +5,7 @@ import LoginForm from './LoginForm'
 import Parse from 'parse'
 import { userStore } from '../models/user'
 import { useSnapshot } from 'valtio'
+import { setDisplayModeToAll } from '../../plugin/tune'
 
 const ParseLesson = Parse.Object.extend('Lesson')
 const ParseCourse = Parse.Object.extend('Course')
@@ -75,6 +76,7 @@ export function PublishTab() {
     { debug }: { debug: boolean } = { debug: false }
   ) {
     setIsDisabled(true)
+    await setDisplayModeToAll()
     const course = await pluginApi.exportCourse()
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([

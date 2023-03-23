@@ -34,7 +34,6 @@ function deleteTmp() {
 }
 
 let lastMode = 'all'
-let lastPage: PageNode
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
   lesson.children.forEach((step) => {
@@ -165,19 +164,75 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   return clearLayerNumbers
 }
 
+export function setDisplayModeToAll() {
+  const pages = figma.root.children
+  lastMode = 'all'
+  pages.forEach((page) => {
+    if (page) {
+      const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
+      if(!lesson) return
+      lesson
+        .findAll((el) => el.name.startsWith('tmp-'))
+        .forEach((el) => {
+          el.remove()
+        })
+      if (lesson) {
+        lesson.children.forEach((step) => {
+          step.visible = true
+        })
+      }
+    }
+  })
+}
+
 export function updateDisplay(
   page: PageNode,
-  settings: { displayMode: string; stepNumber: number }
+  settings: { displayMode: string; stepNumber: number, nextBrushStep: boolean }
 ) {
-  lastPage = page
   lastMode = settings.displayMode
   const { displayMode, stepNumber } = settings
-  const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
+  let lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
     return
   }
-  const step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
-  page.selection = [step]
+  let step: GroupNode
+
+  if(settings.nextBrushStep){
+    const steps = stepsByOrder(lesson)
+    const nextStep = steps.find((step, index) => getTags(step).includes('s-multistep-brush') && index > (stepNumber - 1))
+
+      if (!nextStep) {
+        const lessons = figma.root.children as unknown as FrameNode[]
+          const nextLesson = lessons.find((newLesson, index) => {
+            if (index > lessons.indexOf(lesson.parent as FrameNode)) {
+              const lessonFrame = newLesson.children.find((t) => t.name == 'lesson') as FrameNode
+              if (lessonFrame) {
+                const newSteps = stepsByOrder(lessonFrame)
+                const newNextStep = newSteps.find((step) => getTags(step).includes('s-multistep-brush'))
+                if (newNextStep) {
+                  return { newLesson }
+                }
+              }
+            }
+          })
+
+          if (nextLesson) {
+            figma.currentPage = nextLesson as unknown as PageNode
+            lesson = nextLesson.children.find((el) => el.name == 'lesson') as FrameNode
+            step = stepsByOrder(lesson).find((step) => getTags(step).includes('s-multistep-brush')) as GroupNode
+          } else {
+            lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
+            step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
+          }
+      } else {
+        step = nextStep as GroupNode
+      }
+  } else {
+    step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
+  }
+
+  figma.currentPage.selection = [step]
+
   const stepCount = lesson.children.filter((n) =>
     getTags(n).includes('step')
   ).length
@@ -234,7 +289,7 @@ export function updateDisplay(
 }
 
 setTimeout(() => {
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1, nextBrushStep: false })
 }, 1500)
 
 function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
@@ -342,13 +397,17 @@ function updateProps(settings: {
 on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
 on('updateProps', updateProps)
 
-export function currentPageChanged(pageNode: any) {
-  if (figma && !lastPage){
-    lastPage = figma.currentPage
-  }
-    updateDisplay(lastPage, { displayMode: 'all', stepNumber: 1 })
-    updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
-    lastPage = pageNode
+export function currentPageChanged() {
+    const selection = figma.currentPage.selection[0] as GroupNode
+    const lesson = getCurrentLesson()
+    if (!selection || !lesson || !lesson.children.includes(selection)) {
+      updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber: 1, nextBrushStep: false })
+      return
+    }
+    const step = figma.currentPage.selection[0] as GroupNode
+    console.log('stepNumber', lesson, step, 1)
+    const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+    updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber: stepNumber || 1, nextBrushStep: false })
 }
 
 export function selectionChanged() {
@@ -365,5 +424,5 @@ export function selectionChanged() {
   //update step
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
-  updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber })
+  updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber, nextBrushStep: false })
 }
