@@ -10,8 +10,9 @@ import {
 } from './plugin/create'
 import { displayNotification, resizeUi } from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
-import { selectionChanged, currentPageChanged, updateDisplay } from './plugin/tune'
-import { animationTest } from "./app/components/DisplayForm"
+import { selectionChanged, currentPageChanged, updateDisplay, updateDisplayFromForm, updatePropsFromForm } from "./plugin/tune"
+import { setAnimationTags, updateProps } from "./app/components/uiRPC"
+
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
   setSessionToken(token: string) {
@@ -39,8 +40,12 @@ export const pluginApi = createPluginAPI({
   lintPage,
   lintCourse,
   resizeUi,
+  updateDisplayFromForm,
+  updatePropsFromForm,
 })
 
 // Figma UI app methods
 export const uiApi = createUIAPI({
+  setAnimationTags,
+  updateProps,
 })

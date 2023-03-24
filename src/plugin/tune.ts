@@ -6,6 +6,7 @@ import {
   getTags,
   isResultStep,
 } from './util'
+import { uiApi } from "../rpc-api"
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -164,7 +165,7 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   return clearLayerNumbers
 }
 
-export function updateDisplay(
+export async function updateDisplay(
   page: PageNode,
   settings: { displayMode: string; stepNumber: number }
 ) {
@@ -183,7 +184,22 @@ export function updateDisplay(
   const maxStrokeWeight = getBrushSize(step)
   const brushType = getTag(step, 'brush-name-') || ''
   let layerNumbersToClear = getTags(step).includes('clear-before') ? [...Array(stepNumber).keys()].slice(1) : getClearLayerNumbers(step)
-  emit('updateForm', {
+  await uiApi.updateProps({
+    shadowSize: parseInt(getTag(step, 'ss-')) || 0,
+    brushSize: parseInt(getTag(step, 'bs-')) || 0,
+    suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
+    template: getTag(step, 's-') || '0',
+    stepCount,
+    stepNumber,
+    displayMode,
+    clearBefore: getTags(step).includes('clear-before'),
+    clearLayers: layerNumbersToClear.map((n)=> n.toString()) || [],
+    otherTags: getTags(step).filter((t) =>
+      t.startsWith('share-button') ||
+      t.startsWith('allow-undo')) || [],
+    brushType,
+  })
+  /*emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')) || 0,
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
@@ -197,7 +213,7 @@ export function updateDisplay(
       t.startsWith('share-button') ||
       t.startsWith('allow-undo')) || [],
     brushType,
-  })
+  })*/
   deleteTmp()
   switch (displayMode) {
     case 'all':
@@ -237,6 +253,7 @@ setTimeout(() => {
 }, 1500)
 
 function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
+  console.log('addAnimationTag', step, tag, delay, repeat)
   if(figma.currentPage.selection) {
     let selectionTags = getTags(figma.currentPage.selection[0])
     selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
@@ -310,8 +327,16 @@ function updateProps(settings: {
   step.name = tags.join(' ')
 }
 
-on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
-on('updateProps', updateProps)
+export function updateDisplayFromForm(settings) {
+  updateDisplay(figma.currentPage, settings)
+}
+
+export function updatePropsFromForm(settings) {
+  updateProps(settings)
+}
+
+/*on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
+on('updateProps', updateProps)*/
 
 export function currentPageChanged(pageNode: any) {
   if (figma && !lastPage){
@@ -322,9 +347,20 @@ export function currentPageChanged(pageNode: any) {
     lastPage = pageNode
 }
 
-export function selectionChanged() {
+export async function selectionChanged() {
   const lesson = getCurrentLesson()
   const selection = figma.currentPage.selection[0]
+  if(selection || lesson || selection.type !== 'FRAME'  ) {
+    const tags = getTags(selection)
+
+    const animationTags = tags.find((t) => t.startsWith('wiggle') || t.startsWith('fly-from-') || t.startsWith('appear') || t.startsWith('blink') || t.startsWith('draw-line'))
+    const delay = tags.find((t) => /d\d+/.test(t)) || tags.find((t) => /d-\d+/.test(t))
+    const delayNumber = delay ? parseInt(delay.slice(-1)) : 0
+    const repeat = tags.find((t) => /r\d+/.test(t)) || tags.find((t) => /r-\d+/.test(t))
+    const repeatNumber = repeat ?  parseInt(repeat.slice(-1)) : 0
+
+    await uiApi.setAnimationTags(animationTags, delayNumber, repeatNumber)
+  }
   if (
     !selection ||
     !lesson ||

@@ -24,12 +24,11 @@ import {
   Pencil,
   Lightbulb,
   MagicWand,
-  FlipIcon
-} from "./assets/bootstrapIcons"
+  FlipIcon,
+} from './assets/bootstrapIcons'
+import { rpcStore } from "../models/rpc"
+import { subscribe } from "valtio"
 
-export function animationTest () {
-  console.log("animationTest")
-}
 
 export function DisplayForm() {
   const [displayMode, setDisplayMode] = useState('all')
@@ -139,6 +138,11 @@ export function DisplayForm() {
     }
   }
 
+  async function getSteps() {
+    const steps = await pluginApi.getSteps()
+    setSteps(steps)
+  }
+
   useEffect(() => {
     if (!mutex) {
       emit('updateDisplay', { displayMode, stepNumber })
@@ -147,18 +151,18 @@ export function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateProps', {
-        shadowSize,
-        brushSize,
-        stepNumber,
-        template,
-        clearLayers,
-        clearBefore,
-        otherTags,
-        brushType,
-        animationTag,
-        delay,
-        repeat })
+    pluginApi.updatePropsFromForm({
+      shadowSize,
+      brushSize,
+      stepNumber,
+      template,
+      clearLayers,
+      clearBefore,
+      otherTags,
+      brushType,
+      animationTag,
+      delay,
+      repeat })
     }
   }, [animationTag, delay, repeat])
 
@@ -172,45 +176,37 @@ export function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, otherTags, brushType })
-      emit('updateDisplay', { displayMode, stepNumber })
+      pluginApi.updateDisplayFromForm({displayMode, stepNumber})
+      console.log('updateDisplayFromForm', brushType)
+      pluginApi.updatePropsFromForm({shadowSize, brushSize, stepNumber, template, clearLayers: JSON.parse(JSON.stringify(clearLayers)), clearBefore, otherTags: JSON.parse(JSON.stringify(otherTags)), brushType})
     }
   }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
 
+
   useEffect(() => {
-    on(
-      'updateForm',
-      async (settings: {
-        shadowSize: number
-        brushSize: number
-        suggestedBrushSize: number
-        stepCount: number
-        stepNumber: number
-        displayMode: string
-        template: string
-        clearBefore: boolean
-        clearLayers: string[]
-        otherTags: string[]
-        brushType: string
-        animation: string
-      }) => {
+    const unsubscribe = subscribe(rpcStore, () => {
         setMutex(true)
-        setShadowSize(settings.shadowSize)
-        setBrushSize(settings.brushSize)
-        setSuggestedBrushSize(settings.suggestedBrushSize)
-        setStepCount(settings.stepCount)
-        setStepNumber(settings.stepNumber)
-        setDisplayMode(settings.displayMode)
-        setTemplate(settings.template)
-        setClearBefore(settings.clearBefore)
-        setClearLayers(settings.clearLayers)
-        setOtherTags(settings.otherTags)
-        setBrushType(settings.brushType)
-        setAnimationTag(settings.animation)
-        setSteps(await pluginApi.getSteps())
-        setMutex(false)
+        setAnimationTag(rpcStore.animationTag)
+        setDelay(rpcStore.delay)
+        setRepeat(rpcStore.repeat)
+      setShadowSize(rpcStore.shadowSize)
+      setBrushSize(rpcStore.brushSize)
+      setSuggestedBrushSize(rpcStore.suggestedBrushSize)
+      setStepCount(rpcStore.stepCount)
+      setStepNumber(rpcStore.stepNumber)
+      setDisplayMode(rpcStore.displayMode)
+      setTemplate(rpcStore.template)
+      setClearBefore(rpcStore.clearBefore)
+      setClearLayers(rpcStore.clearLayers)
+      setOtherTags(rpcStore.otherTags)
+      setBrushType(rpcStore.brushType)
+      getSteps()
+      setMutex(false)
       }
     )
+    return () => {
+      unsubscribe()
+    }
   }, []) // once
 
   const enableOnTags: any = ['INPUT', 'TEXTAREA', 'SELECT']
@@ -419,10 +415,10 @@ export function DisplayForm() {
             </OverlayTrigger>
             <Col className={'col-4'}>
               <Form.Control
-                disabled={animationTag === ''}
+                disabled={animationTag === undefined}
                 type='number'
                 min={0}
-                max={1000}
+                max={10}
                 value={delay}
                 onChange={(e) => setDelay(parseInt(e.target.value))}
                 step={1}
@@ -437,10 +433,10 @@ export function DisplayForm() {
             </OverlayTrigger>
             <Col className={'col-4'}>
               <Form.Control
-                disabled={animationTag === ''}
+                disabled={animationTag === undefined}
                 type='number'
                 min={0}
-                max={1000}
+                max={10}
                 value={repeat}
                 onChange={(e) => setRepeat(parseInt(e.target.value))}
                 step={1}
