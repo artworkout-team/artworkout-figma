@@ -31,8 +31,8 @@ export function StepList({
       <Droppable droppableId='step-list'>
         {(provided) => (
           <ListGroup {...provided.droppableProps} ref={provided.innerRef}>
-            {steps.map((stepNode, index) => {
-               return stepNode.id ? (
+            {steps?.map((stepNode, index) => {
+               return stepNode && selectedStep ? (
                 <Draggable
                   key={stepNode.id}
                   draggableId={stepNode.id}

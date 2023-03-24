@@ -132,10 +132,6 @@ function DisplayForm() {
     }
   }
 
-  function onNextBrushStepClick() {
-    setNextBrushStep(true)
-  }
-
   useEffect(() => {
     if (!mutex) {
       emit('updateDisplay', { displayMode, stepNumber, nextBrushStep })
@@ -169,14 +165,14 @@ function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateDisplay', { displayMode, stepNumber, nextBrushStep })
+      pluginApi.selectNextBrushStep(stepNumber)
     }
   }, [nextBrushStep])
 
   useEffect(() => {
     if (!mutex) {
       emit('updateProps', { shadowSize, brushSize, stepNumber, template, clearLayers, clearBefore, otherTags, brushType  })
-      emit('updateDisplay', { displayMode, stepNumber, nextBrushStep: false })
+      emit('updateDisplay', { displayMode, stepNumber })
     }
   }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
 
@@ -236,7 +232,7 @@ function DisplayForm() {
   useHotkeys('c', () => setDisplayMode('current'), { enableOnTags })
   useHotkeys('p', () => setDisplayMode('previous'), { enableOnTags })
   useHotkeys('t', () => setDisplayMode('template'), { enableOnTags })
-  useHotkeys('n', () => onNextBrushStepClick(), { enableOnTags })
+  useHotkeys('n', () => setNextBrushStep(true), { enableOnTags })
 
   useHotkeys('d', () => setBrushSize((prev) => (prev += 5)), { enableOnTags })
   useHotkeys('a', () => setBrushSize((prev) => (prev - 5 > 0 ? prev - 5 : 0)), {
@@ -278,7 +274,7 @@ function DisplayForm() {
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-template">(N)ext brush step</Tooltip>}>
-              <Button variant="outline-primary"  id={'displayModeNextBrushStep'} value={'next'} onClick={()=> onNextBrushStepClick()}>N</Button>
+              <Button variant="outline-primary"  id={'displayModeNextBrushStep'} value={'next'} onClick={()=> setNextBrushStep(true)}>N</Button>
             </OverlayTrigger>
           </ButtonGroup>
             <ButtonGroup className={'ml-2'}>

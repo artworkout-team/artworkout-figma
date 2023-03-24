@@ -167,7 +167,7 @@ export function FormatTab() {
           {tableValue?.length ?
             tableValue.map((item, index) => renderRow(item, index))
             :
-            <tr><Form.Label> Done  </Form.Label></tr>
+            <tr><th>Done</th></tr>
           }
         </tbody>
       </Table>

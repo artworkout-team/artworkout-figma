@@ -1,5 +1,5 @@
 import { getTags, findAll, findTag, descendants } from './util'
-import { setDisplayModeToAll } from './tune'
+import { deleteTmp } from './tune'
 
 export interface LintError {
   ignore?: boolean
@@ -459,7 +459,7 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
 export async function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) {
   if (!appendErrors) {
     errors = []
-    await setDisplayModeToAll()
+    await deleteTmp()
   }
   const page = currentPage?  currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
@@ -524,7 +524,7 @@ function lintIndex(page: PageNode) {
 
 export async function lintCourse() {
   errors = []
-  await setDisplayModeToAll()
+  await deleteTmp()
   assert(
     /^COURSE-[a-z\-0-9]+$/.test(figma.root.name),
     `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`
