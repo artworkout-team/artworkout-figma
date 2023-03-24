@@ -76,7 +76,7 @@ export function PublishTab() {
     { debug }: { debug: boolean } = { debug: false }
   ) {
     setIsDisabled(true)
-    await deleteTmp()
+    await deleteTmp(true )
     const course = await pluginApi.exportCourse()
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
