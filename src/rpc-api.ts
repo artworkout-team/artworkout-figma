@@ -10,8 +10,8 @@ import {
 } from './plugin/create'
 import { displayNotification, resizeUi } from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
-import { selectionChanged, currentPageChanged, updateDisplay, updateDisplayFromForm, updatePropsFromForm } from "./plugin/tune"
-import { setAnimationTags, updateProps } from "./app/components/uiRPC"
+import { selectionChanged, currentPageChanged, updateDisplay, updateDisplayFromForm, updatePropsFromForm } from './plugin/tune'
+import { setAnimationTags, updateProps } from './app/components/uiRPC'
 
 // Figma plugin methods
 export const pluginApi = createPluginAPI({

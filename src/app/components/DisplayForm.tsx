@@ -16,7 +16,6 @@ import {
   Accordion, 
   ToggleButton,
 } from 'react-bootstrap'
-import { emit, on } from '../../events'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
 import { StepList } from './StepList'
@@ -26,8 +25,8 @@ import {
   MagicWand,
   FlipIcon,
 } from './assets/bootstrapIcons'
-import { rpcStore } from "../models/rpc"
-import { subscribe } from "valtio"
+import { rpcStore } from '../models/rpc'
+import { subscribe } from 'valtio'
 
 
 export function DisplayForm() {
@@ -145,7 +144,8 @@ export function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      emit('updateDisplay', { displayMode, stepNumber })
+      console.log('update display')
+      pluginApi.updateDisplayFromForm({displayMode, stepNumber})
     }
   }, [stepNumber, displayMode])
 
@@ -156,19 +156,19 @@ export function DisplayForm() {
       brushSize,
       stepNumber,
       template,
-      clearLayers,
+      clearLayers: JSON.parse(JSON.stringify(clearLayers)),
       clearBefore,
-      otherTags,
+      otherTags: JSON.parse(JSON.stringify(otherTags)),
       brushType,
       animationTag,
       delay,
-      repeat })
+      repeat})
     }
   }, [animationTag, delay, repeat])
 
   useEffect(() => {
     if (!mutex) {
-      setAnimationTag('')
+      setAnimationTag(undefined)
       setDelay(0)
       setRepeat(0)
     }
@@ -176,19 +176,27 @@ export function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
+      console.log('update props')
+      pluginApi.updatePropsFromForm({
+        shadowSize,
+        brushSize,
+        stepNumber,
+        template,
+        clearLayers: JSON.parse(JSON.stringify(clearLayers)),
+        clearBefore,
+        otherTags: JSON.parse(JSON.stringify(otherTags)), brushType})
       pluginApi.updateDisplayFromForm({displayMode, stepNumber})
-      console.log('updateDisplayFromForm', brushType)
-      pluginApi.updatePropsFromForm({shadowSize, brushSize, stepNumber, template, clearLayers: JSON.parse(JSON.stringify(clearLayers)), clearBefore, otherTags: JSON.parse(JSON.stringify(otherTags)), brushType})
     }
   }, [shadowSize, brushSize, template, clearLayers, otherTags, brushType])
 
 
   useEffect(() => {
     const unsubscribe = subscribe(rpcStore, () => {
-        setMutex(true)
-        setAnimationTag(rpcStore.animationTag)
-        setDelay(rpcStore.delay)
-        setRepeat(rpcStore.repeat)
+      setMutex(true)
+      getSteps()
+      setAnimationTag(rpcStore.animationTag)
+      setDelay(rpcStore.delay)
+      setRepeat(rpcStore.repeat)
       setShadowSize(rpcStore.shadowSize)
       setBrushSize(rpcStore.brushSize)
       setSuggestedBrushSize(rpcStore.suggestedBrushSize)
@@ -200,7 +208,6 @@ export function DisplayForm() {
       setClearLayers(rpcStore.clearLayers)
       setOtherTags(rpcStore.otherTags)
       setBrushType(rpcStore.brushType)
-      getSteps()
       setMutex(false)
       }
     )

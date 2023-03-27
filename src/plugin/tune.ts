@@ -1,4 +1,4 @@
-import { emit, on } from '../events'
+
 import {
   findLeafNodes,
   getCurrentLesson,
@@ -6,7 +6,7 @@ import {
   getTags,
   isResultStep,
 } from './util'
-import { uiApi } from "../rpc-api"
+import { uiApi } from '../rpc-api'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -199,21 +199,6 @@ export async function updateDisplay(
       t.startsWith('allow-undo')) || [],
     brushType,
   })
-  /*emit('updateForm', {
-    shadowSize: parseInt(getTag(step, 'ss-')) || 0,
-    brushSize: parseInt(getTag(step, 'bs-')) || 0,
-    suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
-    template: getTag(step, 's-') || 0,
-    stepCount,
-    stepNumber,
-    displayMode,
-    clearBefore: getTags(step).includes('clear-before'),
-    clearLayers: layerNumbersToClear.map((n)=> n.toString()) || [],
-    otherTags: getTags(step).filter((t) =>
-      t.startsWith('share-button') ||
-      t.startsWith('allow-undo')) || [],
-    brushType,
-  })*/
   deleteTmp()
   switch (displayMode) {
     case 'all':
@@ -253,11 +238,10 @@ setTimeout(() => {
 }, 1500)
 
 function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
-  console.log('addAnimationTag', step, tag, delay, repeat)
   if(figma.currentPage.selection) {
     let selectionTags = getTags(figma.currentPage.selection[0])
     selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
-    selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
+    selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t) && !/r-\d+/.test(t) && !/d-\d+/.test(t))
     if (tag) {
       selectionTags.push(tag)
       if (delay) {
@@ -335,9 +319,6 @@ export function updatePropsFromForm(settings) {
   updateProps(settings)
 }
 
-/*on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
-on('updateProps', updateProps)*/
-
 export function currentPageChanged(pageNode: any) {
   if (figma && !lastPage){
     lastPage = figma.currentPage
@@ -354,11 +335,10 @@ export async function selectionChanged() {
     const tags = getTags(selection)
 
     const animationTags = tags.find((t) => t.startsWith('wiggle') || t.startsWith('fly-from-') || t.startsWith('appear') || t.startsWith('blink') || t.startsWith('draw-line'))
-    const delay = tags.find((t) => /d\d+/.test(t)) || tags.find((t) => /d-\d+/.test(t))
+    const delay = tags.find((t) => /^d\d+/.test(t)) || tags.find((t) => /^d-\d+/.test(t))
     const delayNumber = delay ? parseInt(delay.slice(-1)) : 0
-    const repeat = tags.find((t) => /r\d+/.test(t)) || tags.find((t) => /r-\d+/.test(t))
+    const repeat = tags.find((t) => /^r\d+/.test(t)) || tags.find((t) => /^r-\d+/.test(t))
     const repeatNumber = repeat ?  parseInt(repeat.slice(-1)) : 0
-
     await uiApi.setAnimationTags(animationTags, delayNumber, repeatNumber)
   }
   if (
