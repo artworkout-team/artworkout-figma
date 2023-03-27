@@ -144,7 +144,6 @@ export function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      console.log('update display')
       pluginApi.updateDisplayFromForm({displayMode, stepNumber})
     }
   }, [stepNumber, displayMode])
@@ -176,7 +175,6 @@ export function DisplayForm() {
 
   useEffect(() => {
     if (!mutex) {
-      console.log('update props')
       pluginApi.updatePropsFromForm({
         shadowSize,
         brushSize,
