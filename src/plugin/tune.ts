@@ -1,4 +1,3 @@
-
 import {
   findLeafNodes,
   getCurrentLesson,
