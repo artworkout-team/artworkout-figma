@@ -105,3 +105,13 @@ export function descendants(node: GroupNode): SceneNode[] {
   }
   return node.children.flatMap((n) => getAllTree(n as GroupNode))
 }
+
+export function getParamValue(el, pattern) {
+  for (let cl of el) {
+    const match = cl.match(pattern)
+    if (match) {
+      return parseInt(match[1])
+    }
+  }
+  return 0
+}

@@ -19,5 +19,5 @@ figma.on('currentpagechange', () => {
 })
 
 setTimeout(() => {
-  updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay( { displayMode: 'all', stepNumber: 1 }, figma.currentPage)
 }, 1500)
