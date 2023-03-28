@@ -28,27 +28,20 @@ function stepsByOrder(lesson: FrameNode) {
 }
 
 let lastMode = 'all'
+let lastPage = null
 
-export function deleteTmp(displayModeAll?: boolean) {
-  const pages = figma.root.children
-  pages.forEach((page) => {
-    if (!page) {
-      return
-    }
-    const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
-    if (!lesson) return
-    page
-      .findAll((el) => el.name.startsWith('tmp-'))
-      .forEach((el) => {
-        el.remove()
-      })
-      if (lesson) {
-        lesson.children.forEach((step) => {
-          step.visible = true
-        })
-      }
+export function deleteTmp(page?: PageNode) {
+  const p = page || figma.currentPage
+  p
+    .findAll((el) => el.name.startsWith('tmp-'))
+    .forEach((el) => el.remove())
+}
+
+export function displayAll(lesson: FrameNode, setLastMode?: boolean ) {
+  lesson.children.forEach((step) => {
+    step.visible = true
   })
-  if (displayModeAll) {
+  if(setLastMode){
     lastMode = 'all'
   }
 }
@@ -207,6 +200,7 @@ export function selectNextBrushStep(stepNumber: number) {
         }
       })
       if (nextLesson) {
+        deleteTmp(page)
         figma.currentPage = nextLesson
         lesson = nextLesson.children.find((el) => el.name == 'lesson') as FrameNode
         step = stepsByOrder(lesson).find((step) => getTags(step).includes('s-multistep-brush')) as GroupNode
@@ -256,8 +250,19 @@ export function updateDisplay(
       t.startsWith('allow-undo')) || [],
     brushType,
   })
+
+  if(lastPage && lastPage != page) {
+    deleteTmp(lastPage)
+    displayAll(lastPage.children.find((el) => el.name == 'lesson') as FrameNode)
+  }
   deleteTmp()
+  lastPage = page
+
   switch (displayMode) {
+    case 'all':
+      displayAll(lesson, true)
+      break
+
     case 'current':
       displayBrushSize(lesson, step)
       lesson.children.forEach((step) => {
@@ -402,7 +407,9 @@ export function currentPageChanged() {
     }
     const step = figma.currentPage.selection[0] as GroupNode
     const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+
     updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber: stepNumber || 1 })
+
 }
 
 export function selectionChanged() {
