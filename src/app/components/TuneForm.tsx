@@ -184,15 +184,16 @@ export function TuneForm() {
         template,
         clearLayers: JSON.parse(JSON.stringify(clearLayers)),
         clearBefore,
-        otherTags: JSON.parse(JSON.stringify(otherTags)), brushType})
+        otherTags: JSON.parse(JSON.stringify(otherTags)),
+        brushType,
+      })
       pluginApi.updateDisplay({displayMode: state.formProps.displayMode, stepNumber})
     }
-  }, [state.formProps.shadowSize, brushSize, template, clearLayers, otherTags, brushType])
+  }, [brushSize, template, clearLayers, otherTags, brushType])
 
 
   useEffect(() => {
     const unsubscribe = subscribe(TuneFormStore, () => {
-      if(!mutex) {
         setMutex(true)
         getSteps()
         setAnimationTag(TuneFormStore.formProps.animationTag)
@@ -208,7 +209,6 @@ export function TuneForm() {
         setOtherTags(TuneFormStore.formProps.otherTags)
         setBrushType(TuneFormStore.formProps.brushType)
         setMutex(false)
-      }
       }
     )
     return () => {
@@ -243,7 +243,7 @@ export function TuneForm() {
   useHotkeys('w', () => {TuneFormStore.formProps.shadowSize += 5}, { enableOnTags })
   useHotkeys(
     's',
-    () => {TuneFormStore.formProps.shadowSize =TuneFormStore.formProps.shadowSize - 5 > 0 ? TuneFormStore.formProps.shadowSize - 5 : 0 },
+    () => {TuneFormStore.formProps.shadowSize = TuneFormStore.formProps.shadowSize - 5 > 0 ? TuneFormStore.formProps.shadowSize - 5 : 0 },
     { enableOnTags }
   )
 

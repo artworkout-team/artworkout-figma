@@ -6,6 +6,8 @@ import {
   isResultStep,
 } from './util'
 import { uiApi } from '../rpc-api'
+import { TuneFormStore } from '../app/models/TuneFormStore'
+import { snapshot } from 'valtio'
 
 export interface formProps {
   shadowSize: number
@@ -218,7 +220,7 @@ export async function updateDisplay(
       t.startsWith('allow-undo')) || [],
     brushType,
   })
-  console.log('props updated')
+  console.log('props updated in updateDisplay')
   deleteTmp()
   switch (displayMode) {
     case 'all':
@@ -279,6 +281,10 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
 
 export function updateProps(settings: formProps) {
   const lesson = getCurrentLesson()
+
+  const obj = snapshot(TuneFormStore)
+  console.log('shadowSize', obj.formProps, TuneFormStore.formProps, 1)
+
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
     (t) => !t.startsWith('ss-') &&
@@ -329,7 +335,6 @@ export function currentPageChanged(pageNode: any) {
 }
 
 export async function selectionChanged() {
-  console.log('selection changed')
   const lesson = getCurrentLesson()
   const selection = figma.currentPage.selection[0]
   if(selection || lesson || selection.type !== 'FRAME'  ) {
@@ -352,5 +357,6 @@ export async function selectionChanged() {
   //update step
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+  console.log('here 3')
   updateDisplay({ displayMode: lastMode, stepNumber }, figma.currentPage)
 }

@@ -26,7 +26,6 @@ export const TuneFormStore = proxy({
       repeat }
   },
   async updateProps(settings: formProps) {
-    console.log('updateProps', { ...TuneFormStore.formProps, ...settings })
     TuneFormStore.formProps = {
       ...TuneFormStore.formProps,
       ...settings,
