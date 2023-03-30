@@ -1,4 +1,4 @@
-import { getTags, findAll, findTag, descendants } from './util'
+import { getTags, findAll, findTag, descendants, getStepOrder, findParentByTag } from './util'
 import { updateDisplay } from './tune'
 
 export interface LintError {
@@ -10,6 +10,7 @@ export interface LintError {
   pageName?: string
   nodeName?: string
   nodeType?: string
+  step?: number
 }
 
 let errors: LintError[] = []
@@ -27,17 +28,21 @@ export function selectError(index: number) {
   if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
-  // setTimeout(() => { // crashes, probably because of selection happening from the DisplayForm
-  if (errors[index]?.node) {
-    errors[index].page.selection = [errors[index].node]
-  }
-  // }, 0)
+   setTimeout(() => {
+    if (errors[index]?.node) {
+      errors[index].page.selection = [errors[index].node]
+    }
+   }, 0)
 }
 
 export async function printErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
   let sortedErrors = errors.sort((a, b) => a.level - b.level)
     .map((e) => {
+      let stepNumber = null
+      if(/GROUP|RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(e?.node?.type)) {
+         stepNumber = getStepOrder(e.node) || getStepOrder(findParentByTag(e.node, 'step'))
+      }
       return {
         ignore: e.ignore,
         pageName: e.page?.name,
@@ -46,6 +51,7 @@ export async function printErrors() {
         error: e.error,
         level: e.level,
         errorColor: e.level,
+        step: stepNumber,
       } as LintError
     })
   if (savedErrors) {
@@ -83,11 +89,18 @@ function deepNodes(node: GroupNode): SceneNode[] {
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
   const rgbt = findTag(node, /^rgb-template$/)
+  const drawLineTag = findTag(node, /^draw-line/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
+    assert(
+      (!/GRADIENT_LINEAR|GRADIENT_RADIAL|GRADIENT_ANGULAR|GRADIENT_DIAMOND/.test(f.type) || !rgbt),
+      'Fill must not be gradient',
+      page,
+      node)
+    assert(!drawLineTag || !rgbt, 'Fills cant be used with draw-line tag', page, node)
     if (f.type === 'IMAGE') {
-      assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
+      assert(f.opacity == 1 || !rgbt, 'Image fill must not be opaque', page, node, ErrorLevel.INFO)
     }
   })
 }
@@ -98,19 +111,26 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
-      assert(s.opacity == 1, 'Image stroke must be opaque', page, node)
+      assert(s.opacity == 1 || !rgbt, 'Image stroke must be opaque', page, node, ErrorLevel.INFO)
     }
   })
 
   assert(
-    !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)),
+    !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)) || !rgbt,
     `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`,
     page,
     node,
     ErrorLevel.ERROR
   )
   assert(
-    !strokes.length || node.strokeJoin == 'ROUND',
+    node.strokeAlign == 'CENTER' || !rgbt,
+    `Stroke align must be 'CENTER' but is '${String(node.strokeAlign)}'`,
+    page,
+    node,
+    ErrorLevel.ERROR
+  )
+  assert(
+    !strokes.length || node.strokeJoin == 'ROUND' || !rgbt,
     `Stroke joins should be 'ROUND' but are '${String(node.strokeJoin)}'`,
     page,
     node,
@@ -122,9 +142,12 @@ const validVectorTags =
   /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^[vV]ector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
 
 function lintVector(page: PageNode, node: VectorNode) {
-  assert(node.opacity == 1, 'Must be opaque', page, node)
-  assert(node.visible, 'Must be visible', page, node)
   let tags = getTags(node)
+  const rgbt = findTag(node, /^rgb-template$/)
+  const anim = findTag(node, /^draw-line$|^blink$/)
+
+  assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.visible, 'Must be visible', page, node)
 
   assert(
     tags.length > 0,
@@ -143,15 +166,12 @@ function lintVector(page: PageNode, node: VectorNode) {
   let fills = node.fills as Paint[]
   let strokes = node.strokes as Paint[]
   assert(
-    !fills.length || !strokes.length,
+    !fills.length || !strokes.length || !rgbt,
     'Should not have fill+stroke',
     page,
     node,
     ErrorLevel.WARN
   )
-
-  const rgbt = findTag(node, /^rgb-template$/)
-  const anim = findTag(node, /^draw-line$|^blink$/)
 
   lintStrokes(node, page, strokes)
   lintFills(node, page, fills)
@@ -162,22 +182,7 @@ function lintVector(page: PageNode, node: VectorNode) {
 const validGroupTags = /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
 
 function lintGroup(page: PageNode, node: GroupNode) {
-  assert(
-    !/BOOLEAN_OPERATION/.test(node.type),
-    'Notice BOOLEAN_OPERATION',
-    page,
-    node,
-    ErrorLevel.INFO
-  )
-  assert(node.opacity == 1, 'Must be opaque', page, node)
-  assert(node.visible, 'Must be visible', page, node)
   let tags = getTags(node)
-  assert(
-    tags.length > 0,
-    'Name must not be empty. Use slash to /ignore.',
-    page,
-    node
-  )
   tags.forEach((tag) => {
     assert(
       validGroupTags.test(tag),
@@ -188,6 +193,21 @@ function lintGroup(page: PageNode, node: GroupNode) {
   })
   const rgbt = tags.find((s) => /^rgb-template$/.test(s))
   const anim = tags.find((s) => /^blink$/.test(s))
+  assert(
+    !/BOOLEAN_OPERATION/.test(node.type),
+    'Notice BOOLEAN_OPERATION',
+    page,
+    node,
+    ErrorLevel.INFO
+  )
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.visible, 'Must be visible', page, node)
+  assert(
+    tags.length > 0,
+    'Name must not be empty. Use slash to /ignore.',
+    page,
+    node
+  )
   assert(!rgbt || !!anim, "Must have 'blink'", page, node) // every rgbt must have animation
 }
 
@@ -195,13 +215,13 @@ function lintInput(page: PageNode, node: GroupNode) {
   if (!assert(node.type == 'GROUP', "Must be 'GROUP' type'", page, node)) {
     return
   }
-  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
   assert(node.visible, 'Must be visible', page, node)
   assert(node.name == 'input', "Must be 'input'", page, node)
   descendants(node as GroupNode).forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
-    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
+    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)){
       lintVector(page, v as VectorNode)
     } else {
       assert(
@@ -218,7 +238,7 @@ const validSettingsTags = /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^orde
 
 function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.type == 'ELLIPSE', "Must be 'ELLIPSE' type'", page, node)
-  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
   assert(node.visible, 'Must be visible', page, node)
   const tags = getTags(node)
   tags.forEach((tag) => {
@@ -255,7 +275,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
     return
   }
-  assert(step.opacity == 1, 'Must be opaque', page, step)
+  assert(step.opacity == 1, 'Must be opaque', page, step, ErrorLevel.INFO)
   assert(step.visible, 'Must be visible', page, step)
   const tags = getTags(step)
   tags.forEach((tag) => {
@@ -398,7 +418,7 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
   if (!assert(node.type == 'FRAME', "Must be 'FRAME' type", page, node)) {
     return
   }
-  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
   assert(node.visible, 'Must be visible', page, node)
   assert(
     node.width == 1366 && node.height == 1024,
@@ -410,7 +430,8 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     !!node.children.find((n) => getTags(n).includes('s-multistep-result')),
     "Must have 's-multistep-result' child",
     page,
-    node
+    node,
+    ErrorLevel.WARN
   )
   let settings = node.children.find((n) => n.name.startsWith('settings'))
   if (settings) {
@@ -452,7 +473,7 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   if (!assert(node.type == 'FRAME', "Must be 'FRAME' type", page, node)) {
     return
   }
-  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
