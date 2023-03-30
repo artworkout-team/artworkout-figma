@@ -88,7 +88,7 @@ function deepNodes(node: GroupNode): SceneNode[] {
 }
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
-  const rgbt = findTag(node, /^rgb-template$/)
+  const rgbt = findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
   const drawLineTag = findTag(node, /^draw-line/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
@@ -106,7 +106,7 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
 }
 
 function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
-  const rgbt = findTag(node, /^rgb-template$/)
+  const rgbt = findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
   strokes.forEach((s) => {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
@@ -123,7 +123,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     ErrorLevel.ERROR
   )
   assert(
-    node.strokeAlign == 'CENTER' || !rgbt,
+    node.strokeAlign == 'CENTER' || !rgbt || !strokes.length,
     `Stroke align must be 'CENTER' but is '${String(node.strokeAlign)}'`,
     page,
     node,
@@ -143,8 +143,8 @@ const validVectorTags =
 
 function lintVector(page: PageNode, node: VectorNode) {
   let tags = getTags(node)
-  const rgbt = findTag(node, /^rgb-template$/)
-  const anim = findTag(node, /^draw-line$|^blink$/)
+  const rgbt = findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
+  const anim = findTag(node, /^draw-line$|^blink$/) || findParentByTag(node, 'draw-line') || findParentByTag(node, 'blink')
 
   assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node, ErrorLevel.INFO)
   assert(node.visible, 'Must be visible', page, node)
@@ -191,8 +191,8 @@ function lintGroup(page: PageNode, node: GroupNode) {
       node
     )
   })
-  const rgbt = tags.find((s) => /^rgb-template$/.test(s))
-  const anim = tags.find((s) => /^blink$/.test(s))
+  const rgbt = tags.find((s) => /^rgb-template$/.test(s)) || findParentByTag(node, 'rgb-template')
+  const anim = tags.find((s) => /^blink$/.test(s)) || findParentByTag(node, 'blink')
   assert(
     !/BOOLEAN_OPERATION/.test(node.type),
     'Notice BOOLEAN_OPERATION',
@@ -352,11 +352,11 @@ function lintStep(page: PageNode, step: GroupNode) {
 
   const sf = step.findOne(
     (n: VectorNode) =>
-      getTags(n).includes('rgb-template') && n.strokes?.length > 0
+      (getTags(n).includes('rgb-template') || findParentByTag(n, 'rgb-template')) && n.strokes?.length > 0
   )
   const ffs = step.findAll(
     (n: VectorNode) =>
-      getTags(n).includes('rgb-template') && n.fills && n.fills[0]
+      (getTags(n).includes('rgb-template') || findParentByTag(n, 'rgb-template')) && n.fills && n.fills[0]
   )
   const bigFfs = ffs.filter((n: VectorNode) => n.width > 27 || n.height > 27)
   const ff = ffs.length > 0
