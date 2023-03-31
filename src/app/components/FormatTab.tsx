@@ -125,7 +125,7 @@ export function FormatTab() {
           overlay={
             renderTooltip(`${row?.nodeName ? `Node name: ${row.nodeName} `: ''} \r\n ${row?.nodeType ? `Node type: ${row.nodeType} `: ''}`)
           }>
-          <th className={'th'}>{row?.step ? `0-${row.step}`: 'Frame'}</th>
+          <th className={'th'}>{row?.stepNumber ? `o-${row.stepNumber}`: 'Frame'}</th>
         </OverlayTrigger>
       <OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Page name')}>
       <th className={'th'} >{row.pageName}</th>

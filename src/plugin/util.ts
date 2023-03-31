@@ -105,3 +105,7 @@ export function descendants(node: GroupNode): SceneNode[] {
   }
   return node.children.flatMap((n) => getAllTree(n as GroupNode))
 }
+
+export function isRGBTemplate(node: SceneNode) {
+  return findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
+}
