@@ -30,57 +30,40 @@ import { subscribe, useSnapshot } from 'valtio'
 
 
 export function TuneForm() {
-  const [template, setTemplate] = useState('')
-  const [stepNumber, setStepNumber] = useState(1)
-  const [stepCount, setStepCount] = useState(1)
-  const [brushSize, setBrushSize] = useState(0)
   const [steps, setSteps] = useState([])
-  const [suggestedBrushSize, setSuggestedBrushSize] = useState(0)
-  const [brushType, setBrushType] = useState('')
-
-  const [clearLayers, setClearLayers] = useState<string[]>([])
-  const [clearBefore, setClearBefore] = useState(false)
-
-  const [animationTag, setAnimationTag] = useState<string>('')
-  const [delay, setDelay] = useState<number>(0)
-  const [repeat, setRepeat] = useState<number>(0)
-
-  const [otherTags, setOtherTags] = useState<string[]>([])
-
-  const [mutex, setMutex] = useState(true)
 
   const state = useSnapshot(TuneFormStore)
 
   function onStepNumberChange(event: ChangeEvent) {
-    setStepNumber(parseInt((event.target as HTMLInputElement).value))
+    TuneFormStore.stepNumber = (parseInt((event.target as HTMLInputElement).value))
   }
 
   function onDisplayModeChange(event: FormEvent) {
-    TuneFormStore.formProps.displayMode = (event.target as HTMLInputElement).value
+    TuneFormStore.displayMode = (event.target as HTMLInputElement).value
 
   }
 
   function onTemplateChange(event: FormEvent) {
     const targetSelect = event.target as HTMLSelectElement
     if (targetSelect.value === 'multistep-bg') {
-      TuneFormStore.formProps.shadowSize = 0
+      TuneFormStore.stepProps.shadowSize = 0
     }
-    setTemplate(targetSelect.value)
+    TuneFormStore.stepProps.template = targetSelect.value
   }
 
   function onBrushTypeChange(event: FormEvent) {
-    setBrushType((event.target as HTMLInputElement).value)
+    TuneFormStore.stepProps.brushType = (event.target as HTMLInputElement).value
   }
 
   async function onListUpdate(selectedNode) {
     let sns = await pluginApi.getSteps()
     setSteps(sns)
     let index = sns.findIndex((node) => node.id === selectedNode.id)
-    setStepNumber(index + 1)
+    TuneFormStore.stepNumber = index + 1
   }
 
   function onClearLayerChange(stepNumber: string) {
-    let newClearLayer = clearLayers
+    let newClearLayer = TuneFormStore.stepProps.clearLayers
     if (newClearLayer.includes(stepNumber.toString())) {
       newClearLayer = newClearLayer.filter(
         (item) => item !== stepNumber.toString()
@@ -88,53 +71,53 @@ export function TuneForm() {
     } else {
       newClearLayer.push(stepNumber.toString())
     }
-    setClearLayers([...newClearLayer])
-    setClearBefore(false)
+    TuneFormStore.stepProps.clearLayers = [...newClearLayer]
+    TuneFormStore.stepProps.clearBefore = false
   }
 
   function onClearBeforeChanged() {
     let newClearLayer = []
-    if (clearBefore) {
-      setClearLayers([...newClearLayer])
-      setClearBefore(false)
+    if (state.stepProps.clearBefore) {
+      TuneFormStore.stepProps.clearLayers = [...newClearLayer]
+      TuneFormStore.stepProps.clearBefore = false
     } else {
-      if(clearLayers.length > 0) {
+      if(state.stepProps.clearLayers.length > 0) {
         newClearLayer = steps.reduce((acc, cur, index) => {
-            if (index + 1 < stepNumber && !acc.includes((index + 1).toString())) {
+            if (index + 1 < state.stepNumber && !acc.includes((index + 1).toString())) {
               acc.push((index + 1).toString())
             }
             return acc
           }
           , [])
-        setClearLayers([...newClearLayer])
-        setClearBefore(true)
+        TuneFormStore.stepProps.clearLayers = [...newClearLayer]
+        TuneFormStore.stepProps.clearBefore = true
       }
       else{
         newClearLayer = steps.reduce((acc, cur, index) => {
-            if (index + 1 < stepNumber) {
+            if (index + 1 < state.stepNumber) {
               acc.push((index + 1).toString())
             }
             return acc
           }, [])
         }
-      setClearLayers([...newClearLayer])
-      setClearBefore(true)
+      TuneFormStore.stepProps.clearLayers = [...newClearLayer]
+      TuneFormStore.stepProps.clearBefore = true
       }
     }
 
   function onOtherTagsChange(tag: string) {
-    if(otherTags.includes(tag)) {
-      setOtherTags(otherTags.filter(item => item !== tag))
+    if(state.stepProps.otherTags.includes(tag)) {
+      TuneFormStore.stepProps.otherTags = (state.stepProps.otherTags.filter(item => item !== tag))
     } else {
-      setOtherTags([...otherTags, tag])
+      TuneFormStore.stepProps.otherTags = [...state.stepProps.otherTags, tag]
     }
   }
 
   function onAnimationTagChange(tag: string) {
-    if(tag === animationTag)  {
-      setAnimationTag('')
+    if(tag === state.stepProps.animationTag)  {
+      TuneFormStore.stepProps.animationTag = undefined
     } else {
-      setAnimationTag(tag)
+      TuneFormStore.stepProps.animationTag = tag
     }
   }
 
@@ -143,72 +126,24 @@ export function TuneForm() {
     setSteps(steps)
   }
 
-  useEffect(() => {
-    if (!mutex) {
-      pluginApi.updateDisplay({displayMode: state.formProps.displayMode, stepNumber})
-    }
-  }, [stepNumber, state.formProps.displayMode])
-
-  useEffect(() => {
-    if (!mutex) {
-    pluginApi.updateProps({
-      shadowSize: TuneFormStore.formProps.shadowSize,
-      brushSize,
-      stepNumber,
-      template,
-      clearLayers: JSON.parse(JSON.stringify(clearLayers)),
-      clearBefore,
-      otherTags: JSON.parse(JSON.stringify(otherTags)),
-      brushType,
-      animationTag,
-      delay,
-      repeat})
-    }
-  }, [animationTag, delay, repeat])
-
-  useEffect(() => {
-    if (!mutex) {
-      setAnimationTag(undefined)
-      setDelay(0)
-      setRepeat(0)
-    }
-  }, [stepNumber])
-
-  useEffect(() => {
-    if (!mutex) {
-      console.log('update props via tune')
-      pluginApi.updateProps({
-        shadowSize: state.formProps.shadowSize,
-        brushSize,
-        stepNumber,
-        template,
-        clearLayers: JSON.parse(JSON.stringify(clearLayers)),
-        clearBefore,
-        otherTags: JSON.parse(JSON.stringify(otherTags)),
-        brushType,
-      })
-      pluginApi.updateDisplay({displayMode: state.formProps.displayMode, stepNumber})
-    }
-  }, [brushSize, template, clearLayers, otherTags, brushType])
+  // useEffect(() => {
+  //   if (!mutex) {
+  //     pluginApi.updateDisplay({displayMode: state.formProps.displayMode, stepNumber})
+  //   }
+  // }, [stepNumber, state.formProps.displayMode])
+  //
+  // useEffect(() => {
+  //   if (!mutex) {
+  //     setAnimationTag(undefined)
+  //     setDelay(0)
+  //     setRepeat(0)
+  //   }
+  // }, [stepNumber])
 
 
   useEffect(() => {
     const unsubscribe = subscribe(TuneFormStore, () => {
-        setMutex(true)
         getSteps()
-        setAnimationTag(TuneFormStore.formProps.animationTag)
-        setDelay(TuneFormStore.formProps.delay)
-        setRepeat(TuneFormStore.formProps.repeat)
-        setBrushSize(TuneFormStore.formProps.brushSize)
-        setSuggestedBrushSize(TuneFormStore.formProps.suggestedBrushSize)
-        setStepCount(TuneFormStore.formProps.stepCount)
-        setStepNumber(TuneFormStore.formProps.stepNumber)
-        setTemplate(TuneFormStore.formProps.template)
-        setClearBefore(TuneFormStore.formProps.clearBefore)
-        setClearLayers(TuneFormStore.formProps.clearLayers)
-        setOtherTags(TuneFormStore.formProps.otherTags)
-        setBrushType(TuneFormStore.formProps.brushType)
-        setMutex(false)
       }
     )
     return () => {
@@ -224,26 +159,21 @@ export function TuneForm() {
 
   useHotkeys(
     'j',
-    () =>
-      setStepNumber((prev) => (prev + 1 < stepCount ? prev + 1 : stepCount)),
+    () =>{ TuneFormStore.stepNumber = (TuneFormStore.stepNumber + 1 < state.stepProps.stepCount ? TuneFormStore.stepNumber + 1 : state.stepProps.stepCount)},
     { enableOnTags }
   )
-  useHotkeys('k', () => setStepNumber((prev) => (prev > 1 ? prev - 1 : 1)), {
-    enableOnTags,
-  })
-  useHotkeys('g', () => setStepNumber(1), { enableOnTags })
-  useHotkeys('q', () => { TuneFormStore.formProps.displayMode = 'all' }, { enableOnTags })
-  useHotkeys('c', () =>  { TuneFormStore.formProps.displayMode = 'current' }, { enableOnTags })
-  useHotkeys('p', () =>  { TuneFormStore.formProps.displayMode = 'previous' },{ enableOnTags })
-  useHotkeys('t', () => { TuneFormStore.formProps.displayMode = 'template' }, { enableOnTags })
-  useHotkeys('d', () => setBrushSize((prev) => (prev += 5)), { enableOnTags })
-  useHotkeys('a', () => setBrushSize((prev) => (prev - 5 > 0 ? prev - 5 : 0)), {
-    enableOnTags,
-  })
-  useHotkeys('w', () => {TuneFormStore.formProps.shadowSize += 5}, { enableOnTags })
+  useHotkeys('k', () => {TuneFormStore.stepNumber = (state.stepNumber - 1 > 0 ? state.stepNumber - 1 : 1)}, { enableOnTags })
+  useHotkeys('g', () => {TuneFormStore.stepNumber = 1}, { enableOnTags })
+  useHotkeys('q', () => { TuneFormStore.displayMode = 'all' }, { enableOnTags })
+  useHotkeys('c', () =>  { TuneFormStore.displayMode = 'current' }, { enableOnTags })
+  useHotkeys('p', () =>  { TuneFormStore.displayMode = 'previous' },{ enableOnTags })
+  useHotkeys('t', () => { TuneFormStore.displayMode = 'template' }, { enableOnTags })
+  useHotkeys('d', () => { TuneFormStore.stepProps.brushSize =  state.stepProps.brushSize + 5}, { enableOnTags })
+  useHotkeys('a', () => { TuneFormStore.stepProps.brushSize =  state.stepProps.brushSize - 5 > 0 ? state.stepProps.brushSize - 5 : 0 }, { enableOnTags })
+  useHotkeys('w', () => {TuneFormStore.stepProps.shadowSize += 5}, { enableOnTags })
   useHotkeys(
     's',
-    () => {TuneFormStore.formProps.shadowSize = TuneFormStore.formProps.shadowSize - 5 > 0 ? TuneFormStore.formProps.shadowSize - 5 : 0 },
+    () => {TuneFormStore.stepProps.shadowSize = TuneFormStore.stepProps.shadowSize - 5 > 0 ? TuneFormStore.stepProps.shadowSize - 5 : 0 },
     { enableOnTags }
   )
 
@@ -261,9 +191,9 @@ export function TuneForm() {
           <Col>
             <Form.Control
               type="number"
-              value={stepNumber}
+              value={state.stepNumber}
               min={1}
-              max={stepCount}
+              max={state.stepProps.stepCount}
               onChange={onStepNumberChange}
             />
           </Col>
@@ -274,22 +204,22 @@ export function TuneForm() {
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip className={'tooltip'} style={{position: 'fixed'}} id="button-tooltip-all">(Q) All</Tooltip>}>
-              <ToggleButton  variant="outline-primary"  type='radio' checked={ state.formProps.displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
+              <ToggleButton variant="outline-primary" type='radio' checked={ state.displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-current">(C)urrent</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={state.formProps.displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
+              <ToggleButton variant="outline-primary" type='radio' checked={state.displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-previous">(P)revious</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={state.formProps.displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
+              <ToggleButton variant="outline-primary" type='radio' checked={state.displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-template">(T)emplate</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={state.formProps.displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
+              <ToggleButton variant="outline-primary" type='radio' checked={state.displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
             </OverlayTrigger>
           </ButtonGroup>
       </Col>
@@ -309,7 +239,7 @@ export function TuneForm() {
         <Col xs={3}>
           <Form.Check
             inline
-            checked={clearLayers.includes(stepNumber.toString())}
+            checked={state.stepProps.clearLayers.includes(stepNumber.toString())}
             label={`step ${stepNumber}`}
             onChange={() => onClearLayerChange(stepNumber)}
             />
@@ -331,7 +261,7 @@ export function TuneForm() {
           <Col xs={3}>
             <Form.Check
               inline
-              checked={otherTags.includes(tag.tag)}
+              checked={state.stepProps.otherTags.includes(tag.tag)}
               label={tag.name}
               onChange={() => onOtherTagsChange(tag.tag)}
               />
@@ -353,7 +283,7 @@ export function TuneForm() {
               <Form.Check
                 inline
                 label={'Clear before'}
-                checked={clearBefore}
+                checked={state.stepProps.clearBefore}
                 onChange={onClearBeforeChanged}
               />
             </Col>
@@ -383,28 +313,28 @@ export function TuneForm() {
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-blink">Blink</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='blink'} value={'blink'} id={'blink'} onChange={()=> onAnimationTagChange('blink')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='blink'} value={'blink'} id={'blink'} onChange={()=> onAnimationTagChange('blink')}>
             <Lightbulb/>
           </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-appear">Appear</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='appear'}  value={'appear'} id={'appear'} onChange={()=> onAnimationTagChange('appear')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='appear'} value={'appear'} id={'appear'} onChange={()=> onAnimationTagChange('appear')}>
             <MagicWand/>
           </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-draw-line">Draw line</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='draw-line'} value={'draw-line'} id={'draw-line'} onChange={() => onAnimationTagChange('draw-line')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='draw-line'} value={'draw-line'} id={'draw-line'} onChange={() => onAnimationTagChange('draw-line')}>
             <Pencil/>
           </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-draw-line">Draw line flip</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={animationTag ==='draw-line-flip'} value={'draw-line-flip'} id={'draw-line-flip'} onChange={() => onAnimationTagChange('draw-line-flip')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='draw-line-flip'} value={'draw-line-flip'} id={'draw-line-flip'} onChange={() => onAnimationTagChange('draw-line-flip')}>
             <FlipIcon/>
           </ToggleButton>
         </OverlayTrigger>
@@ -422,12 +352,12 @@ export function TuneForm() {
             </OverlayTrigger>
             <Col className={'col-4'}>
               <Form.Control
-                disabled={animationTag === undefined}
+                disabled={state.stepProps.animationTag === undefined}
                 type='number'
                 min={0}
                 max={10}
-                value={delay}
-                onChange={(e) => setDelay(parseInt(e.target.value))}
+                value={state.stepProps.delay}
+                onChange={(e) => TuneFormStore.stepProps.delay = (parseInt(e.target.value))}
                 step={1}
               />
             </Col>
@@ -440,12 +370,12 @@ export function TuneForm() {
             </OverlayTrigger>
             <Col className={'col-4'}>
               <Form.Control
-                disabled={animationTag === undefined}
+                disabled={state.stepProps.animationTag === undefined}
                 type='number'
                 min={0}
                 max={10}
-                value={repeat}
-                onChange={(e) => setRepeat(parseInt(e.target.value))}
+                value={state.stepProps.repeat}
+                onChange={(e) => TuneFormStore.stepProps.repeat = (parseInt(e.target.value))}
                 step={1}
               />
             </Col>
@@ -469,7 +399,7 @@ export function TuneForm() {
               Template
             </Form.Label>
             <Col>
-              <Form.Select value={template} onChange={onTemplateChange}>
+              <Form.Select value={state.stepProps.template} onChange={onTemplateChange}>
                 <option value=''></option>
                 <option value='multistep-brush'>brush</option>
                 <option value='multistep-bg'>bg</option>
@@ -482,7 +412,7 @@ export function TuneForm() {
                 Brush type
               </Form.Label>
               <Col>
-                <Form.Select value={brushType} onChange={onBrushTypeChange}>
+                <Form.Select value={state.stepProps.brushType} onChange={onBrushTypeChange}>
                   <option value=''></option>
                   <option value='pen'>pen</option>
                   <option value='pencil'>pencil</option>
@@ -498,8 +428,8 @@ export function TuneForm() {
               <Form.Control
                 type='number'
                 min={0}
-                value={state.formProps.shadowSize}
-                onChange={(e) => TuneFormStore.formProps.shadowSize = parseInt(e.target.value)}
+                value={state.stepProps.shadowSize}
+                onChange={(e) => TuneFormStore.stepProps.shadowSize = parseInt(e.target.value)}
                 step={5}
               />
             </Col>
@@ -512,8 +442,8 @@ export function TuneForm() {
               <Form.Control
                 type='number'
                 min={0}
-                value={brushSize}
-                onChange={(e) => setBrushSize(parseInt(e.target.value))}
+                value={state.stepProps.brushSize}
+                onChange={(e) => TuneFormStore.stepProps.brushSize = parseInt(e.target.value)}
                 step={5}
               />
             </Col>
@@ -526,9 +456,9 @@ export function TuneForm() {
                   border: '1px solid lightgray',
                   color: 'darkgray',
                 }}
-                onClick={() => setBrushSize(suggestedBrushSize)}
+                onClick={() => TuneFormStore.stepProps.brushSize = state.stepProps.suggestedBrushSize}
               >
-                {suggestedBrushSize}
+                {state.stepProps.suggestedBrushSize}
               </button>
             </Col>
           </Form.Group>
@@ -559,7 +489,7 @@ export function TuneForm() {
       <Row>
         <StepList
           steps={steps}
-          selectedStep={steps[stepNumber - 1]}
+          selectedStep={steps[state.stepNumber - 1]}
           onUpdate={onListUpdate}
         />
       </Row>

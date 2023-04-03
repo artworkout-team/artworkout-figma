@@ -283,7 +283,7 @@ export function updateProps(settings: formProps) {
   const lesson = getCurrentLesson()
 
   const obj = snapshot(TuneFormStore)
-  console.log('shadowSize', obj.formProps, TuneFormStore.formProps, 1)
+  console.log('shadowSize', obj.stepProps, TuneFormStore.stepProps, 1)
 
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
