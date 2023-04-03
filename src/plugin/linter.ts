@@ -39,10 +39,7 @@ export async function formatErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
   let sortedErrors = errors.sort((a, b) => a.level - b.level)
     .map((e) => {
-      let stepNumber = null
-      if(/GROUP|RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(e?.node?.type)) {
-         stepNumber = getStepOrder(e.node) || getStepOrder(findParentByTag(e.node, 'step'))
-      }
+      const stepNumber = getStepOrder(findParentByTag(e.node, 'step')) || getStepOrder(e.node)
       return {
         ignore: e.ignore,
         pageName: e.page?.name,
@@ -92,11 +89,6 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
-    assert(
-      (!/GRADIENT_LINEAR|GRADIENT_RADIAL|GRADIENT_ANGULAR|GRADIENT_DIAMOND/.test(f.type) || !rgbt),
-      'Fill must not be gradient',
-      page,
-      node)
     assert(!drawLineTag || !rgbt, 'Fills cant be used with draw-line tag', page, node)
     if (f.type === 'IMAGE') {
       assert(f.opacity == 1 || !rgbt, 'Image fill must not be opaque', page, node, ErrorLevel.INFO)
@@ -118,15 +110,13 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)) || !rgbt,
     `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`,
     page,
-    node,
-    ErrorLevel.ERROR
+    node
   )
   assert(
     node.strokeAlign == 'CENTER' || !rgbt || !strokes.length,
     `Stroke align must be 'CENTER' but is '${String(node.strokeAlign)}'`,
     page,
-    node,
-    ErrorLevel.ERROR
+    node
   )
   assert(
     !strokes.length || node.strokeJoin == 'ROUND' || !rgbt,
