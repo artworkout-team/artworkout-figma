@@ -53,10 +53,35 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
     .flat()
     .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
     .forEach((el: VectorNode) => {
+      const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
+      const ss = parseInt(getTag(step, 'ss-')) || defaultWeight
+
+      if (el.strokes.length > 0 && (el.fills as Paint[]).length > 0) {
+        console.log('stroke and fill')
+        const green = el.clone()
+        green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
+        green.strokeWeight = ss + green.strokeWeight
+        template.appendChild(green)
+      }
+
+      if(el.strokes.length > 0 && !(el.fills as Paint[]).length){
+        console.log('stroke')
+        const green = el.clone()
+        green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
+        green.strokeWeight = ss * 1.1
+        template.appendChild(green)
+      }
+      if ((el.fills as Paint[]).length > 0 && !el.strokes.length) {
+        const green = el.clone()
+        green.fills = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
+        green.strokeWeight = ss
+        template.appendChild(green)
+      }
       if (el.strokes.length > 0) {
-        el.strokes = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
-        const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
-        el.strokeWeight = parseInt(getTag(step, 'ss-')) || defaultWeight
+        const blue = el.clone()
+        blue.strokes = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
+        blue.strokeWeight = ss
+        template.appendChild(blue)
         const pink = el.clone()
         pink.strokes = [{ type: 'SOLID', color: { r: 1, g: 0, b: 1 } }]
         pink.strokeWeight = 2
@@ -65,7 +90,9 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
         // clone element here and give him thin pink stroke
       }
       if ((el.fills as Paint[]).length > 0) {
-        el.fills = [{ type: 'SOLID', color: { r: 0.1, g: 0, b: 1 } }]
+        const fillsBlue = el.clone()
+        fillsBlue.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
+        template.appendChild(fillsBlue)
       }
     })
   lesson.appendChild(template)
