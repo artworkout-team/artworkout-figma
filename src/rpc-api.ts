@@ -51,4 +51,7 @@ export const uiApi = createUIAPI({
   updateUiProps(settings: formProps) {
     TuneFormStore.updateProps(settings)
   },
+  setStepNavigationProps(stepNumber: number, displayMode: string) {
+    TuneFormStore.setStepNavigationProps(stepNumber, displayMode)
+  },
 })

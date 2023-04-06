@@ -1,13 +1,13 @@
 import {
   findLeafNodes,
-  getCurrentLesson, getParamValue,
+  findParentByTag,
+  getCurrentLesson,
+  getParamValue,
   getStepOrder,
   getTags,
   isResultStep,
 } from './util'
 import { uiApi } from '../rpc-api'
-import { TuneFormStore } from '../app/models/TuneFormStore'
-import { snapshot } from 'valtio'
 
 export interface formProps {
   shadowSize: number
@@ -143,23 +143,28 @@ function getClearLayerNumbers(step: SceneNode): number[] {
 }
 
 function showOnlyRGBTemplate(node: GroupNode) {
-    if(getTags(node).includes('settings')){
-      node.visible = false
-      return
+  if (getTags(node).includes('settings')) {
+    node.visible = false
+    return
+  }
+  if (
+    getTags(node).includes('rgb-template') ||
+    /GROUP|BOOLEAN_OPERATION/.test(node.type)
+  ) {
+    return
+  }
+  node.children.forEach((v) => {
+    if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
+      return showOnlyRGBTemplate(v as GroupNode)
     }
-    if (getTags(node).includes('rgb-template') || (/GROUP|BOOLEAN_OPERATION/.test(node.type))) {
-      return
+    if (
+      /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) &&
+      !getTags(v).includes('rgb-template')
+    ) {
+      return (v.visible = false)
     }
-    node.children.forEach((v) => {
-      if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
-        return showOnlyRGBTemplate(v as GroupNode)
-      }
-      if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) && !getTags(v).includes('rgb-template')) {
-        return v.visible = false
-      }
-    })
+  })
 }
-
 
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentStepOrder = getStepOrder(step)
@@ -187,7 +192,7 @@ export async function updateDisplay(
   settings: { displayMode: string; stepNumber: number },
   page?: PageNode
 ) {
-  if(!page){
+  if (!page) {
     page = figma.currentPage
   }
   lastPage = page
@@ -204,7 +209,9 @@ export async function updateDisplay(
   ).length
   const maxStrokeWeight = getBrushSize(step)
   const brushType = getTag(step, 'brush-name-') || ''
-  let layerNumbersToClear = getTags(step).includes('clear-before') ? [...Array(stepNumber).keys()].slice(1) : getClearLayerNumbers(step)
+  let layerNumbersToClear = getTags(step).includes('clear-before')
+    ? [...Array(stepNumber).keys()].slice(1)
+    : getClearLayerNumbers(step)
   await uiApi.updateUiProps({
     shadowSize: parseInt(getTag(step, 'ss-')) || 0,
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
@@ -214,13 +221,14 @@ export async function updateDisplay(
     stepNumber,
     displayMode,
     clearBefore: getTags(step).includes('clear-before'),
-    clearLayers: layerNumbersToClear.map((n)=> n.toString()) || [],
-    otherTags: getTags(step).filter((t) =>
-      t.startsWith('share-button') ||
-      t.startsWith('allow-undo')) || [],
+    clearLayers: layerNumbersToClear.map((n) => n.toString()) || [],
+    otherTags:
+      getTags(step).filter(
+        (t) => t.startsWith('share-button') || t.startsWith('allow-undo')
+      ) || [],
     brushType,
   })
-  console.log('props updated in updateDisplay')
+  await uiApi.setStepNavigationProps(stepNumber, displayMode)
   deleteTmp()
   switch (displayMode) {
     case 'all':
@@ -245,7 +253,7 @@ export async function updateDisplay(
       collectLayerNumbersToClear(lesson, step).forEach((i) => {
         lesson.children[i].visible = false
       })
-      lesson.children.forEach((step)=> showOnlyRGBTemplate(step as GroupNode))
+      lesson.children.forEach((step) => showOnlyRGBTemplate(step as GroupNode))
       break
 
     case 'template':
@@ -259,11 +267,29 @@ setTimeout(() => {
   updateDisplay({ displayMode: 'all', stepNumber: 1 }, figma.currentPage)
 }, 1500)
 
-function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
-  if(figma.currentPage.selection) {
+function addAnimationTag(
+  step: GroupNode,
+  tag: string,
+  delay: number,
+  repeat: number
+) {
+  if (figma.currentPage.selection) {
     let selectionTags = getTags(figma.currentPage.selection[0])
-    selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
-    selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t) && !/r-\d+/.test(t) && !/d-\d+/.test(t))
+    selectionTags = selectionTags.filter(
+      (t) =>
+        !t.startsWith('wiggle') &&
+        !t.startsWith('fly-from-') &&
+        !t.startsWith('appear') &&
+        !t.startsWith('blink') &&
+        !t.startsWith('draw-line')
+    )
+    selectionTags = selectionTags.filter(
+      (t) =>
+        !/d\d+/.test(t) &&
+        !/r\d+/.test(t) &&
+        !/r-\d+/.test(t) &&
+        !/d-\d+/.test(t)
+    )
     if (tag) {
       selectionTags.push(tag)
       if (delay) {
@@ -282,12 +308,10 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
 export function updateProps(settings: formProps) {
   const lesson = getCurrentLesson()
 
-  const obj = snapshot(TuneFormStore)
-  console.log('shadowSize', obj.stepProps, TuneFormStore.stepProps, 1)
-
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
-    (t) => !t.startsWith('ss-') &&
+    (t) =>
+      !t.startsWith('ss-') &&
       !t.startsWith('bs-') &&
       !t.startsWith('s-') &&
       !t.startsWith('clear-layer-') &&
@@ -296,7 +320,7 @@ export function updateProps(settings: formProps) {
       !t.startsWith('allow-undo') &&
       !t.startsWith('brush-name-')
   )
-  if (settings.template){
+  if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
   }
   if (settings.shadowSize) {
@@ -308,7 +332,7 @@ export function updateProps(settings: formProps) {
   if (settings.brushType) {
     tags.push(`brush-name-${settings.brushType}`)
   }
-  if(settings.clearLayers.length > 0) {
+  if (settings.clearLayers.length > 0) {
     if (!settings.clearBefore) {
       tags.push(`clear-layer-${settings.clearLayers.join(',')}`)
     }
@@ -326,37 +350,37 @@ export function updateProps(settings: formProps) {
 }
 
 export function currentPageChanged(pageNode: any) {
-  if (figma && !lastPage){
+  if (figma && !lastPage) {
     lastPage = figma.currentPage
   }
-    updateDisplay({ displayMode: 'all', stepNumber: 1 }, lastPage)
-    updateDisplay({ displayMode: 'all', stepNumber: 1 }, figma.currentPage)
-    lastPage = pageNode
+  updateDisplay({ displayMode: 'all', stepNumber: 1 }, lastPage)
+  updateDisplay({ displayMode: 'all', stepNumber: 1 }, figma.currentPage)
+  lastPage = pageNode
 }
 
 export async function selectionChanged() {
   const lesson = getCurrentLesson()
   const selection = figma.currentPage.selection[0]
-  if(selection || lesson || selection.type !== 'FRAME'  ) {
+  if (selection || lesson || selection.type !== 'FRAME') {
     const tags = getTags(selection)
 
-    const animationTags = tags.find((t) => /^wiggle|^fly-from-|^appear|^blink|^draw-line/.test(t))
-    const delay = getParamValue(tags, /^d(\d+)/) || getParamValue(tags, /^d-(\d+)/)
-    const repeat = getParamValue(tags, /^r(\d+)/) || getParamValue(tags, /^r-(\d+)/)
+    const animationTags = tags.find((t) =>
+      /^wiggle|^fly-from-|^appear|^blink|^draw-line/.test(t)
+    )
+    const delay =
+      getParamValue(tags, /^d(\d+)/) || getParamValue(tags, /^d-(\d+)/)
+    const repeat =
+      getParamValue(tags, /^r(\d+)/) || getParamValue(tags, /^r-(\d+)/)
     await uiApi.setAnimationTags(animationTags, delay, repeat)
+    const parentStep = findParentByTag(selection, 'step')
+    const stepNumber = stepsByOrder(lesson).indexOf(parentStep) + 1
+    await uiApi.setStepNavigationProps(stepNumber, lastMode)
   }
-  if (
-    !selection ||
-    !lesson ||
-    !lesson.children.includes(selection) ||
-    selection.type !== 'GROUP'
-  ) {
+  if (!selection || !lesson || !lesson.children.includes(selection)) {
     return
   }
 
-  //update step
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
-  console.log('here 3')
   updateDisplay({ displayMode: lastMode, stepNumber }, figma.currentPage)
 }

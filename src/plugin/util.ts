@@ -40,7 +40,7 @@ export function getCurrentLesson() {
 }
 
 export function getTags(node: BaseNode | Step) {
-  return node.name.split(' ').filter(Boolean)
+  return node?.name.split(' ').filter(Boolean)
 }
 
 export function findTag(node: BaseNode | Step, tag: RegExp) {

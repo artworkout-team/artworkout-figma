@@ -32,7 +32,7 @@ export function StepList({
         {(provided) => (
           <ListGroup {...provided.droppableProps} ref={provided.innerRef}>
             {steps.map((stepNode, index) => {
-              return (
+              return stepNode && selectedStep ? (
                 <Draggable
                   key={stepNode.id}
                   draggableId={stepNode.id}
@@ -76,7 +76,7 @@ export function StepList({
                     </ListGroup.Item>
                   )}
                 </Draggable>
-              )
+              ) : null
             })}
             {provided.placeholder}
           </ListGroup>

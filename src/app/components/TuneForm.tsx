@@ -35,11 +35,11 @@ export function TuneForm() {
   const state = useSnapshot(TuneFormStore)
 
   function onStepNumberChange(event: ChangeEvent) {
-    TuneFormStore.stepNumber = (parseInt((event.target as HTMLInputElement).value))
+    TuneFormStore.stepNavigationProps.stepNumber = (parseInt((event.target as HTMLInputElement).value))
   }
 
   function onDisplayModeChange(event: FormEvent) {
-    TuneFormStore.displayMode = (event.target as HTMLInputElement).value
+    TuneFormStore.stepNavigationProps.displayMode = (event.target as HTMLInputElement).value
 
   }
 
@@ -59,7 +59,7 @@ export function TuneForm() {
     let sns = await pluginApi.getSteps()
     setSteps(sns)
     let index = sns.findIndex((node) => node.id === selectedNode.id)
-    TuneFormStore.stepNumber = index + 1
+    TuneFormStore.stepNavigationProps.stepNumber = index + 1
   }
 
   function onClearLayerChange(stepNumber: string) {
@@ -83,7 +83,7 @@ export function TuneForm() {
     } else {
       if(state.stepProps.clearLayers.length > 0) {
         newClearLayer = steps.reduce((acc, cur, index) => {
-            if (index + 1 < state.stepNumber && !acc.includes((index + 1).toString())) {
+            if (index + 1 < state.stepNavigationProps.stepNumber && !acc.includes((index + 1).toString())) {
               acc.push((index + 1).toString())
             }
             return acc
@@ -94,7 +94,7 @@ export function TuneForm() {
       }
       else{
         newClearLayer = steps.reduce((acc, cur, index) => {
-            if (index + 1 < state.stepNumber) {
+            if (index + 1 < state.stepNavigationProps.stepNumber) {
               acc.push((index + 1).toString())
             }
             return acc
@@ -114,10 +114,10 @@ export function TuneForm() {
   }
 
   function onAnimationTagChange(tag: string) {
-    if(tag === state.stepProps.animationTag)  {
-      TuneFormStore.stepProps.animationTag = undefined
+    if(tag === state.animationProps.animationTag)  {
+      TuneFormStore.animationProps.animationTag = undefined
     } else {
-      TuneFormStore.stepProps.animationTag = tag
+      TuneFormStore.animationProps.animationTag = tag
     }
   }
 
@@ -159,15 +159,15 @@ export function TuneForm() {
 
   useHotkeys(
     'j',
-    () =>{ TuneFormStore.stepNumber = (TuneFormStore.stepNumber + 1 < state.stepProps.stepCount ? TuneFormStore.stepNumber + 1 : state.stepProps.stepCount)},
+    () =>{ TuneFormStore.stepNavigationProps.stepNumber = (TuneFormStore.stepNavigationProps.stepNumber + 1 < state.stepProps.stepCount ? TuneFormStore.stepNavigationProps.stepNumber + 1 : state.stepProps.stepCount)},
     { enableOnTags }
   )
-  useHotkeys('k', () => {TuneFormStore.stepNumber = (state.stepNumber - 1 > 0 ? state.stepNumber - 1 : 1)}, { enableOnTags })
-  useHotkeys('g', () => {TuneFormStore.stepNumber = 1}, { enableOnTags })
-  useHotkeys('q', () => { TuneFormStore.displayMode = 'all' }, { enableOnTags })
-  useHotkeys('c', () =>  { TuneFormStore.displayMode = 'current' }, { enableOnTags })
-  useHotkeys('p', () =>  { TuneFormStore.displayMode = 'previous' },{ enableOnTags })
-  useHotkeys('t', () => { TuneFormStore.displayMode = 'template' }, { enableOnTags })
+  useHotkeys('k', () => {TuneFormStore.stepNavigationProps.stepNumber = (state.stepNavigationProps.stepNumber - 1 > 0 ? state.stepNavigationProps.stepNumber - 1 : 1)}, { enableOnTags })
+  useHotkeys('g', () => {TuneFormStore.stepNavigationProps.stepNumber = 1}, { enableOnTags })
+  useHotkeys('q', () => { TuneFormStore.stepNavigationProps.displayMode = 'all' }, { enableOnTags })
+  useHotkeys('c', () =>  { TuneFormStore.stepNavigationProps.displayMode = 'current' }, { enableOnTags })
+  useHotkeys('p', () =>  { TuneFormStore.stepNavigationProps.displayMode = 'previous' },{ enableOnTags })
+  useHotkeys('t', () => { TuneFormStore.stepNavigationProps.displayMode = 'template' }, { enableOnTags })
   useHotkeys('d', () => { TuneFormStore.stepProps.brushSize =  state.stepProps.brushSize + 5}, { enableOnTags })
   useHotkeys('a', () => { TuneFormStore.stepProps.brushSize =  state.stepProps.brushSize - 5 > 0 ? state.stepProps.brushSize - 5 : 0 }, { enableOnTags })
   useHotkeys('w', () => {TuneFormStore.stepProps.shadowSize += 5}, { enableOnTags })
@@ -191,7 +191,7 @@ export function TuneForm() {
           <Col>
             <Form.Control
               type="number"
-              value={state.stepNumber}
+              value={state.stepNavigationProps.stepNumber}
               min={1}
               max={state.stepProps.stepCount}
               onChange={onStepNumberChange}
@@ -204,22 +204,22 @@ export function TuneForm() {
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip className={'tooltip'} style={{position: 'fixed'}} id="button-tooltip-all">(Q) All</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={ state.displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
+              <ToggleButton key={1} variant="outline-primary" type='radio' checked={ state.stepNavigationProps.displayMode ==='all'} id={'displayModeAll'} value={'all'} onChange={onDisplayModeChange}>Q</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-current">(C)urrent</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={state.displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
+              <ToggleButton key={2} variant="outline-primary" type='radio' checked={state.stepNavigationProps.displayMode ==='current'} id={'displayModeCurrent'} value={'current'} onChange={onDisplayModeChange}>C</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-previous">(P)revious</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={state.displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
+              <ToggleButton variant="outline-primary" type='radio' checked={state.stepNavigationProps.displayMode ==='previous'} id={'displayModePrevious'} value={'previous'} onChange={onDisplayModeChange}>P</ToggleButton>
             </OverlayTrigger>
             <OverlayTrigger
               placement={'bottom'}
               overlay={<Tooltip id="button-tooltip-template">(T)emplate</Tooltip>}>
-              <ToggleButton variant="outline-primary" type='radio' checked={state.displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
+              <ToggleButton variant="outline-primary" type='radio' checked={state.stepNavigationProps.displayMode ==='template'} id={'displayModeTemplate'} value={'template'} onChange={onDisplayModeChange}>T</ToggleButton>
             </OverlayTrigger>
           </ButtonGroup>
       </Col>
@@ -313,28 +313,28 @@ export function TuneForm() {
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-blink">Blink</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='blink'} value={'blink'} id={'blink'} onChange={()=> onAnimationTagChange('blink')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.animationProps.animationTag ==='blink'} value={'blink'} id={'blink'} onChange={()=> onAnimationTagChange('blink')}>
             <Lightbulb/>
           </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-appear">Appear</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='appear'} value={'appear'} id={'appear'} onChange={()=> onAnimationTagChange('appear')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.animationProps.animationTag ==='appear'} value={'appear'} id={'appear'} onChange={()=> onAnimationTagChange('appear')}>
             <MagicWand/>
           </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-draw-line">Draw line</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='draw-line'} value={'draw-line'} id={'draw-line'} onChange={() => onAnimationTagChange('draw-line')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.animationProps.animationTag ==='draw-line'} value={'draw-line'} id={'draw-line'} onChange={() => onAnimationTagChange('draw-line')}>
             <Pencil/>
           </ToggleButton>
         </OverlayTrigger>
         <OverlayTrigger
           placement={'bottom'}
           overlay={<Tooltip id="button-tooltip-draw-line">Draw line flip</Tooltip>}>
-          <ToggleButton variant="outline-primary" type='radio' checked={state.stepProps.animationTag ==='draw-line-flip'} value={'draw-line-flip'} id={'draw-line-flip'} onChange={() => onAnimationTagChange('draw-line-flip')}>
+          <ToggleButton variant="outline-primary" type='radio' checked={state.animationProps.animationTag ==='draw-line-flip'} value={'draw-line-flip'} id={'draw-line-flip'} onChange={() => onAnimationTagChange('draw-line-flip')}>
             <FlipIcon/>
           </ToggleButton>
         </OverlayTrigger>
@@ -352,12 +352,12 @@ export function TuneForm() {
             </OverlayTrigger>
             <Col className={'col-4'}>
               <Form.Control
-                disabled={state.stepProps.animationTag === undefined}
+                disabled={state.animationProps.animationTag === undefined}
                 type='number'
                 min={0}
                 max={10}
-                value={state.stepProps.delay}
-                onChange={(e) => TuneFormStore.stepProps.delay = (parseInt(e.target.value))}
+                value={state.animationProps.delay}
+                onChange={(e) => TuneFormStore.animationProps.delay = (parseInt(e.target.value))}
                 step={1}
               />
             </Col>
@@ -370,12 +370,12 @@ export function TuneForm() {
             </OverlayTrigger>
             <Col className={'col-4'}>
               <Form.Control
-                disabled={state.stepProps.animationTag === undefined}
+                disabled={state.animationProps.animationTag === undefined}
                 type='number'
                 min={0}
                 max={10}
-                value={state.stepProps.repeat}
-                onChange={(e) => TuneFormStore.stepProps.repeat = (parseInt(e.target.value))}
+                value={state.animationProps.repeat}
+                onChange={(e) => TuneFormStore.animationProps.repeat = (parseInt(e.target.value))}
                 step={1}
               />
             </Col>
@@ -489,7 +489,7 @@ export function TuneForm() {
       <Row>
         <StepList
           steps={steps}
-          selectedStep={steps[state.stepNumber - 1]}
+          selectedStep={steps[state.stepNavigationProps.stepNumber - 1]}
           onUpdate={onListUpdate}
         />
       </Row>

@@ -1,12 +1,11 @@
 import { proxy, subscribe } from 'valtio'
-import { formProps, updateProps } from '../../plugin/tune'
-import { pluginApi } from "../../rpc-api"
+import { formProps } from '../../plugin/tune'
+import { pluginApi } from '../../rpc-api'
+
+let mutex = false
 
 export const TuneFormStore = proxy({
-  stepProps :{
-    animationTag: undefined,
-    delay: 0,
-    repeat: 0,
+  stepProps: {
     shadowSize: 0,
     brushSize: 0,
     suggestedBrushSize: 0,
@@ -17,36 +16,68 @@ export const TuneFormStore = proxy({
     otherTags: [],
     brushType: '',
   },
-  stepNumber: 1,
-  displayMode: 'all',
-  mutex: false,
+  animationProps: {
+    animationTag: undefined,
+    delay: 0,
+    repeat: 0,
+  },
+  stepNavigationProps: {
+    stepNumber: 1,
+    displayMode: 'all',
+  },
 
   async setAnimationTags(animationTag: string, delay: number, repeat: number) {
-    TuneFormStore.mutex = true
-    TuneFormStore.stepProps = {
-      ...TuneFormStore.stepProps,
-      animationTag,
-      delay,
-      repeat }
-    TuneFormStore.mutex = false
+    mutex = true
+    TuneFormStore.animationProps.animationTag = animationTag
+    TuneFormStore.animationProps.delay = delay
+    TuneFormStore.animationProps.repeat = repeat
+    setTimeout(() => {
+      mutex = false
+    }, 10)
   },
+
   async updateProps(settings: formProps) {
-    TuneFormStore.mutex = true
-    TuneFormStore.stepProps = {
-      ...TuneFormStore.stepProps,
-      ...settings,
+    mutex = true
+    for (const key in settings) {
+      TuneFormStore.stepProps[key] = settings[key]
     }
-    TuneFormStore.mutex = false
+    setTimeout(() => {
+      mutex = false
+    }, 10)
+  },
+
+  async setStepNavigationProps(stepNumber: number, displayMode: string) {
+    mutex = true
+    TuneFormStore.stepNavigationProps.stepNumber = stepNumber
+    TuneFormStore.stepNavigationProps.displayMode = displayMode
+    setTimeout(() => {
+      mutex = false
+    }, 10)
   },
 })
 
-
-subscribe(TuneFormStore.stepProps, () => {
-  console.log('stepProps changed', TuneFormStore.stepProps)
-  if (!TuneFormStore.mutex) {
-    pluginApi.updateProps(JSON.parse(JSON.stringify(TuneFormStore.stepProps)))
-    pluginApi.updateDisplay({ stepNumber: TuneFormStore.stepNumber, displayMode: TuneFormStore.displayMode })
+subscribe(TuneFormStore.stepProps, async () => {
+  if (!mutex) {
+    await pluginApi.updateProps({
+      ...JSON.parse(JSON.stringify(TuneFormStore.stepProps)),
+      ...JSON.parse(JSON.stringify(TuneFormStore.animationProps)),
+    })
   }
 })
 
+subscribe(TuneFormStore.stepNavigationProps, () => {
+  if (!mutex) {
+    pluginApi.updateDisplay(
+      JSON.parse(JSON.stringify(TuneFormStore.stepNavigationProps))
+    )
+  }
+})
 
+subscribe(TuneFormStore.animationProps, () => {
+  if (!mutex) {
+    pluginApi.updateProps({
+      ...JSON.parse(JSON.stringify(TuneFormStore.stepProps)),
+      ...JSON.parse(JSON.stringify(TuneFormStore.animationProps)),
+    })
+  }
+})
