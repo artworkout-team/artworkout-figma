@@ -4,6 +4,7 @@ function findTexts(texts: PageNode) {
   return texts
     .findAll((node: SceneNode) => node.type === 'TEXT')
     .filter((node: TextNode) => node.visible)
+    .reverse()
 }
 
 function getStyledSegments(node: TextNode) {
