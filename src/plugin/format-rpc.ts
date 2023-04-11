@@ -2,10 +2,9 @@ import { displayNotification, findAll, getCurrentLesson } from './util'
 import { stepsByOrder } from './tune-rpc'
 
 function findTextInCurrentLesson() {
- const lesson = getCurrentLesson()
-  return  stepsByOrder(lesson)
-    .flatMap((step) =>
-    findAll(step, (node) => node.type === 'TEXT'))
+  const lesson = getCurrentLesson()
+  return stepsByOrder(lesson)
+    .flatMap((step) => findAll(step, (node) => node.type === 'TEXT'))
     .filter((node: TextNode) => node.visible)
 }
 
