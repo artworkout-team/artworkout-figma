@@ -10,7 +10,13 @@ import {
 } from './plugin/create'
 import { displayNotification, resizeUi } from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
-import { selectionChanged, currentPageChanged, updateDisplay, updateProps, formProps } from './plugin/tune'
+import {
+  selectionChanged,
+  currentPageChanged,
+  updateDisplay,
+  updateProps,
+  formProps,
+} from './plugin/tune'
 import { TuneFormStore } from './app/models/TuneFormStore'
 
 // Figma plugin methods
@@ -49,6 +55,7 @@ export const uiApi = createUIAPI({
     TuneFormStore.setAnimationTags(animationTag, delay, repeat)
   },
   updateUiProps(settings: formProps) {
+    console.log('updateUiProps', settings)
     TuneFormStore.updateProps(settings)
   },
   setStepNavigationProps(stepNumber: number, displayMode: string) {

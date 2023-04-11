@@ -192,9 +192,7 @@ export async function updateDisplay(
   settings: { displayMode: string; stepNumber: number },
   page?: PageNode
 ) {
-  if (!page) {
-    page = figma.currentPage
-  }
+  page = page || figma.currentPage
   lastPage = page
   lastMode = settings.displayMode
   const { displayMode, stepNumber } = settings
@@ -264,7 +262,7 @@ export async function updateDisplay(
 }
 
 setTimeout(() => {
-  updateDisplay({ displayMode: 'all', stepNumber: 1 }, figma.currentPage)
+  updateDisplay({ displayMode: 'all', stepNumber: 1 })
 }, 1500)
 
 function addAnimationTag(
@@ -274,22 +272,11 @@ function addAnimationTag(
   repeat: number
 ) {
   if (figma.currentPage.selection) {
-    let selectionTags = getTags(figma.currentPage.selection[0])
-    selectionTags = selectionTags.filter(
-      (t) =>
-        !t.startsWith('wiggle') &&
-        !t.startsWith('fly-from-') &&
-        !t.startsWith('appear') &&
-        !t.startsWith('blink') &&
-        !t.startsWith('draw-line')
-    )
-    selectionTags = selectionTags.filter(
-      (t) =>
-        !/d\d+/.test(t) &&
-        !/r\d+/.test(t) &&
-        !/r-\d+/.test(t) &&
-        !/d-\d+/.test(t)
-    )
+    let selectionTags = getTags(figma.currentPage.selection[0]).filter((t) => {
+      return !/^(wiggle|fly-from-|appear|blink|draw-line)|([dr]-\d+)|([dr]\d+)$/g.test(
+        t
+      )
+    })
     if (tag) {
       selectionTags.push(tag)
       if (delay) {
@@ -354,7 +341,7 @@ export function currentPageChanged(pageNode: any) {
     lastPage = figma.currentPage
   }
   updateDisplay({ displayMode: 'all', stepNumber: 1 }, lastPage)
-  updateDisplay({ displayMode: 'all', stepNumber: 1 }, figma.currentPage)
+  updateDisplay({ displayMode: 'all', stepNumber: 1 })
   lastPage = pageNode
 }
 
@@ -367,10 +354,8 @@ export async function selectionChanged() {
     const animationTags = tags.find((t) =>
       /^wiggle|^fly-from-|^appear|^blink|^draw-line/.test(t)
     )
-    const delay =
-      getParamValue(tags, /^d(\d+)/) || getParamValue(tags, /^d-(\d+)/)
-    const repeat =
-      getParamValue(tags, /^r(\d+)/) || getParamValue(tags, /^r-(\d+)/)
+    const delay = getParamValue(tags, /^d-?(\d+)/)
+    const repeat = getParamValue(tags, /^r-?(\d+)/)
     await uiApi.setAnimationTags(animationTags, delay, repeat)
     const parentStep = findParentByTag(selection, 'step')
     const stepNumber = stepsByOrder(lesson).indexOf(parentStep) + 1

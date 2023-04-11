@@ -38,12 +38,14 @@ export const TuneFormStore = proxy({
 
   async updateProps(settings: formProps) {
     mutex = true
+    console.log('updateProps store start', settings)
     for (const key in settings) {
       TuneFormStore.stepProps[key] = settings[key]
     }
     setTimeout(() => {
       mutex = false
     }, 10)
+    console.log('updateProps store end', settings)
   },
 
   async setStepNavigationProps(stepNumber: number, displayMode: string) {
