@@ -119,22 +119,20 @@ export function FormatTab() {
             ></div>
           </th>
       </OverlayTrigger>
+        <OverlayTrigger
+          placement='bottom'
+          delay={{show: 400, hide: 400}}
+          overlay={
+            renderTooltip(`${row?.nodeName ? `Node name: ${row.nodeName} `: ''} \r\n ${row?.nodeType ? `Node type: ${row.nodeType} `: ''}`)
+          }>
+          <th className={'th'}>{row?.stepNumber ? `o-${row.stepNumber}`: 'Frame'}</th>
+        </OverlayTrigger>
       <OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Page name')}>
-      <th className={'th'}>{row.pageName}</th>
+      <th className={'th'} >{row.pageName}</th>
         </OverlayTrigger>
       <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(row.error)}>
         <th className={'th-error'}>{row.error}</th>
       </OverlayTrigger>
-        { row.nodeType ?
-          (<OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Node type')}>
-            <th className={'th'}>{row.nodeType}</th>
-          </OverlayTrigger>)
-          : null}
-      { row.nodeName ?
-        (<OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Node name')}>
-          <th className={'th'}>{row.nodeName}</th>
-        </OverlayTrigger>)
-        : null}
       </tr>
     )
   }

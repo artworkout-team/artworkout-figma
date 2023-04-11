@@ -1,4 +1,4 @@
-import { getTags, findAll, findTag, descendants } from './util'
+import { getTags, findAll, findTag, descendants, getStepOrder, findParentByTag, isRGBTemplate } from './util'
 import { updateDisplay } from './tune'
 
 export interface LintError {
@@ -10,6 +10,7 @@ export interface LintError {
   pageName?: string
   nodeName?: string
   nodeType?: string
+  stepNumber?: number
 }
 
 let errors: LintError[] = []
@@ -27,17 +28,18 @@ export function selectError(index: number) {
   if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
-  // setTimeout(() => { // crashes, probably because of selection happening from the DisplayForm
-  if (errors[index]?.node) {
-    errors[index].page.selection = [errors[index].node]
-  }
-  // }, 0)
+   setTimeout(() => {
+    if (errors[index]?.node) {
+      errors[index].page.selection = [errors[index].node]
+    }
+   }, 0)
 }
 
-export async function printErrors() {
+export async function formatErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
   let sortedErrors = errors.sort((a, b) => a.level - b.level)
     .map((e) => {
+      const stepNumber = getStepOrder(findParentByTag(e.node, 'step')) || getStepOrder(e.node)
       return {
         ignore: e.ignore,
         pageName: e.page?.name,
@@ -45,7 +47,7 @@ export async function printErrors() {
         nodeType: e.node?.type,
         error: e.error,
         level: e.level,
-        errorColor: e.level,
+        stepNumber,
       } as LintError
     })
   if (savedErrors) {
@@ -82,35 +84,42 @@ function deepNodes(node: GroupNode): SceneNode[] {
 }
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
-  const rgbt = findTag(node, /^rgb-template$/)
+  const rgbt = isRGBTemplate(node)
+  const drawLineTag = findTag(node, /^draw-line/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
+    assert(!drawLineTag || !rgbt, 'Fills cant be used with draw-line tag', page, node)
     if (f.type === 'IMAGE') {
-      assert(f.opacity == 1, 'Image fill must not be opaque', page, node)
+      assert(f.opacity == 1 || !rgbt, 'Image fill must not be opaque', page, node, ErrorLevel.INFO)
     }
   })
 }
 
 function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
-  const rgbt = findTag(node, /^rgb-template$/)
+  const rgbt = isRGBTemplate(node)
   strokes.forEach((s) => {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
-      assert(s.opacity == 1, 'Image stroke must be opaque', page, node)
+      assert(s.opacity == 1 || !rgbt, 'Image stroke must be opaque', page, node, ErrorLevel.INFO)
     }
   })
 
   assert(
-    !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)),
+    !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)) || !rgbt,
     `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`,
     page,
-    node,
-    ErrorLevel.ERROR
+    node
   )
   assert(
-    !strokes.length || node.strokeJoin == 'ROUND',
+    node.strokeAlign == 'CENTER' || !rgbt || !strokes.length,
+    `Stroke align must be 'CENTER' but is '${String(node.strokeAlign)}'`,
+    page,
+    node
+  )
+  assert(
+    !strokes.length || node.strokeJoin == 'ROUND' || !rgbt,
     `Stroke joins should be 'ROUND' but are '${String(node.strokeJoin)}'`,
     page,
     node,
@@ -122,9 +131,12 @@ const validVectorTags =
   /^\/|^draw-line$|^blink$|^rgb-template$|^d\d+$|^r\d+$|^flip$|^[vV]ector$|^\d+$|^Ellipse$|^Rectangle$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$/
 
 function lintVector(page: PageNode, node: VectorNode) {
-  assert(node.opacity == 1, 'Must be opaque', page, node)
-  assert(node.visible, 'Must be visible', page, node)
   let tags = getTags(node)
+  const rgbt = isRGBTemplate(node)
+  const anim = findTag(node, /^draw-line$|^blink$/) || findParentByTag(node, 'draw-line') || findParentByTag(node, 'blink')
+
+  assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.visible, 'Must be visible', page, node)
 
   assert(
     tags.length > 0,
@@ -143,15 +155,12 @@ function lintVector(page: PageNode, node: VectorNode) {
   let fills = node.fills as Paint[]
   let strokes = node.strokes as Paint[]
   assert(
-    !fills.length || !strokes.length,
+    !fills.length || !strokes.length || !rgbt,
     'Should not have fill+stroke',
     page,
     node,
     ErrorLevel.WARN
   )
-
-  const rgbt = findTag(node, /^rgb-template$/)
-  const anim = findTag(node, /^draw-line$|^blink$/)
 
   lintStrokes(node, page, strokes)
   lintFills(node, page, fills)
@@ -162,6 +171,17 @@ function lintVector(page: PageNode, node: VectorNode) {
 const validGroupTags = /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
 
 function lintGroup(page: PageNode, node: GroupNode) {
+  let tags = getTags(node)
+  tags.forEach((tag) => {
+    assert(
+      validGroupTags.test(tag),
+      `Tag '${tag}' unknown`,
+      page,
+      node
+    )
+  })
+  const rgbt = isRGBTemplate(node)
+  const anim = tags.find((s) => /^blink$/.test(s)) || findParentByTag(node, 'blink')
   assert(
     !/BOOLEAN_OPERATION/.test(node.type),
     'Notice BOOLEAN_OPERATION',
@@ -171,23 +191,12 @@ function lintGroup(page: PageNode, node: GroupNode) {
   )
   assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
-  let tags = getTags(node)
   assert(
     tags.length > 0,
     'Name must not be empty. Use slash to /ignore.',
     page,
     node
   )
-  tags.forEach((tag) => {
-    assert(
-      validGroupTags.test(tag),
-      `Tag '${tag}' unknown`,
-      page,
-      node
-    )
-  })
-  const rgbt = tags.find((s) => /^rgb-template$/.test(s))
-  const anim = tags.find((s) => /^blink$/.test(s))
   assert(!rgbt || !!anim, "Must have 'blink'", page, node) // every rgbt must have animation
 }
 
@@ -201,7 +210,7 @@ function lintInput(page: PageNode, node: GroupNode) {
   descendants(node as GroupNode).forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
-    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
+    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)){
       lintVector(page, v as VectorNode)
     } else {
       assert(
@@ -332,11 +341,11 @@ function lintStep(page: PageNode, step: GroupNode) {
 
   const sf = step.findOne(
     (n: VectorNode) =>
-      getTags(n).includes('rgb-template') && n.strokes?.length > 0
+      (getTags(n).includes('rgb-template') || findParentByTag(n, 'rgb-template')) && n.strokes?.length > 0
   )
   const ffs = step.findAll(
     (n: VectorNode) =>
-      getTags(n).includes('rgb-template') && n.fills && n.fills[0]
+      (getTags(n).includes('rgb-template') || findParentByTag(n, 'rgb-template')) && n.fills && n.fills[0]
   )
   const bigFfs = ffs.filter((n: VectorNode) => n.width > 27 || n.height > 27)
   const ff = ffs.length > 0
@@ -410,7 +419,8 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
     !!node.children.find((n) => getTags(n).includes('s-multistep-result')),
     "Must have 's-multistep-result' child",
     page,
-    node
+    node,
+    ErrorLevel.WARN
   )
   let settings = node.children.find((n) => n.name.startsWith('settings'))
   if (settings) {
@@ -500,7 +510,7 @@ export function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) 
       )
     }
   }
-  return printErrors()
+  return formatErrors()
 }
 
 function lintIndex(page: PageNode) {
@@ -541,7 +551,7 @@ export function lintCourse() {
   for (let page of figma.root.children) {
     lintPage(page, true)
   }
-  return printErrors()
+  return formatErrors()
 }
 
 export function saveErrors(errorsForPrint: LintError[]) {

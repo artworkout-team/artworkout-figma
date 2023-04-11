@@ -24,7 +24,7 @@ export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   if (f(node)) {
     return node
   }
-  if (node.parent) {
+  if (node?.parent) {
     return findParent(node.parent, f)
   }
 }
@@ -40,7 +40,7 @@ export function getCurrentLesson() {
 }
 
 export function getTags(node: BaseNode | Step) {
-  return node.name.split(' ').filter(Boolean)
+  return node?.name ? node?.name?.split(' ').filter(Boolean) : []
 }
 
 export function findTag(node: BaseNode | Step, tag: RegExp) {
@@ -104,4 +104,8 @@ export function descendants(node: GroupNode): SceneNode[] {
     return []
   }
   return node.children.flatMap((n) => getAllTree(n as GroupNode))
+}
+
+export function isRGBTemplate(node: SceneNode) {
+  return findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
 }
