@@ -55,7 +55,6 @@ export const uiApi = createUIAPI({
     TuneFormStore.setAnimationTags(animationTag, delay, repeat)
   },
   updateUiProps(settings: formProps) {
-    console.log('updateUiProps', settings)
     TuneFormStore.updateProps(settings)
   },
   setStepNavigationProps(stepNumber: number, displayMode: string) {

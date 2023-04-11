@@ -118,7 +118,6 @@ export function TuneForm() {
 
   async function getSteps() {
     const steps = await pluginApi.getSteps()
-    console.log('steps', steps)
     setSteps(steps)
   }
 
