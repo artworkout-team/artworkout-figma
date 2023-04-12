@@ -16,7 +16,7 @@ import { pluginApi } from '../../rpc-api'
 import { StepList } from './StepList'
 import { Pencil, Lightbulb, MagicWand, FlipIcon } from './assets/bootstrapIcons'
 import { TuneFormStore } from '../models/TuneFormStore'
-import { subscribe, useSnapshot } from 'valtio'
+import { useSnapshot } from 'valtio'
 
 export function TuneForm() {
   const [steps, setSteps] = useState([])
@@ -122,13 +122,8 @@ export function TuneForm() {
   }
 
   useEffect(() => {
-    const unsubscribe = subscribe(TuneFormStore.stepProps, () => {
-      getSteps()
-    })
-    return () => {
-      unsubscribe()
-    }
-  }, []) // once
+    getSteps()
+  }, [state])
 
   const enableOnTags: any = ['INPUT', 'TEXTAREA', 'SELECT']
   const otherTagsList: any = [

@@ -32,7 +32,7 @@ export function StepList({
         {(provided) => (
           <ListGroup {...provided.droppableProps} ref={provided.innerRef}>
             {steps.map((stepNode, index) => {
-              return stepNode && selectedStep ? (
+              return stepNode ? (
                 <Draggable
                   key={stepNode.id}
                   draggableId={stepNode.id}
@@ -47,7 +47,7 @@ export function StepList({
                       style={{
                         ...provided.draggableProps.style,
                       }}
-                      active={stepNode.id === selectedStep.id}
+                      active={stepNode.id === selectedStep?.id}
                       onClick={() => onUpdate(stepNode)}
                     >
                       {stepNode.name.substring(5).replace(/s-multistep-/, '')}

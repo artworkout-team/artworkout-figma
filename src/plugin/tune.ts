@@ -261,10 +261,6 @@ export async function updateDisplay(
   }
 }
 
-setTimeout(() => {
-  updateDisplay({ displayMode: 'all', stepNumber: 1 })
-}, 1500)
-
 function addAnimationTag(
   step: GroupNode,
   tag: string,
@@ -273,9 +269,7 @@ function addAnimationTag(
 ) {
   if (figma.currentPage.selection) {
     let selectionTags = getTags(figma.currentPage.selection[0]).filter((t) => {
-      return !/^(wiggle|fly-from-|appear|blink|draw-line)|([dr]-\d+)|([dr]\d+)$/g.test(
-        t
-      )
+      return !/^(wiggle|fly-from-|appear$|blink$|draw-line|[dr]-?\d+$)/g.test(t)
     })
     if (tag) {
       selectionTags.push(tag)
