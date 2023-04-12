@@ -17,7 +17,7 @@ function getOrder(step: SceneNode) {
   return isNaN(o) ? 9999 : o
 }
 
-function stepsByOrder(lesson: FrameNode) {
+export function stepsByOrder(lesson: FrameNode) {
   return lesson.children
     .filter((n) => getTags(n).includes('step'))
     .sort((a, b) => {
