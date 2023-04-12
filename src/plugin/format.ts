@@ -82,9 +82,11 @@ function autoFormat() {
   ).forEach((n: GroupNode) => {
     n.children[0].name = 'template'
     ;(n.children[0] as GroupNode).children[0].name = '/ignore'
-    n.resize(40, 40)
-    n.x = 10
-    n.y = 60
+    if (n.children[0].type === 'RECTANGLE') {
+      n.resize(40, 40)
+      n.x = 10
+      n.y = 60
+    }
   })
 }
 
