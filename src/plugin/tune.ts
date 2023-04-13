@@ -31,7 +31,9 @@ function deleteTmp() {
   figma.currentPage
     .findAll((el) => el.name.startsWith('tmp-'))
     .forEach((el) => el.remove())
-  //show template groups
+}
+
+function showTemplateGroups() {
   figma.currentPage
     .findAll((el) => el.name.includes('template'))
     .forEach((el) => {
@@ -51,14 +53,31 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
   if (!input) {
     return
   }
+
+  const templateGroup = step.findChild((g) => g.name.includes('template'))
+  if (templateGroup) {
+    templateGroup.visible = true
+  }
+
   const template = input.clone() as GroupNode
   template.name = 'tmp-template'
+
+  console.log(
+    template
+      .findAll((el) => getTags(el).includes('rgb-template'))
+      .map((el) => findLeafNodes(el))
+      .flat()
+      .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
+  )
+
+  console.log(template)
   template
     .findAll((el) => getTags(el).includes('rgb-template'))
     .map((el) => findLeafNodes(el))
     .flat()
     .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
     .forEach((el: VectorNode) => {
+      console.log(1, 'element', el)
       const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
       const ss = parseInt(getTag(step, 'ss-')) || defaultWeight
 
@@ -98,10 +117,7 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
         template.appendChild(fillsBlue)
       }
     })
-  const templateGroup = step.findChild((g) => g.name == 'template')
-  if (templateGroup) {
-    template.appendChild(templateGroup.clone())
-  }
+  console.log(template)
   lesson.appendChild(template)
   template.relativeTransform = input.relativeTransform
 }
@@ -242,6 +258,7 @@ export function updateDisplay(
     brushType,
   })
   deleteTmp()
+  showTemplateGroups()
   switch (displayMode) {
     case 'all':
       lesson.children.forEach((step) => {
@@ -256,13 +273,10 @@ export function updateDisplay(
       })
       step.visible = true
       if (step.type === 'GROUP') {
-        //hide template group
-        step.children.forEach(() => {
-          const groupTemplate = step.findChild((g) => g.name == 'template')
-          if (groupTemplate) {
-            groupTemplate.visible = false
-          }
-        })
+        const groupTemplate = step.findChild((g) => g.name == 'template')
+        if (groupTemplate) {
+          groupTemplate.visible = false
+        }
       }
       break
 
@@ -280,6 +294,7 @@ export function updateDisplay(
     case 'template':
       displayBrushSize(lesson, step)
       displayTemplate(lesson, step)
+      //shpw current step, hice input group and show template group
       break
   }
 }

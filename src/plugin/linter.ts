@@ -1,4 +1,12 @@
-import { getTags, findAll, findTag, descendants, getStepOrder, findParentByTag, isRGBTemplate } from './util'
+import {
+  getTags,
+  findAll,
+  findTag,
+  descendants,
+  getStepOrder,
+  findParentByTag,
+  isRGBTemplate,
+} from './util'
 import { updateDisplay } from './tune'
 
 export interface LintError {
@@ -28,18 +36,20 @@ export function selectError(index: number) {
   if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
-   setTimeout(() => {
+  setTimeout(() => {
     if (errors[index]?.node) {
       errors[index].page.selection = [errors[index].node]
     }
-   }, 0)
+  }, 0)
 }
 
 export async function formatErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
-  let sortedErrors = errors.sort((a, b) => a.level - b.level)
+  let sortedErrors = errors
+    .sort((a, b) => a.level - b.level)
     .map((e) => {
-      const stepNumber = getStepOrder(findParentByTag(e.node, 'step')) || getStepOrder(e.node)
+      const stepNumber =
+        getStepOrder(findParentByTag(e.node, 'step')) || getStepOrder(e.node)
       return {
         ignore: e.ignore,
         pageName: e.page?.name,
@@ -52,7 +62,12 @@ export async function formatErrors() {
     })
   if (savedErrors) {
     sortedErrors = sortedErrors.map((e) => {
-      const savedError = savedErrors.find((s) => s.pageName === e.pageName && s.nodeName === e.nodeName && s.error === e.error)
+      const savedError = savedErrors.find(
+        (s) =>
+          s.pageName === e.pageName &&
+          s.nodeName === e.nodeName &&
+          s.error === e.error
+      )
       if (savedError) {
         e.ignore = savedError.ignore
       }
@@ -89,9 +104,20 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
-    assert(!drawLineTag || !rgbt, 'Fills cant be used with draw-line tag', page, node)
+    assert(
+      !drawLineTag || !rgbt,
+      'Fills cant be used with draw-line tag',
+      page,
+      node
+    )
     if (f.type === 'IMAGE') {
-      assert(f.opacity == 1 || !rgbt, 'Image fill must not be opaque', page, node, ErrorLevel.INFO)
+      assert(
+        f.opacity == 1 || !rgbt,
+        'Image fill must not be opaque',
+        page,
+        node,
+        ErrorLevel.INFO
+      )
     }
   })
 }
@@ -102,7 +128,13 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
-      assert(s.opacity == 1 || !rgbt, 'Image stroke must be opaque', page, node, ErrorLevel.INFO)
+      assert(
+        s.opacity == 1 || !rgbt,
+        'Image stroke must be opaque',
+        page,
+        node,
+        ErrorLevel.INFO
+      )
     }
   })
 
@@ -133,9 +165,18 @@ const validVectorTags =
 function lintVector(page: PageNode, node: VectorNode) {
   let tags = getTags(node)
   const rgbt = isRGBTemplate(node)
-  const anim = findTag(node, /^draw-line$|^blink$/) || findParentByTag(node, 'draw-line') || findParentByTag(node, 'blink')
+  const anim =
+    findTag(node, /^draw-line$|^blink$/) ||
+    findParentByTag(node, 'draw-line') ||
+    findParentByTag(node, 'blink')
 
-  assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(
+    node.opacity == 1 || !rgbt,
+    'Must be opaque',
+    page,
+    node,
+    ErrorLevel.INFO
+  )
   assert(node.visible, 'Must be visible', page, node)
 
   assert(
@@ -168,20 +209,17 @@ function lintVector(page: PageNode, node: VectorNode) {
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
 }
 
-const validGroupTags = /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
+const validGroupTags =
+  /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
 
 function lintGroup(page: PageNode, node: GroupNode) {
   let tags = getTags(node)
   tags.forEach((tag) => {
-    assert(
-      validGroupTags.test(tag),
-      `Tag '${tag}' unknown`,
-      page,
-      node
-    )
+    assert(validGroupTags.test(tag), `Tag '${tag}' unknown`, page, node)
   })
   const rgbt = isRGBTemplate(node)
-  const anim = tags.find((s) => /^blink$/.test(s)) || findParentByTag(node, 'blink')
+  const anim =
+    tags.find((s) => /^blink$/.test(s)) || findParentByTag(node, 'blink')
   assert(
     !/BOOLEAN_OPERATION/.test(node.type),
     'Notice BOOLEAN_OPERATION',
@@ -210,7 +248,7 @@ function lintInput(page: PageNode, node: GroupNode) {
   descendants(node as GroupNode).forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
-    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)){
+    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
       lintVector(page, v as VectorNode)
     } else {
       assert(
@@ -223,7 +261,8 @@ function lintInput(page: PageNode, node: GroupNode) {
   })
 }
 
-const validSettingsTags = /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/
+const validSettingsTags =
+  /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/
 
 function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.type == 'ELLIPSE', "Must be 'ELLIPSE' type'", page, node)
@@ -231,14 +270,7 @@ function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.visible, 'Must be visible', page, node)
   const tags = getTags(node)
   tags.forEach((tag) => {
-    assert(
-      validSettingsTags.test(
-        tag
-      ),
-      `Tag '${tag}' unknown`,
-      page,
-      node
-    )
+    assert(validSettingsTags.test(tag), `Tag '${tag}' unknown`, page, node)
   })
   if (tags.find((tag) => /^order-layers$/.test(tag))) {
     order = 'layers'
@@ -258,7 +290,8 @@ function lintSettings(page: PageNode, node: EllipseNode) {
   )
 }
 
-const validStepTags = /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$/
+const validStepTags =
+  /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$/
 
 function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
@@ -269,9 +302,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   const tags = getTags(step)
   tags.forEach((tag) => {
     assert(
-      validStepTags.test(
-        tag
-      ),
+      validStepTags.test(tag),
       `Tag '${tag}' unknown. Use slash to /ignore.`,
       page,
       step
@@ -341,11 +372,16 @@ function lintStep(page: PageNode, step: GroupNode) {
 
   const sf = step.findOne(
     (n: VectorNode) =>
-      (getTags(n).includes('rgb-template') || findParentByTag(n, 'rgb-template')) && n.strokes?.length > 0
+      (getTags(n).includes('rgb-template') ||
+        findParentByTag(n, 'rgb-template')) &&
+      n.strokes?.length > 0
   )
   const ffs = step.findAll(
     (n: VectorNode) =>
-      (getTags(n).includes('rgb-template') || findParentByTag(n, 'rgb-template')) && n.fills && n.fills[0]
+      (getTags(n).includes('rgb-template') ||
+        findParentByTag(n, 'rgb-template')) &&
+      n.fills &&
+      n.fills[0]
   )
   const bigFfs = ffs.filter((n: VectorNode) => n.width > 27 || n.height > 27)
   const ff = ffs.length > 0
@@ -466,11 +502,14 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-export function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) {
+export function lintPage(
+  currentPage?: PageNode | null,
+  appendErrors?: boolean
+) {
   if (!appendErrors) {
     errors = []
   }
-  const page = currentPage?  currentPage : figma.currentPage
+  const page = currentPage ? currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
