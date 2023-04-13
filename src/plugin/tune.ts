@@ -59,66 +59,55 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
     templateGroup.visible = true
   }
 
-  const template = input.clone() as GroupNode
+  let template = input.clone() as GroupNode
   template.name = 'tmp-template'
-
-  console.log(
-    template
-      .findAll((el) => getTags(el).includes('rgb-template'))
-      .map((el) => findLeafNodes(el))
-      .flat()
-      .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
-  )
-
-  console.log(template)
-  template
+  const tmp = template
     .findAll((el) => getTags(el).includes('rgb-template'))
     .map((el) => findLeafNodes(el))
     .flat()
     .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
-    .forEach((el: VectorNode) => {
-      console.log(1, 'element', el)
-      const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
-      const ss = parseInt(getTag(step, 'ss-')) || defaultWeight
+  tmp.forEach((el: VectorNode) => {
+    const defaultWeight = getTag(step, 's-') == 'multistep-bg' ? 30 : 50
+    const ss = parseInt(getTag(step, 'ss-')) || defaultWeight
 
-      if (el.strokes.length > 0 && (el.fills as Paint[]).length > 0) {
-        const green = el.clone()
-        green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
-        green.strokeWeight += ss
-        template.appendChild(green)
-      }
+    if (el.strokes.length > 0 && (el.fills as Paint[]).length > 0) {
+      const green = el.clone()
+      green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
+      green.strokeWeight += ss
+      template.appendChild(green)
+    }
 
-      if (el.strokes.length > 0 && !(el.fills as Paint[]).length) {
-        const green = el.clone()
-        green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
-        green.strokeWeight = ss * 1.1
-        template.appendChild(green)
-      }
-      if ((el.fills as Paint[]).length > 0 && !el.strokes.length) {
-        const green = el.clone()
-        green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
-        green.strokeWeight = ss
-        template.appendChild(green)
-      }
-      if (el.strokes.length > 0) {
-        const blue = el.clone()
-        blue.strokes = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
-        blue.strokeWeight = ss
-        template.appendChild(blue)
-        const pink = el.clone()
-        pink.strokes = [{ type: 'SOLID', color: { r: 1, g: 0, b: 1 } }]
-        pink.strokeWeight = 2
-        pink.name = 'pink ' + el.name
-        template.appendChild(pink)
-      }
-      if ((el.fills as Paint[]).length > 0) {
-        const fillsBlue = el.clone()
-        fillsBlue.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
-        template.appendChild(fillsBlue)
-      }
-    })
+    if (el.strokes.length > 0 && !(el.fills as Paint[]).length) {
+      const green = el.clone()
+      green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
+      green.strokeWeight = ss * 1.1
+      template.appendChild(green)
+    }
+    if ((el.fills as Paint[]).length > 0 && !el.strokes.length) {
+      const green = el.clone()
+      green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
+      green.strokeWeight = ss
+      template.appendChild(green)
+    }
+    if (el.strokes.length > 0) {
+      const blue = el.clone()
+      blue.strokes = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
+      blue.strokeWeight = ss
+      template.appendChild(blue)
+      const pink = el.clone()
+      pink.strokes = [{ type: 'SOLID', color: { r: 1, g: 0, b: 1 } }]
+      pink.strokeWeight = 2
+      pink.name = 'pink ' + el.name
+      template.appendChild(pink)
+    }
+    if ((el.fills as Paint[]).length > 0) {
+      const fillsBlue = el.clone()
+      fillsBlue.fills = [{ type: 'SOLID', color: { r: 0, g: 0, b: 1 } }]
+      template.appendChild(fillsBlue)
+    }
+  })
   console.log(template)
-  lesson.appendChild(template)
+  lesson.appendChild(tmp)
   template.relativeTransform = input.relativeTransform
 }
 
