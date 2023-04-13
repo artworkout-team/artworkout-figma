@@ -24,7 +24,7 @@ export function findParent(node: BaseNode, f: (node: BaseNode) => boolean) {
   if (f(node)) {
     return node
   }
-  if (node.parent) {
+  if (node?.parent) {
     return findParent(node.parent, f)
   }
 }
@@ -40,7 +40,7 @@ export function getCurrentLesson() {
 }
 
 export function getTags(node: BaseNode | Step) {
-  return node?.name.split(' ').filter(Boolean)
+  return node?.name ? node?.name?.split(' ').filter(Boolean) : []
 }
 
 export function findTag(node: BaseNode | Step, tag: RegExp) {
@@ -80,9 +80,9 @@ export function getStepOrder(step: SceneNode | Step): number {
 
 export function resizeUi(isWide: boolean) {
   if (isWide) {
-    figma.ui.resize(900, 450)
+    figma.ui.resize(900, 470)
   } else {
-    figma.ui.resize(340, 450)
+    figma.ui.resize(340, 470)
   }
 }
 
@@ -114,4 +114,8 @@ export function getParamValue(el, pattern) {
     }
   }
   return 0
+}
+
+export function isRGBTemplate(node: SceneNode) {
+  return findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
 }

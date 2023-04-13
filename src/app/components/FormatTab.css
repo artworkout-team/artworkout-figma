@@ -4,10 +4,9 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     font-weight: normal;
-    max-width: 150px;
 }
 .th{
-    max-width: 100px;
+    max-width: 150px;
     white-space: nowrap;
     align-content: center;
     justify-content: center;

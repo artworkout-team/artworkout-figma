@@ -74,6 +74,9 @@ function autoFormat() {
       n.y = 10
     }
   )
+  findAll(figma.root, (node) => node.type == 'TEXT').forEach((n: TextNode) => {
+    addTag(n, 'no-mirror')
+  })
   findAll(figma.root, (node) =>
     /^step s-multistep-result/.test(node.name)
   ).forEach((n: GroupNode) => {

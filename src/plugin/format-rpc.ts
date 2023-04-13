@@ -1,8 +1,10 @@
-import { displayNotification } from './util'
+import { displayNotification, findAll, getCurrentLesson } from './util'
+import { stepsByOrder } from './tune-rpc'
 
-function findTexts(texts: PageNode) {
-  return texts
-    .findAll((node: SceneNode) => node.type === 'TEXT')
+function findTextInCurrentLesson() {
+  const lesson = getCurrentLesson()
+  return stepsByOrder(lesson)
+    .flatMap((step) => findAll(step, (node) => node.type === 'TEXT'))
     .filter((node: TextNode) => node.visible)
 }
 
@@ -64,7 +66,7 @@ function importStyledSegments(segmentTexts: string[], node: TextNode) {
 }
 
 export function exportTexts() {
-  const texts = findTexts(figma.currentPage)
+  const texts = findTextInCurrentLesson()
 
   return (
     texts
@@ -104,7 +106,7 @@ export async function importTexts(translations: {}) {
     return
   }
 
-  const texts = findTexts(figma.currentPage)
+  const texts = findTextInCurrentLesson()
   await loadFonts(texts as TextNode[])
   texts.forEach((txt: TextNode) => {
     const formattedText = getFormattedText(txt)
