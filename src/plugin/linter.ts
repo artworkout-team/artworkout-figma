@@ -475,7 +475,7 @@ export function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) 
     return
   }
 
-  updateDisplay(page, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay( { displayMode: 'all', stepNumber: 1 }, page)
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),
