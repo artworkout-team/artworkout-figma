@@ -80,10 +80,10 @@ function autoFormat() {
   findAll(figma.root, (node) =>
     /^step s-multistep-result/.test(node.name)
   ).forEach((n: GroupNode) => {
-    n.children[0].name = 'template'
     const templateNode = n.children[0] as GroupNode
-    templateNode.children[0].name = '/ignore'
+    templateNode.name = 'template'
     if (n.children[0].type === 'RECTANGLE' && n.children.length == 1) {
+      templateNode.children[0].name = '/ignore'
       n.resize(40, 40)
       n.x = 10
       n.y = 60
