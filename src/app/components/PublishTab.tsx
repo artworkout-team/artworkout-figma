@@ -11,6 +11,8 @@ const ParseCourse = Parse.Object.extend('Course')
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
+const allowedEmails = ['ulitiy@gmail.com', 'indie.djan@gmail.com']
+
 export function PublishTab() {
   const userSnapshot = useSnapshot(userStore)
   const [isDisabled, setIsDisabled] = React.useState(false)
@@ -141,7 +143,7 @@ export function PublishTab() {
           >
             Publish debug
           </Button>{' '}
-          {userSnapshot.user.get('email') === 'ulitiy@gmail.com' && (
+          {allowedEmails.includes(userSnapshot.user.get('email')) && (
             <Button
               disabled={isDisabled}
               variant='danger'
