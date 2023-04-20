@@ -102,22 +102,16 @@ function hasGaps(node: VectorNode) {
   if (!node.vectorNetwork) return false
 
   const { segments } = node.vectorNetwork
+
   const starts = segments.map((segment) => segment.start)
   const ends = segments.map((segment) => segment.end)
-  for (let i = 0; i < starts.length - 1; i++) {
-    const startValue = starts[i]
-    if (!ends.includes(startValue)) {
-      return true
-    }
-  }
 
-  for (const endValue of ends) {
-    if (!starts.includes(endValue)) {
-      return true
-    }
-  }
+  const hasNonMatchingStart = starts.some(
+    (startValue) => !ends.includes(startValue)
+  )
+  const hasNonMatchingEnd = ends.some((endValue) => !starts.includes(endValue))
 
-  return false
+  return hasNonMatchingStart || hasNonMatchingEnd
 }
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
