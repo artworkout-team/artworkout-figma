@@ -81,8 +81,11 @@ function autoFormat() {
     /^step s-multistep-result/.test(node.name)
   ).forEach((n: GroupNode) => {
     const templateNode = n.children[0] as GroupNode
-    templateNode.name = 'template'
-    if (n.children[0].type === 'RECTANGLE' && n.children.length == 1) {
+    if (
+      templateNode.children.length == 1 &&
+      templateNode.children[0].type === 'RECTANGLE'
+    ) {
+      templateNode.name = 'template'
       templateNode.children[0].name = '/ignore'
       n.resize(40, 40)
       n.x = 10
