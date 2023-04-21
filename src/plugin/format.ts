@@ -80,17 +80,16 @@ function autoFormat() {
   findAll(figma.root, (node) =>
     /^step s-multistep-result/.test(node.name)
   ).forEach((n: GroupNode) => {
-    const templateNode = n.children[0] as GroupNode
-    if (
-      templateNode.children.length == 1 &&
-      templateNode.children[0].type === 'RECTANGLE'
-    ) {
-      templateNode.name = 'template'
-      templateNode.children[0].name = '/ignore'
-      n.resize(40, 40)
-      n.x = 10
-      n.y = 60
-    }
+    n.children.forEach((node: GroupNode) => {
+      if (node.children.length == 1 && node.children[0].type === 'RECTANGLE') {
+        console.log(node.name, node.children)
+        node.name = 'template'
+        node.children[0].name = '/ignore'
+        node.resize(40, 40)
+        node.x = 10
+        node.y = 60
+      }
+    })
   })
 }
 
