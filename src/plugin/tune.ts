@@ -119,7 +119,7 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
     .forEach((el: VectorNode) => {
       el.visible = false
     })
-  const templateGroup = step.findChild((g) => g.name.includes('template'))
+  const templateGroup = step.findChild((g) => getTags(g).includes('template'))
   if (templateGroup) {
     step.visible = true
     input.visible = false
