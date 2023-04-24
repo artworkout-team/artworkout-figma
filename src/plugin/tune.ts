@@ -113,8 +113,6 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
 
   template
     .findAll((el) => !getTags(el).includes('rgb-template'))
-    .map((el) => findLeafNodes(el))
-    .flat()
     .filter((el) => /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(el.type))
     .forEach((el: VectorNode) => {
       el.visible = false
