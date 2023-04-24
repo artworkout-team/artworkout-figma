@@ -1,4 +1,12 @@
-import { getTags, findAll, findTag, descendants, getStepOrder, findParentByTag } from './util'
+import {
+  getTags,
+  findAll,
+  findTag,
+  descendants,
+  getStepOrder,
+  findParentByTag,
+  isRGBTemplate,
+} from './util'
 import { updateDisplay } from './tune'
 
 export interface LintError {
@@ -28,21 +36,20 @@ export function selectError(index: number) {
   if (errors[index]?.page) {
     figma.currentPage = errors[index].page
   }
-   setTimeout(() => {
+  setTimeout(() => {
     if (errors[index]?.node) {
       errors[index].page.selection = [errors[index].node]
     }
-   }, 0)
+  }, 0)
 }
 
-export async function printErrors() {
+export async function formatErrors() {
   const savedErrors = await figma.clientStorage.getAsync('errorsForPrint')
-  let sortedErrors = errors.sort((a, b) => a.level - b.level)
+  let sortedErrors = errors
+    .sort((a, b) => a.level - b.level)
     .map((e) => {
-      let stepNumber = null
-      if(/GROUP|RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(e?.node?.type)) {
-         stepNumber = getStepOrder(e.node) || getStepOrder(findParentByTag(e.node, 'step'))
-      }
+      const stepNumber =
+        getStepOrder(findParentByTag(e.node, 'step')) || getStepOrder(e.node)
       return {
         ignore: e.ignore,
         pageName: e.page?.name,
@@ -50,13 +57,17 @@ export async function printErrors() {
         nodeType: e.node?.type,
         error: e.error,
         level: e.level,
-        errorColor: e.level,
-        step: stepNumber,
+        stepNumber,
       } as LintError
     })
   if (savedErrors) {
     sortedErrors = sortedErrors.map((e) => {
-      const savedError = savedErrors.find((s) => s.pageName === e.pageName && s.nodeName === e.nodeName && s.error === e.error)
+      const savedError = savedErrors.find(
+        (s) =>
+          s.pageName === e.pageName &&
+          s.nodeName === e.nodeName &&
+          s.error === e.error
+      )
       if (savedError) {
         e.ignore = savedError.ignore
       }
@@ -87,8 +98,24 @@ function deepNodes(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => deepNodes(n as GroupNode))
 }
 
+function hasGaps(node: VectorNode) {
+  if (!node.vectorNetwork) return false
+
+  const { segments } = node.vectorNetwork
+
+  const starts = segments.map((segment) => segment.start)
+  const ends = segments.map((segment) => segment.end)
+
+  const hasNonMatchingStart = starts.some(
+    (startValue) => !ends.includes(startValue)
+  )
+  const hasNonMatchingEnd = ends.some((endValue) => !starts.includes(endValue))
+
+  return hasNonMatchingStart || hasNonMatchingEnd
+}
+
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
-  const rgbt = findTag(node, /^rgb-template$/)
+  const rgbt = isRGBTemplate(node)
   const drawLineTag = findTag(node, /^draw-line/)
   fills.forEach((f) => {
     assert(f.visible, 'Fill must be visible', page, node)
@@ -100,18 +127,31 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
       node)
     assert(!drawLineTag || !rgbt, 'Fills cant be used with draw-line tag', page, node)
     if (f.type === 'IMAGE') {
-      assert(f.opacity == 1 || !rgbt, 'Image fill must not be opaque', page, node, ErrorLevel.INFO)
+      assert(
+        f.opacity == 1 || !rgbt,
+        'Image fill must not be opaque',
+        page,
+        node,
+        ErrorLevel.INFO
+      )
     }
   })
 }
 
 function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
-  const rgbt = findTag(node, /^rgb-template$/)
+  const rgbt = isRGBTemplate(node)
+  const drawLineTag = findTag(node, /^draw-line/)
   strokes.forEach((s) => {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
-      assert(s.opacity == 1 || !rgbt, 'Image stroke must be opaque', page, node, ErrorLevel.INFO)
+      assert(
+        s.opacity == 1 || !rgbt,
+        'Image stroke must be opaque',
+        page,
+        node,
+        ErrorLevel.INFO
+      )
     }
   })
 
@@ -119,15 +159,13 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     !strokes.length || /ROUND|NONE/.test(String(node.strokeCap)) || !rgbt,
     `Stroke caps must be 'ROUND' but are '${String(node.strokeCap)}'`,
     page,
-    node,
-    ErrorLevel.ERROR
+    node
   )
   assert(
-    node.strokeAlign == 'CENTER' || !rgbt,
+    node.strokeAlign == 'CENTER' || !rgbt || !strokes.length,
     `Stroke align must be 'CENTER' but is '${String(node.strokeAlign)}'`,
     page,
-    node,
-    ErrorLevel.ERROR
+    node
   )
   assert(
     !strokes.length || node.strokeJoin == 'ROUND' || !rgbt,
@@ -136,6 +174,12 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     node,
     ErrorLevel.INFO
   )
+  assert(
+    !drawLineTag || !hasGaps(node),
+    'Split vector or change animation',
+    page,
+    node
+  )
 }
 
 const validVectorTags =
@@ -143,10 +187,19 @@ const validVectorTags =
 
 function lintVector(page: PageNode, node: VectorNode) {
   let tags = getTags(node)
-  const rgbt = findTag(node, /^rgb-template$/)
-  const anim = findTag(node, /^draw-line$|^blink$/)
+  const rgbt = isRGBTemplate(node)
+  const anim =
+    findTag(node, /^draw-line$|^blink$/) ||
+    findParentByTag(node, 'draw-line') ||
+    findParentByTag(node, 'blink')
 
-  assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(
+    node.opacity == 1 || !rgbt,
+    'Must be opaque',
+    page,
+    node,
+    ErrorLevel.INFO
+  )
   assert(node.visible, 'Must be visible', page, node)
 
   assert(
@@ -179,20 +232,17 @@ function lintVector(page: PageNode, node: VectorNode) {
   assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
 }
 
-const validGroupTags = /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
+const validGroupTags =
+  /^\/|^blink$|^rgb-template$|^d\d+$|^r\d+$|^fly-from-bottom$|^fly-from-left$|^fly-from-right$|^appear$|^wiggle-\d+$|^draw-line$|^\d+$|^[gG]roup$/
 
 function lintGroup(page: PageNode, node: GroupNode) {
   let tags = getTags(node)
   tags.forEach((tag) => {
-    assert(
-      validGroupTags.test(tag),
-      `Tag '${tag}' unknown`,
-      page,
-      node
-    )
+    assert(validGroupTags.test(tag), `Tag '${tag}' unknown`, page, node)
   })
-  const rgbt = tags.find((s) => /^rgb-template$/.test(s))
-  const anim = tags.find((s) => /^blink$/.test(s))
+  const rgbt = isRGBTemplate(node)
+  const anim =
+    tags.find((s) => /^blink$/.test(s)) || findParentByTag(node, 'blink')
   assert(
     !/BOOLEAN_OPERATION/.test(node.type),
     'Notice BOOLEAN_OPERATION',
@@ -242,14 +292,7 @@ function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.visible, 'Must be visible', page, node)
   const tags = getTags(node)
   tags.forEach((tag) => {
-    assert(
-      validSettingsTags.test(
-        tag
-      ),
-      `Tag '${tag}' unknown`,
-      page,
-      node
-    )
+    assert(validSettingsTags.test(tag), `Tag '${tag}' unknown`, page, node)
   })
   if (tags.find((tag) => /^order-layers$/.test(tag))) {
     order = 'layers'
@@ -269,7 +312,8 @@ function lintSettings(page: PageNode, node: EllipseNode) {
   )
 }
 
-const validStepTags = /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$/
+const validStepTags =
+  /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$/
 
 function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
@@ -280,9 +324,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   const tags = getTags(step)
   tags.forEach((tag) => {
     assert(
-      validStepTags.test(
-        tag
-      ),
+      validStepTags.test(tag),
       `Tag '${tag}' unknown. Use slash to /ignore.`,
       page,
       step
@@ -352,11 +394,16 @@ function lintStep(page: PageNode, step: GroupNode) {
 
   const sf = step.findOne(
     (n: VectorNode) =>
-      getTags(n).includes('rgb-template') && n.strokes?.length > 0
+      (getTags(n).includes('rgb-template') ||
+        findParentByTag(n, 'rgb-template')) &&
+      n.strokes?.length > 0
   )
   const ffs = step.findAll(
     (n: VectorNode) =>
-      getTags(n).includes('rgb-template') && n.fills && n.fills[0]
+      (getTags(n).includes('rgb-template') ||
+        findParentByTag(n, 'rgb-template')) &&
+      n.fills &&
+      n.fills[0]
   )
   const bigFfs = ffs.filter((n: VectorNode) => n.width > 27 || n.height > 27)
   const ff = ffs.length > 0
@@ -477,16 +524,19 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-export function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) {
+export function lintPage(
+  currentPage?: PageNode | null,
+  appendErrors?: boolean
+) {
   if (!appendErrors) {
     errors = []
   }
-  const page = currentPage?  currentPage : figma.currentPage
+  const page = currentPage ? currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
 
-  updateDisplay(page, { displayMode: 'all', stepNumber: 1 })
+  updateDisplay( { displayMode: 'all', stepNumber: 1 }, page)
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),
@@ -521,7 +571,7 @@ export function lintPage(currentPage?: PageNode | null, appendErrors?: boolean) 
       )
     }
   }
-  return printErrors()
+  return formatErrors()
 }
 
 function lintIndex(page: PageNode) {
@@ -562,7 +612,7 @@ export function lintCourse() {
   for (let page of figma.root.children) {
     lintPage(page, true)
   }
-  return printErrors()
+  return formatErrors()
 }
 
 export function saveErrors(errorsForPrint: LintError[]) {

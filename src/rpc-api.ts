@@ -10,7 +10,15 @@ import {
 } from './plugin/create'
 import { displayNotification, resizeUi } from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
-import { selectionChanged, currentPageChanged, updateDisplay } from './plugin/tune'
+import {
+  selectionChanged,
+  currentPageChanged,
+  updateDisplay,
+  updateProps,
+  formProps,
+} from './plugin/tune'
+import { TuneFormStore } from './app/models/TuneFormStore'
+
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
   setSessionToken(token: string) {
@@ -38,8 +46,18 @@ export const pluginApi = createPluginAPI({
   lintPage,
   lintCourse,
   resizeUi,
+  updateProps,
 })
 
 // Figma UI app methods
 export const uiApi = createUIAPI({
+  setAnimationTags(animationTag: string, delay: number, repeat: number) {
+    TuneFormStore.setAnimationTags(animationTag, delay, repeat)
+  },
+  updateUiProps(settings: formProps) {
+    TuneFormStore.updateProps(settings)
+  },
+  setStepNavigationProps(stepNumber: number, displayMode: string) {
+    TuneFormStore.setStepNavigationProps(stepNumber, displayMode)
+  },
 })
