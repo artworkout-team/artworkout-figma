@@ -6,6 +6,8 @@ import {
   getStepOrder,
   getTags,
   isResultStep,
+  findNextBrushStep,
+  findLessonGroup,
 } from './util'
 
 function getOrder(step: SceneNode) {
@@ -37,8 +39,10 @@ export function deleteTmp(page?: PageNode) {
     .forEach((el) => el.remove())
 }
 
-export function displayAll(lesson: FrameNode, setLastMode?: boolean ) {
-  lesson.children.forEach((step) => {
+export function displayAll(page?: PageNode|FrameNode, setLastMode?: boolean ) {
+  deleteTmp()
+  const p = page || figma.currentPage
+  p.children.forEach((step) => {
     step.visible = true
   })
   if(setLastMode){
@@ -174,6 +178,7 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   return clearLayerNumbers
 }
 
+
 export function selectNextBrushStep(stepNumber: number) {
     let lesson = getCurrentLesson()
     const page = figma.currentPage
@@ -182,19 +187,18 @@ export function selectNextBrushStep(stepNumber: number) {
     }
     let step: GroupNode
     let steps = stepsByOrder(lesson)
-    const nextStep = steps.slice(stepNumber).find((step) => {
-      return getTags(step).includes('s-multistep-brush')
-    })
+    const nextStep = findNextBrushStep(steps.slice(stepNumber))
+
 
     if (!nextStep) {
       const lessons = figma.root.children as PageNode[]
       const nextLesson = lessons.slice(lessons.indexOf(<PageNode>lesson.parent) + 1).find((newLesson) => {
-        const lessonFrame = newLesson.children.find((t) => t.name == 'lesson') as FrameNode
+        const lessonFrame = findLessonGroup(newLesson)
         if (!lessonFrame) {
           return false
         }
         const newSteps = stepsByOrder(lessonFrame)
-        const newNextStep = newSteps.find((step) => getTags(step).includes('s-multistep-brush'))
+        const newNextStep = findNextBrushStep(newSteps)
         if (newNextStep) {
           return { newLesson }
         }
@@ -202,10 +206,10 @@ export function selectNextBrushStep(stepNumber: number) {
       if (nextLesson) {
         deleteTmp(page)
         figma.currentPage = nextLesson
-        lesson = nextLesson.children.find((el) => el.name == 'lesson') as FrameNode
-        step = stepsByOrder(lesson).find((step) => getTags(step).includes('s-multistep-brush')) as GroupNode
+        lesson = findLessonGroup(nextLesson)
+        step = findNextBrushStep(stepsByOrder(lesson)) as GroupNode
       } else {
-        lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
+        lesson = findLessonGroup(page)
         step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
       }
     } else {
@@ -223,7 +227,7 @@ export function updateDisplay(
 ) {
   lastMode = settings.displayMode
   const { displayMode, stepNumber } = settings
-  const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
+  const lesson = findLessonGroup(page)
   if (!lesson) {
     return
   }
@@ -250,17 +254,15 @@ export function updateDisplay(
       t.startsWith('allow-undo')) || [],
     brushType,
   })
-
-  if(lastPage && lastPage != page) {
-    deleteTmp(lastPage)
-    displayAll(lastPage.children.find((el) => el.name == 'lesson') as FrameNode)
-  }
   deleteTmp()
+  if(lastPage && lastPage != page) {
+    displayAll(lastPage.children.find((el) => el.name == 'lesson'))
+  }
   lastPage = page
 
   switch (displayMode) {
     case 'all':
-      displayAll(lesson, true)
+      displayAll(lesson as FrameNode, true)
       break
 
     case 'current':

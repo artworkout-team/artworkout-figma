@@ -529,7 +529,6 @@ function lintIndex(page: PageNode) {
 export async function lintCourse() {
   errors = []
   const lesson = getCurrentLesson()
-  await deleteTmp()
   if(lesson) {
     displayAll(lesson, true)
   }

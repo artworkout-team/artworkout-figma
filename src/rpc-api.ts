@@ -10,7 +10,13 @@ import {
 } from './plugin/create'
 import { displayNotification, resizeUi } from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
-import { selectionChanged, currentPageChanged, updateDisplay, selectNextBrushStep } from './plugin/tune'
+import {
+  selectionChanged,
+  currentPageChanged,
+  updateDisplay,
+  selectNextBrushStep,
+  displayAll,
+} from './plugin/tune'
 // Figma plugin methods
 export const pluginApi = createPluginAPI({
   setSessionToken(token: string) {
@@ -39,6 +45,7 @@ export const pluginApi = createPluginAPI({
   lintCourse,
   resizeUi,
   selectNextBrushStep,
+  displayAll,
 })
 
 // Figma UI app methods
