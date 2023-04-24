@@ -121,11 +121,19 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
     assert(
-      (!/GRADIENT_LINEAR|GRADIENT_RADIAL|GRADIENT_ANGULAR|GRADIENT_DIAMOND/.test(f.type) || !rgbt),
+      !/GRADIENT_LINEAR|GRADIENT_RADIAL|GRADIENT_ANGULAR|GRADIENT_DIAMOND/.test(
+        f.type
+      ) || !rgbt,
       'Fill must not be gradient',
       page,
-      node)
-    assert(!drawLineTag || !rgbt, 'Fills cant be used with draw-line tag', page, node)
+      node
+    )
+    assert(
+      !drawLineTag || !rgbt,
+      'Fills cant be used with draw-line tag',
+      page,
+      node
+    )
     if (f.type === 'IMAGE') {
       assert(
         f.opacity == 1 || !rgbt,
@@ -271,7 +279,7 @@ function lintInput(page: PageNode, node: GroupNode) {
   descendants(node as GroupNode).forEach((v) => {
     if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
       lintGroup(page, v as GroupNode)
-    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)){
+    } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
       lintVector(page, v as VectorNode)
     } else {
       assert(
@@ -284,7 +292,8 @@ function lintInput(page: PageNode, node: GroupNode) {
   })
 }
 
-const validSettingsTags = /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/
+const validSettingsTags =
+  /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/
 
 function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.type == 'ELLIPSE', "Must be 'ELLIPSE' type'", page, node)
@@ -536,7 +545,7 @@ export function lintPage(
     return
   }
 
-  updateDisplay( { displayMode: 'all', stepNumber: 1 }, page)
+  updateDisplay({ displayMode: 'all', stepNumber: 1 }, page)
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),
