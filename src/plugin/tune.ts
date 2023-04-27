@@ -34,18 +34,16 @@ let lastPage = null
 
 export function deleteTmp(page?: PageNode) {
   const p = page || figma.currentPage
-  p
-    .findAll((el) => el.name.startsWith('tmp-'))
-    .forEach((el) => el.remove())
+  p.findAll((el) => el.name.startsWith('tmp-')).forEach((el) => el.remove())
 }
 
-export function displayAll(page?: PageNode|FrameNode, setLastMode?: boolean ) {
+export function displayAll(lesson?: FrameNode, setLastMode?: boolean) {
+  const currentLesson = lesson || getCurrentLesson()
   deleteTmp()
-  const p = page || figma.currentPage
-  p.children.forEach((step) => {
+  currentLesson.children.forEach((step) => {
     step.visible = true
   })
-  if(setLastMode){
+  if (setLastMode) {
     lastMode = 'all'
   }
 }
@@ -139,21 +137,27 @@ function getClearLayerNumbers(step: SceneNode): number[] {
 }
 
 function showOnlyRGBTemplate(node: GroupNode) {
-    if(getTags(node).includes('settings')){
-      node.visible = false
-      return
+  if (getTags(node).includes('settings')) {
+    node.visible = false
+    return
+  }
+  if (
+    getTags(node).includes('rgb-template') ||
+    /GROUP|BOOLEAN_OPERATION/.test(node.type)
+  ) {
+    return
+  }
+  node.children.forEach((v) => {
+    if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
+      return showOnlyRGBTemplate(v as GroupNode)
     }
-    if (getTags(node).includes('rgb-template') || (/GROUP|BOOLEAN_OPERATION/.test(node.type))) {
-      return
+    if (
+      /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) &&
+      !getTags(v).includes('rgb-template')
+    ) {
+      return (v.visible = false)
     }
-    node.children.forEach((v) => {
-      if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
-        return showOnlyRGBTemplate(v as GroupNode)
-      }
-      if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) && !getTags(v).includes('rgb-template')) {
-        return v.visible = false
-      }
-    })
+  })
 }
 
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
@@ -178,48 +182,51 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   return clearLayerNumbers
 }
 
-
 export function selectNextBrushStep(stepNumber: number) {
-    let lesson = getCurrentLesson()
-    const page = figma.currentPage
-    if(!lesson) {
-      return
-    }
-    let step: GroupNode
-    let steps = stepsByOrder(lesson)
-    const nextStep = findNextBrushStep(steps.slice(stepNumber))
+  let lesson = getCurrentLesson()
+  const page = figma.currentPage
+  if (!lesson) {
+    return
+  }
+  let step: GroupNode
+  let steps = stepsByOrder(lesson)
+  const nextStep = findNextBrushStep(steps.slice(stepNumber))
 
+  if (!nextStep) {
+    const lessons = figma.root.children as PageNode[]
 
-    if (!nextStep) {
-      const lessons = figma.root.children as PageNode[]
-      const nextLesson = lessons.slice(lessons.indexOf(<PageNode>lesson.parent) + 1).find((newLesson) => {
+    const nextLesson = lessons
+      .slice(lessons.indexOf(<PageNode>lesson.parent) + 1)
+      .reduce((accumulator, newLesson) => {
+        if (accumulator) {
+          return accumulator
+        }
         const lessonFrame = findLessonGroup(newLesson)
         if (!lessonFrame) {
-          return false
+          return null
         }
         const newSteps = stepsByOrder(lessonFrame)
         const newNextStep = findNextBrushStep(newSteps)
-        if (newNextStep) {
-          return { newLesson }
-        }
-      })
-      if (nextLesson) {
-        deleteTmp(page)
-        figma.currentPage = nextLesson
-        lesson = findLessonGroup(nextLesson)
-        step = findNextBrushStep(stepsByOrder(lesson)) as GroupNode
-      } else {
-        lesson = findLessonGroup(page)
-        step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
-      }
-    } else {
-      step = nextStep as GroupNode
-    }
+        return newNextStep ? newLesson : null
+      }, null)
 
-    if (step) {
-      figma.currentPage.selection = [step]
+    if (nextLesson) {
+      deleteTmp(page)
+      figma.currentPage = nextLesson
+      lesson = findLessonGroup(nextLesson)
+      step = findNextBrushStep(stepsByOrder(lesson)) as GroupNode
+    } else {
+      lesson = findLessonGroup(page)
+      step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
     }
+  } else {
+    step = nextStep as GroupNode
   }
+
+  if (step) {
+    figma.currentPage.selection = [step]
+  }
+}
 
 export function updateDisplay(
   page: PageNode,
@@ -238,7 +245,9 @@ export function updateDisplay(
   ).length
   const maxStrokeWeight = getBrushSize(step)
   const brushType = getTag(step, 'brush-name-') || ''
-  let layerNumbersToClear = getTags(step).includes('clear-before') ? [...Array(stepNumber).keys()].slice(1) : getClearLayerNumbers(step)
+  let layerNumbersToClear = getTags(step).includes('clear-before')
+    ? [...Array(stepNumber).keys()].slice(1)
+    : getClearLayerNumbers(step)
   emit('updateForm', {
     shadowSize: parseInt(getTag(step, 'ss-')) || 0,
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
@@ -248,21 +257,22 @@ export function updateDisplay(
     stepNumber,
     displayMode,
     clearBefore: getTags(step).includes('clear-before'),
-    clearLayers: layerNumbersToClear.map((n)=> n.toString()) || [],
-    otherTags: getTags(step).filter((t) =>
-      t.startsWith('share-button') ||
-      t.startsWith('allow-undo')) || [],
+    clearLayers: layerNumbersToClear.map((n) => n.toString()) || [],
+    otherTags:
+      getTags(step).filter(
+        (t) => t.startsWith('share-button') || t.startsWith('allow-undo')
+      ) || [],
     brushType,
   })
   deleteTmp()
-  if(lastPage && lastPage != page) {
+  if (lastPage && lastPage != page) {
     displayAll(lastPage.children.find((el) => el.name == 'lesson'))
   }
   lastPage = page
 
   switch (displayMode) {
     case 'all':
-      displayAll(lesson as FrameNode, true)
+      displayAll(lesson, true)
       break
 
     case 'current':
@@ -281,7 +291,7 @@ export function updateDisplay(
       collectLayerNumbersToClear(lesson, step).forEach((i) => {
         lesson.children[i].visible = false
       })
-      lesson.children.forEach((step)=> showOnlyRGBTemplate(step as GroupNode))
+      lesson.children.forEach((step) => showOnlyRGBTemplate(step as GroupNode))
       break
 
     case 'template':
@@ -295,12 +305,28 @@ setTimeout(() => {
   updateDisplay(figma.currentPage, { displayMode: 'all', stepNumber: 1 })
 }, 1500)
 
-function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: number) {
-  if((/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(figma.currentPage.selection[0].type))) {
+function addAnimationTag(
+  step: GroupNode,
+  tag: string,
+  delay: number,
+  repeat: number
+) {
+  if (
+    /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(figma.currentPage.selection[0].type)
+  ) {
     let selectionTags = getTags(figma.currentPage.selection[0])
-    selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
-    selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
-    if(tag) {
+    selectionTags = selectionTags.filter(
+      (t) =>
+        !t.startsWith('wiggle') &&
+        !t.startsWith('fly-from-') &&
+        !t.startsWith('appear') &&
+        !t.startsWith('blink') &&
+        !t.startsWith('draw-line')
+    )
+    selectionTags = selectionTags.filter(
+      (t) => !/d\d+/.test(t) && !/r\d+/.test(t)
+    )
+    if (tag) {
       selectionTags.push(tag)
       if (delay) {
         selectionTags.push(`d${delay}`)
@@ -317,9 +343,18 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
       descendants(step as GroupNode).forEach((v) => {
         if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
           let selectionTags = getTags(v)
-          selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
+          selectionTags = selectionTags.filter(
+            (t) =>
+              !t.startsWith('wiggle') &&
+              !t.startsWith('fly-from-') &&
+              !t.startsWith('appear') &&
+              !t.startsWith('blink') &&
+              !t.startsWith('draw-line')
+          )
           selectionTags.push(tag)
-          selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
+          selectionTags = selectionTags.filter(
+            (t) => !/d\d+/.test(t) && !/r\d+/.test(t)
+          )
           if (delay) {
             selectionTags.push(`d${delay}`)
           }
@@ -333,8 +368,17 @@ function addAnimationTag(step: GroupNode, tag: string, delay: number, repeat: nu
       descendants(step as GroupNode).forEach((v) => {
         if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
           let selectionTags = getTags(v)
-          selectionTags = selectionTags.filter((t) => !t.startsWith('wiggle') && !t.startsWith('fly-from-') && !t.startsWith('appear') && !t.startsWith('blink') && !t.startsWith('draw-line'))
-          selectionTags = selectionTags.filter((t) => !/d\d+/.test(t) && !/r\d+/.test(t))
+          selectionTags = selectionTags.filter(
+            (t) =>
+              !t.startsWith('wiggle') &&
+              !t.startsWith('fly-from-') &&
+              !t.startsWith('appear') &&
+              !t.startsWith('blink') &&
+              !t.startsWith('draw-line')
+          )
+          selectionTags = selectionTags.filter(
+            (t) => !/d\d+/.test(t) && !/r\d+/.test(t)
+          )
           v.name = selectionTags.join(' ')
         }
       })
@@ -358,7 +402,8 @@ function updateProps(settings: {
   const lesson = getCurrentLesson()
   const step = stepsByOrder(lesson)[settings.stepNumber - 1] as GroupNode
   let tags = getTags(step).filter(
-    (t) => !t.startsWith('ss-') &&
+    (t) =>
+      !t.startsWith('ss-') &&
       !t.startsWith('bs-') &&
       !t.startsWith('s-') &&
       !t.startsWith('clear-layer-') &&
@@ -379,7 +424,7 @@ function updateProps(settings: {
   if (settings.brushType) {
     tags.push(`brush-name-${settings.brushType}`)
   }
-  if(settings.clearLayers.length > 0) {
+  if (settings.clearLayers.length > 0) {
     if (!settings.clearBefore) {
       tags.push(`clear-layer-${settings.clearLayers.join(',')}`)
     }
@@ -391,8 +436,13 @@ function updateProps(settings: {
   if (settings.otherTags.length > 0) {
     tags = tags.concat(settings.otherTags)
   }
-  if(settings.animationTag !== undefined) {
-    addAnimationTag(step, settings.animationTag, settings.delay, settings.repeat)
+  if (settings.animationTag !== undefined) {
+    addAnimationTag(
+      step,
+      settings.animationTag,
+      settings.delay,
+      settings.repeat
+    )
   }
   step.name = tags.join(' ')
 }
@@ -401,17 +451,19 @@ on('updateDisplay', (settings) => updateDisplay(figma.currentPage, settings))
 on('updateProps', updateProps)
 
 export function currentPageChanged() {
-    const selection = figma.currentPage.selection[0] as GroupNode
-    const lesson = getCurrentLesson()
-    if (!selection || !lesson || !lesson.children.includes(selection)) {
-      updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber: 1 })
-      return
-    }
-    const step = figma.currentPage.selection[0] as GroupNode
-    const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+  const selection = figma.currentPage.selection[0] as GroupNode
+  const lesson = getCurrentLesson()
+  if (!selection || !lesson || !lesson.children.includes(selection)) {
+    updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber: 1 })
+    return
+  }
+  const step = figma.currentPage.selection[0] as GroupNode
+  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
 
-    updateDisplay(figma.currentPage, { displayMode: lastMode, stepNumber: stepNumber || 1 })
-
+  updateDisplay(figma.currentPage, {
+    displayMode: lastMode,
+    stepNumber: stepNumber || 1,
+  })
 }
 
 export function selectionChanged() {
