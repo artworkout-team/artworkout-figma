@@ -81,7 +81,7 @@ function displayTemplate(lesson: FrameNode, step: GroupNode) {
         template.appendChild(green)
       }
 
-      if(el.strokes.length > 0 && !(el.fills as Paint[]).length){
+      if (el.strokes.length > 0 && !(el.fills as Paint[]).length) {
         const green = el.clone()
         green.strokes = [{ type: 'SOLID', color: { r: 0, g: 1, b: 0 } }]
         green.strokeWeight = ss * 1.1
@@ -349,8 +349,13 @@ export function updateProps(settings: formProps) {
   if (settings.otherTags.length > 0) {
     tags = tags.concat(settings.otherTags)
   }
-  if(settings.animationTag !== undefined) {
-    addAnimationTag(step, settings.animationTag, settings.delay, settings.repeat)
+  if (settings.animationTag !== undefined) {
+    addAnimationTag(
+      step,
+      settings.animationTag,
+      settings.delay,
+      settings.repeat
+    )
   }
   step.name = tags.join(' ')
 }

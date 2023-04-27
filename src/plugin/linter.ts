@@ -98,20 +98,22 @@ function deepNodes(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => deepNodes(n as GroupNode))
 }
 
-function hasGaps(node: VectorNode) {
+function countDisconnectedSegments(node: VectorNode) {
   if (!node.vectorNetwork) return false
-
   const { segments } = node.vectorNetwork
 
   const starts = segments.map((segment) => segment.start)
   const ends = segments.map((segment) => segment.end)
-
-  const hasNonMatchingStart = starts.some(
+  const disconnectedStartSegments = starts.filter(
     (startValue) => !ends.includes(startValue)
   )
-  const hasNonMatchingEnd = ends.some((endValue) => !starts.includes(endValue))
+  const disconnectedEndSegments = ends.filter(
+    (endValue) => !starts.includes(endValue)
+  )
+  const disconnectedSegmentsCount =
+    disconnectedStartSegments.length + disconnectedEndSegments.length
 
-  return hasNonMatchingStart || hasNonMatchingEnd
+  return disconnectedSegmentsCount > 2
 }
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
@@ -175,7 +177,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     ErrorLevel.INFO
   )
   assert(
-    !drawLineTag || !hasGaps(node),
+    !drawLineTag || !countDisconnectedSegments(node),
     'Split vector or change animation',
     page,
     node
@@ -536,8 +538,7 @@ export function lintPage(
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
-
-  updateDisplay( { displayMode: 'all', stepNumber: 1 }, page)
+  updateDisplay({ displayMode: 'all', stepNumber: 1 }, page)
   if (
     !assert(
       /^[a-z\-0-9]+$/.test(page.name),
