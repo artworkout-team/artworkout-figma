@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { capitalize, print } from './util'
+import { capitalize, findAll, print } from './util'
 
 function generateTranslationsCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
@@ -29,6 +29,19 @@ interface ILesson {
   file: Uint8Array
   thumbnail: Uint8Array
   index: number
+}
+
+function prepareCourseForPublishing() {
+  findAll(figma.root, (node) => node.name.startsWith('tmp-')).forEach(
+    (node) => {
+      node.remove()
+    }
+  )
+  findAll(figma.root, (node) => !!node).forEach((node) => {
+    if ('visible' in node) {
+      node.visible = true
+    }
+  })
 }
 
 export async function exportLesson(page?: PageNode): Promise<ILesson> {
@@ -63,6 +76,7 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
 }
 
 export async function exportCourse() {
+  prepareCourseForPublishing()
   const [lessons, thumbnail] = await Promise.all([
     Promise.all(
       figma.root.children
