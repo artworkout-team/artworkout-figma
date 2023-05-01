@@ -192,35 +192,37 @@ export function selectNextBrushStep(stepNumber: number) {
   let steps = stepsByOrder(lesson)
   const nextStep = findNextBrushStep(steps.slice(stepNumber))
 
-  if (!nextStep) {
-    const lessons = figma.root.children as PageNode[]
+  if (nextStep) {
+    figma.currentPage.selection = [nextStep]
+    return
+  }
 
-    const nextLesson = lessons
-      .slice(lessons.indexOf(<PageNode>lesson.parent) + 1)
-      .reduce((accumulator, newLesson) => {
-        if (accumulator) {
-          return accumulator
-        }
-        const lessonFrame = findLessonGroup(newLesson)
-        if (!lessonFrame) {
-          return null
-        }
-        const newSteps = stepsByOrder(lessonFrame)
-        const newNextStep = findNextBrushStep(newSteps)
-        return newNextStep ? newLesson : null
-      }, null)
+  const lessons = figma.root.children as PageNode[]
 
-    if (nextLesson) {
-      deleteTmp(page)
-      figma.currentPage = nextLesson
-      lesson = findLessonGroup(nextLesson)
-      step = findNextBrushStep(stepsByOrder(lesson)) as GroupNode
-    } else {
-      lesson = findLessonGroup(page)
-      step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
-    }
-  } else {
-    step = nextStep as GroupNode
+  step = lessons
+    .slice(lessons.indexOf(<PageNode>lesson.parent) + 1)
+    .reduce((accumulator: GroupNode | null, newLesson) => {
+      if (accumulator) {
+        return accumulator
+      }
+      const lessonFrame = findLessonGroup(newLesson)
+      if (!lessonFrame) {
+        return null
+      }
+      const newSteps = stepsByOrder(lessonFrame)
+      const newNextStep = findNextBrushStep(newSteps)
+
+      if (newNextStep) {
+        deleteTmp(page)
+        figma.currentPage = newLesson
+        return newNextStep as GroupNode
+      }
+      return null
+    }, null)
+
+  if (!step) {
+    lesson = findLessonGroup(page)
+    step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
   }
 
   if (step) {
