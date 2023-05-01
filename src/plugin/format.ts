@@ -85,12 +85,13 @@ function autoFormat() {
       if (
         templateGroup.children.length == 1 &&
         templateGroup.children[0].type === 'RECTANGLE'
-      )
+      ) {
         templateGroup.name = 'template'
-      templateGroup.children[0].name = '/ignore'
-      n.resize(40, 40)
-      n.x = 10
-      n.y = 60
+        templateGroup.children[0].name = '/ignore'
+        n.resize(40, 40)
+        n.x = 10
+        n.y = 60
+      }
     }
   })
 }
