@@ -121,14 +121,6 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
     assert(f.visible, 'Fill must be visible', page, node)
     assert(f.type == 'SOLID' || !rgbt, 'Fill must be solid', page, node)
     assert(
-      !/GRADIENT_LINEAR|GRADIENT_RADIAL|GRADIENT_ANGULAR|GRADIENT_DIAMOND/.test(
-        f.type
-      ) || !rgbt,
-      'Fill must not be gradient',
-      page,
-      node
-    )
-    assert(
       !drawLineTag || !rgbt,
       'Fills cant be used with draw-line tag',
       page,
@@ -139,8 +131,7 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
         f.opacity == 1 || !rgbt,
         'Image fill must not be opaque',
         page,
-        node,
-        ErrorLevel.INFO
+        node
       )
     }
   })
@@ -153,13 +144,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
-      assert(
-        s.opacity == 1 || !rgbt,
-        'Image stroke must be opaque',
-        page,
-        node,
-        ErrorLevel.INFO
-      )
+      assert(s.opacity == 1 || !rgbt, 'Image stroke must be opaque', page, node)
     }
   })
 
@@ -201,13 +186,7 @@ function lintVector(page: PageNode, node: VectorNode) {
     findParentByTag(node, 'draw-line') ||
     findParentByTag(node, 'blink')
 
-  assert(
-    node.opacity == 1 || !rgbt,
-    'Must be opaque',
-    page,
-    node,
-    ErrorLevel.INFO
-  )
+  assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
 
   assert(
@@ -258,7 +237,7 @@ function lintGroup(page: PageNode, node: GroupNode) {
     node,
     ErrorLevel.INFO
   )
-  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.WARN)
   assert(node.visible, 'Must be visible', page, node)
   assert(
     tags.length > 0,
@@ -273,7 +252,7 @@ function lintInput(page: PageNode, node: GroupNode) {
   if (!assert(node.type == 'GROUP', "Must be 'GROUP' type'", page, node)) {
     return
   }
-  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
   assert(node.name == 'input', "Must be 'input'", page, node)
   descendants(node as GroupNode).forEach((v) => {
@@ -297,7 +276,7 @@ const validSettingsTags =
 
 function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.type == 'ELLIPSE', "Must be 'ELLIPSE' type'", page, node)
-  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
   const tags = getTags(node)
   tags.forEach((tag) => {
@@ -328,7 +307,7 @@ function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
     return
   }
-  assert(step.opacity == 1, 'Must be opaque', page, step, ErrorLevel.INFO)
+  assert(step.opacity == 1, 'Must be opaque', page, step)
   assert(step.visible, 'Must be visible', page, step)
   const tags = getTags(step)
   tags.forEach((tag) => {
@@ -474,7 +453,7 @@ function lintTaskFrame(page: PageNode, node: FrameNode) {
   if (!assert(node.type == 'FRAME', "Must be 'FRAME' type", page, node)) {
     return
   }
-  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
   assert(
     node.width == 1366 && node.height == 1024,
@@ -529,7 +508,7 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   if (!assert(node.type == 'FRAME', "Must be 'FRAME' type", page, node)) {
     return
   }
-  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.INFO)
+  assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
