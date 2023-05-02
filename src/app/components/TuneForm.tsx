@@ -98,16 +98,6 @@ export function TuneForm() {
     }
   }
 
-  function onOtherTagsChange(tag: string) {
-    if (state.stepProps.otherTags.includes(tag)) {
-      TuneFormStore.stepProps.otherTags = state.stepProps.otherTags.filter(
-        (item) => item !== tag
-      )
-    } else {
-      TuneFormStore.stepProps.otherTags = [...state.stepProps.otherTags, tag]
-    }
-  }
-
   function onAnimationTagChange(tag: string) {
     if (tag === state.animationProps.animationTag) {
       TuneFormStore.animationProps.animationTag = undefined
@@ -129,6 +119,7 @@ export function TuneForm() {
   const otherTagsList: any = [
     { tag: 'share-button', name: 'Share button' },
     { tag: 'allow-undo', name: 'Allow undo' },
+    { tag: 'continue-button', name: 'Continue btn' },
   ]
 
   useHotkeys(
@@ -346,20 +337,59 @@ export function TuneForm() {
   }
 
   const renderOtherTagsElement = (tag, index) => {
+    const isChecked = (value) => {
+      return state.stepProps.otherTags.includes(`${tag.tag}-${value}`)
+    }
+
+    const onOtherTagsChange = (value) => {
+      const newTag = `${tag.tag}-${value}`
+      const oppositeTag = `${tag.tag}-${value === 'true' ? 'false' : 'true'}`
+
+      if (state.stepProps.otherTags.includes(newTag)) {
+        TuneFormStore.stepProps.otherTags = state.stepProps.otherTags.filter(
+          (item) => item !== newTag
+        )
+      } else {
+        TuneFormStore.stepProps.otherTags = state.stepProps.otherTags
+          .filter((item) => item !== oppositeTag)
+          .concat(newTag)
+      }
+    }
+
+    const onLabelClick = () => {
+      TuneFormStore.stepProps.otherTags = state.stepProps.otherTags.filter(
+        (item) => !item.startsWith(tag.tag)
+      )
+    }
+
     return (
-      <Dropdown.Item
-        href={`#/action ${tag.tag}`}
-        id={index}
-        value={tag.tag}
-        key={index + 1}
-      >
+      <Dropdown.Item key={index + 1}>
         <Row>
+          <Col xs={6} className='text-right'>
+            <Form.Label className='mr-2' onClick={onLabelClick}>
+              {tag.name}
+            </Form.Label>
+          </Col>
           <Col xs={3}>
             <Form.Check
               inline
-              checked={state.stepProps.otherTags.includes(tag.tag)}
-              label={tag.name}
-              onChange={() => onOtherTagsChange(tag.tag)}
+              type='radio'
+              name={tag.tag}
+              id={`${index}-true`}
+              label='T'
+              checked={isChecked('true')}
+              onChange={() => onOtherTagsChange('true')}
+            />
+          </Col>
+          <Col xs={3}>
+            <Form.Check
+              inline
+              type='radio'
+              name={tag.tag}
+              id={`${index}-false`}
+              label='F'
+              checked={isChecked('false')}
+              onChange={() => onOtherTagsChange('false')}
             />
           </Col>
         </Row>
@@ -392,11 +422,11 @@ export function TuneForm() {
   )
 
   const renderOtherTagsDropdown = (
-    <Dropdown className={'mb-2'} autoClose={'outside'}>
+    <Dropdown className={'mb-2'} autoClose='outside'>
       <Dropdown.Toggle id='dropdown-autoclose-outside'>
         Other tags
       </Dropdown.Toggle>
-      <Dropdown.Menu>
+      <Dropdown.Menu style={{ minWidth: '250px' }}>
         {otherTagsList.map((step, index) =>
           renderOtherTagsElement(step, index)
         )}

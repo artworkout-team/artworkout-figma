@@ -246,7 +246,10 @@ export async function updateDisplay(
     clearLayers: layerNumbersToClear.map((n) => n.toString()) || [],
     otherTags:
       getTags(step).filter(
-        (t) => t.startsWith('share-button') || t.startsWith('allow-undo')
+        (t) =>
+          t.startsWith('share-button') ||
+          t.startsWith('allow-undo') ||
+          t.startsWith('continue-button')
       ) || [],
     brushType,
   })
