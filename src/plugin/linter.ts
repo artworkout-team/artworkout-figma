@@ -131,7 +131,8 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
         f.opacity == 1 || !rgbt,
         'Image fill must not be opaque',
         page,
-        node
+        node,
+        ErrorLevel.WARN
       )
     }
   })
@@ -144,7 +145,13 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     assert(s.visible, 'Stroke must be visible', page, node)
     assert(s.type == 'SOLID' || !rgbt, 'Stroke must be solid', page, node)
     if (s.type === 'IMAGE') {
-      assert(s.opacity == 1 || !rgbt, 'Image stroke must be opaque', page, node)
+      assert(
+        s.opacity == 1 || !rgbt,
+        'Image stroke must be opaque',
+        page,
+        node,
+        ErrorLevel.WARN
+      )
     }
   })
 
@@ -216,7 +223,13 @@ function lintVector(page: PageNode, node: VectorNode) {
   lintStrokes(node, page, strokes)
   lintFills(node, page, fills)
 
-  assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
+  assert(
+    !rgbt || !!anim,
+    "Must have 'blink' or 'draw-line'",
+    page,
+    node,
+    ErrorLevel.WARN
+  ) // every rgbt must have animation
 }
 
 const validGroupTags =
