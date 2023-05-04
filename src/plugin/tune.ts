@@ -224,30 +224,6 @@ function getClearLayerNumbers(step: SceneNode): number[] {
   return layerNumbers
 }
 
-function showOnlyRGBTemplate(node: GroupNode) {
-  if (getTags(node).includes('settings')) {
-    node.visible = false
-    return
-  }
-  if (
-    getTags(node).includes('rgb-template') ||
-    /GROUP|BOOLEAN_OPERATION/.test(node.type)
-  ) {
-    return
-  }
-  node.children.forEach((v) => {
-    if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
-      return showOnlyRGBTemplate(v as GroupNode)
-    }
-    if (
-      /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) &&
-      !getTags(v).includes('rgb-template')
-    ) {
-      return (v.visible = false)
-    }
-  })
-}
-
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentStepOrder = getStepOrder(step)
   const layersStepOrderTags = lesson.children.map((s) => getStepOrder(s))
