@@ -220,11 +220,6 @@ export function selectNextBrushStep(stepNumber: number) {
       return null
     }, null)
 
-  if (!step) {
-    lesson = findLessonGroup(page)
-    step = stepsByOrder(lesson)[stepNumber - 1] as GroupNode
-  }
-
   if (step) {
     figma.currentPage.selection = [step]
   }
