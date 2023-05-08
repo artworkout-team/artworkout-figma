@@ -1,10 +1,11 @@
-import React from 'react'
-import { Button } from 'react-bootstrap'
+import React, { useEffect, useState } from 'react'
+import { Button, Row } from 'react-bootstrap'
 import { pluginApi } from '../../rpc-api'
 import LoginForm from './LoginForm'
 import Parse from 'parse'
 import { userStore } from '../models/user'
 import { useSnapshot } from 'valtio'
+import { CourseList } from './CourseList'
 
 const ParseLesson = Parse.Object.extend('Lesson')
 const ParseCourse = Parse.Object.extend('Course')
@@ -18,6 +19,51 @@ export function PublishTab() {
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
   const [linkCopied, setLinkCopied] = React.useState(false)
+
+  const [courses, setCourses] = useState([])
+
+  const onUpdate = async (selected) => {
+    setCourses(selected)
+  }
+
+  async function getAllCoursesFromParse() {
+    try {
+      // Query Parse Server for all ParseCourse objects
+      const courseQuery = new Parse.Query(ParseCourse)
+      const courseList = await courseQuery.find()
+
+      // Convert ParseCourse objects to a more readable format
+      const courses = courseList.map((courseObject) => {
+        return {
+          id: courseObject.id,
+          path: courseObject.get('path'),
+          thumbnail: courseObject.get('thumbnail'),
+          author: courseObject.get('author'),
+          order: courseObject.get('order'),
+          name: courseObject.get('name'),
+          description: courseObject.get('description'),
+          approved: courseObject.get('approved'),
+        }
+      })
+      courses.sort((a, b) => a.order - b.order)
+      console.log('courses', courses)
+      return courses
+    } catch (error) {
+      console.error('Error fetching courses:', error)
+      return []
+    }
+  }
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const fetchedCourses = await getAllCoursesFromParse()
+      setCourses(fetchedCourses)
+    }
+    console.log('here')
+    setTimeout(() => {
+      fetchCourses()
+    }, 500)
+  }, [])
 
   function copyToClipboard(value: string) {
     try {
@@ -138,7 +184,7 @@ export function PublishTab() {
         >
           <Button
             disabled={isDisabled}
-            onClick={() => publishCourse({ debug: true })}
+            onClick={() => getAllCoursesFromParse()}
             style={{ minWidth: '165px' }}
           >
             Publish debug
@@ -179,6 +225,9 @@ export function PublishTab() {
               )
             }
           />
+          <Row>
+            <CourseList courses={courses} onUpdate={onUpdate} />
+          </Row>
         </div>
       )}
     </>
