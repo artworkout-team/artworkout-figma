@@ -21,6 +21,7 @@ export function PublishTab() {
   const [linkCopied, setLinkCopied] = React.useState(false)
 
   const [courses, setCourses] = useState([])
+  const [parseCourseList, setParseCourseList] = useState([])
 
   const onUpdate = async (selected) => {
     setCourses(selected)
@@ -28,21 +29,15 @@ export function PublishTab() {
 
   async function getAllCoursesFromParse() {
     try {
-      // Query Parse Server for all ParseCourse objects
       const courseQuery = new Parse.Query(ParseCourse)
       const courseList = await courseQuery.find()
-
-      // Convert ParseCourse objects to a more readable format
+      setParseCourseList(courseList)
       const courses = courseList.map((courseObject) => {
         return {
           id: courseObject.id,
           path: courseObject.get('path'),
-          thumbnail: courseObject.get('thumbnail'),
-          author: courseObject.get('author'),
           order: courseObject.get('order'),
           name: courseObject.get('name'),
-          description: courseObject.get('description'),
-          approved: courseObject.get('approved'),
         }
       })
       courses.sort((a, b) => a.order - b.order)
@@ -165,9 +160,23 @@ export function PublishTab() {
       )
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
-
     setCourseLink(`https://artworkout.app.link/courses/${courseObject.id}`)
+    await getAllCoursesFromParse()
     setIsDisabled(false)
+  }
+  const publishNewCourseOrder = async () => {
+    const updatedCourses = parseCourseList.map((parseCourse) => {
+      const course = courses.find(
+        (course) => course.path === parseCourse.get('path')
+      )
+      if (course) {
+        parseCourse.set('order', course.order)
+      }
+      return parseCourse
+    })
+
+    //await Parse.Object.saveAll(updatedCourses)
+    console.log('updatedCourses', updatedCourses)
   }
 
   return (
@@ -225,9 +234,17 @@ export function PublishTab() {
               )
             }
           />
-          <Row>
+          <Row className={'mt-3'}>
             <CourseList courses={courses} onUpdate={onUpdate} />
           </Row>
+          <Button
+            className={'mt-3'}
+            disabled={isDisabled}
+            onClick={() => publishNewCourseOrder()}
+            style={{ minWidth: '165px' }}
+          >
+            Publish course order
+          </Button>{' '}
         </div>
       )}
     </>
