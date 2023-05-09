@@ -54,7 +54,6 @@ export function PublishTab() {
       const fetchedCourses = await getAllCoursesFromParse()
       setCourses(fetchedCourses)
     }
-    console.log('here')
     setTimeout(() => {
       fetchCourses()
     }, 500)
@@ -175,8 +174,7 @@ export function PublishTab() {
       return parseCourse
     })
 
-    //await Parse.Object.saveAll(updatedCourses)
-    console.log('updatedCourses', updatedCourses)
+    await Parse.Object.saveAll(updatedCourses)
   }
 
   return (

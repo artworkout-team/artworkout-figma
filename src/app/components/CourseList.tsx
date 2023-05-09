@@ -24,7 +24,6 @@ export function CourseList({
     newStepsOrder.slice(startIndex, endIndex + 1).forEach((item, index) => {
       item.order = startIndex + index + 1
     })
-    console.log('newStepsOrder', newStepsOrder)
     onUpdate(newStepsOrder)
   }
 
