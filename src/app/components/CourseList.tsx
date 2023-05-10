@@ -15,16 +15,16 @@ export function CourseList({
       return
     }
 
-    const newStepsOrder = Array.from(courses)
-    const [removed] = newStepsOrder.splice(result.source.index, 1)
-    newStepsOrder.splice(result.destination.index, 0, removed)
+    const newCourseOrder = Array.from(courses)
+    const [removed] = newCourseOrder.splice(result.source.index, 1)
+    newCourseOrder.splice(result.destination.index, 0, removed)
     const startIndex = Math.min(result.source.index, result.destination.index)
     const endIndex = Math.max(result.source.index, result.destination.index)
 
-    newStepsOrder.slice(startIndex, endIndex + 1).forEach((item, index) => {
+    newCourseOrder.slice(startIndex, endIndex + 1).forEach((item, index) => {
       item.order = startIndex + index + 1
     })
-    onUpdate(newStepsOrder)
+    onUpdate(newCourseOrder)
   }
 
   function generateUniqueKey(id) {

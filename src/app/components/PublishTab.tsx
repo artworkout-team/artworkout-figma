@@ -23,7 +23,7 @@ export function PublishTab() {
   const [courses, setCourses] = useState([])
   const [parseCourseList, setParseCourseList] = useState([])
 
-  const onUpdate = async (selected) => {
+  const onCourseOrderUpdate = async (selected) => {
     setCourses(selected)
   }
 
@@ -41,7 +41,6 @@ export function PublishTab() {
         }
       })
       courses.sort((a, b) => a.order - b.order)
-      console.log('courses', courses)
       return courses
     } catch (error) {
       console.error('Error fetching courses:', error)
@@ -191,7 +190,7 @@ export function PublishTab() {
         >
           <Button
             disabled={isDisabled}
-            onClick={() => getAllCoursesFromParse()}
+            onClick={() => publishCourse({ debug: true })}
             style={{ minWidth: '165px' }}
           >
             Publish debug
@@ -233,7 +232,7 @@ export function PublishTab() {
             }
           />
           <Row className={'mt-3'}>
-            <CourseList courses={courses} onUpdate={onUpdate} />
+            <CourseList courses={courses} onUpdate={onCourseOrderUpdate} />
           </Row>
           <Button
             className={'mt-3'}
