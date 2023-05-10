@@ -93,6 +93,7 @@ function showOnlyRGBTemplate(node: GroupNode) {
 
 let lastMode = 'all'
 let lastPage: PageNode
+let lastStepNumber = 1
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
   lesson.children.forEach((step) => {
@@ -253,6 +254,7 @@ export async function updateDisplay(
   page = page || figma.currentPage
   lastPage = page
   lastMode = settings.displayMode
+  lastStepNumber = settings.stepNumber
   const { displayMode, stepNumber } = settings
   const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
   if (!lesson) {
@@ -424,7 +426,10 @@ export async function selectionChanged() {
     const repeat = getParamValue(tags, /^r-?(\d+)/)
     await uiApi.setAnimationTags(animationTags, delay, repeat)
     const parentStep = findParentByTag(selection, 'step')
-    const stepNumber = stepsByOrder(lesson).indexOf(parentStep) + 1
+    const stepNumber =
+      stepsByOrder(lesson).indexOf(parentStep) >= 0
+        ? stepsByOrder(lesson).indexOf(parentStep) + 1
+        : lastStepNumber
     await uiApi.setStepNavigationProps(stepNumber, lastMode)
   }
   if (!selection || !lesson || !lesson.children.includes(selection)) {
@@ -432,6 +437,10 @@ export async function selectionChanged() {
   }
 
   const step = figma.currentPage.selection[0] as GroupNode
-  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+  const stepNumber =
+    stepsByOrder(lesson).indexOf(step) >= 0
+      ? stepsByOrder(lesson).indexOf(step) + 1
+      : lastStepNumber
+
   updateDisplay({ displayMode: lastMode, stepNumber }, figma.currentPage)
 }
