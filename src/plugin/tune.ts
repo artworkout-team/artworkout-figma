@@ -427,7 +427,7 @@ export async function selectionChanged() {
     await uiApi.setAnimationTags(animationTags, delay, repeat)
     const parentStep = findParentByTag(selection, 'step')
     const stepNumber =
-      stepsByOrder(lesson).indexOf(parentStep) + 1 > 0
+      stepsByOrder(lesson).indexOf(parentStep) >= 0
         ? stepsByOrder(lesson).indexOf(parentStep) + 1
         : lastStepNumber
     await uiApi.setStepNavigationProps(stepNumber, lastMode)
@@ -438,7 +438,7 @@ export async function selectionChanged() {
 
   const step = figma.currentPage.selection[0] as GroupNode
   const stepNumber =
-    stepsByOrder(lesson).indexOf(step) + 1 > 0
+    stepsByOrder(lesson).indexOf(step) >= 0
       ? stepsByOrder(lesson).indexOf(step) + 1
       : lastStepNumber
 
