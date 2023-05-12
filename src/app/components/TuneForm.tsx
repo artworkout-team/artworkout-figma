@@ -17,6 +17,7 @@ import { StepList } from './StepList'
 import { Pencil, Lightbulb, MagicWand, FlipIcon } from './assets/bootstrapIcons'
 import { TuneFormStore } from '../models/TuneFormStore'
 import { useSnapshot } from 'valtio'
+import './TuneForm.css'
 
 export function TuneForm() {
   const [steps, setSteps] = useState([])
@@ -117,9 +118,9 @@ export function TuneForm() {
 
   const enableOnTags: any = ['INPUT', 'TEXTAREA', 'SELECT']
   const otherTagsList: any = [
-    { tag: 'share-button', name: 'Share button' },
-    { tag: 'allow-undo', name: 'Allow undo' },
-    { tag: 'continue-button', name: 'Continue btn' },
+    { tag: 'continueButton', name: 'Continue btn' },
+    { tag: 'resizeBrush', name: 'Resize brush' },
+    { tag: 'allowUndo', name: 'Allow undo' },
   ]
 
   useHotkeys(
@@ -337,59 +338,55 @@ export function TuneForm() {
   }
 
   const renderOtherTagsElement = (tag, index) => {
-    const isChecked = (value) => {
-      return state.stepProps.otherTags.includes(`${tag.tag}-${value}`)
-    }
-
-    const onOtherTagsChange = (value) => {
-      const newTag = `${tag.tag}-${value}`
-      const oppositeTag = `${tag.tag}-${value === 'true' ? 'false' : 'true'}`
-
-      if (state.stepProps.otherTags.includes(newTag)) {
-        TuneFormStore.stepProps.otherTags = state.stepProps.otherTags.filter(
-          (item) => item !== newTag
+    const isChecked = () => {
+      if (state.stepProps[tag.tag] === undefined) {
+        return (
+          (state.stepProps.template === 'multistep-bg' ||
+            state.stepProps.template === 'multistep-result') &&
+          tag.tag === 'continueButton'
         )
+      }
+      return state.stepProps[tag.tag]
+    }
+    const onOtherTagsChange = (value) => {
+      if (state.stepProps[tag.tag] === value) {
+        TuneFormStore.stepProps[tag.tag] = undefined
       } else {
-        TuneFormStore.stepProps.otherTags = state.stepProps.otherTags
-          .filter((item) => item !== oppositeTag)
-          .concat(newTag)
+        TuneFormStore.stepProps[tag.tag] = value
       }
     }
 
-    const onLabelClick = () => {
-      TuneFormStore.stepProps.otherTags = state.stepProps.otherTags.filter(
-        (item) => !item.startsWith(tag.tag)
-      )
-    }
+    const strikeThroughClass =
+      state.stepProps[tag.tag] === undefined ? 'strike-through' : ''
 
     return (
       <Dropdown.Item key={index + 1}>
         <Row>
           <Col xs={6} className='text-right'>
-            <Form.Label className='mr-2' onClick={onLabelClick}>
+            <Form.Label className={`mr-2 ${strikeThroughClass}`}>
               {tag.name}
             </Form.Label>
           </Col>
           <Col xs={3}>
             <Form.Check
               inline
-              type='radio'
-              name={tag.tag}
+              type='checkbox'
               id={`${index}-true`}
               label='T'
-              checked={isChecked('true')}
-              onChange={() => onOtherTagsChange('true')}
+              checked={isChecked()}
+              onChange={() => onOtherTagsChange(true)}
+              className='custom-radio'
             />
           </Col>
           <Col xs={3}>
             <Form.Check
               inline
-              type='radio'
-              name={tag.tag}
+              type='checkbox'
               id={`${index}-false`}
               label='F'
-              checked={isChecked('false')}
-              onChange={() => onOtherTagsChange('false')}
+              checked={!isChecked()}
+              onChange={() => onOtherTagsChange(false)}
+              className='custom-radio'
             />
           </Col>
         </Row>
@@ -427,9 +424,7 @@ export function TuneForm() {
         Other tags
       </Dropdown.Toggle>
       <Dropdown.Menu style={{ minWidth: '250px' }}>
-        {otherTagsList.map((step, index) =>
-          renderOtherTagsElement(step, index)
-        )}
+        {otherTagsList.map((tag, index) => renderOtherTagsElement(tag, index))}
       </Dropdown.Menu>
     </Dropdown>
   )

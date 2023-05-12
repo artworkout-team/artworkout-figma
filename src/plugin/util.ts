@@ -60,6 +60,15 @@ export function isResultStep(node: BaseNode) {
   return node && getTags(node).includes('s-multistep-result')
 }
 
+export function getBooleanTagValue(node: BaseNode, tag: string) {
+  if (!node) return undefined
+  const foundTag = getTags(node).find((t) => t.startsWith(`${tag}-`))
+  if (!foundTag) return undefined
+  if (foundTag) {
+    return foundTag.endsWith('true')
+  }
+}
+
 export function print(text: string) {
   emit('print', text)
 }
@@ -117,5 +126,7 @@ export function getParamValue(el, pattern) {
 }
 
 export function isRGBTemplate(node: SceneNode) {
-  return findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
+  return (
+    findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
+  )
 }

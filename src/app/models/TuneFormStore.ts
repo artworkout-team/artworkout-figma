@@ -15,6 +15,9 @@ export const TuneFormStore = proxy({
     clearLayers: [],
     otherTags: [],
     brushType: '',
+    continueButton: undefined,
+    resizeBrush: undefined,
+    allowUndo: undefined,
   },
   animationProps: {
     animationTag: undefined,

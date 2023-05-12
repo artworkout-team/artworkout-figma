@@ -1,0 +1,10 @@
+.custom-radio input[type='checkbox'] {
+    border-radius: 50%;
+}
+
+.custom-radio input[type='checkbox']:checked::before {
+    border-radius: 50%;
+}
+.strike-through {
+    text-decoration: line-through;
+}

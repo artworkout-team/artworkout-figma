@@ -1,6 +1,7 @@
 import {
   findLeafNodes,
   findParentByTag,
+  getBooleanTagValue,
   getCurrentLesson,
   getParamValue,
   getStepOrder,
@@ -16,8 +17,10 @@ export interface formProps {
   template: string
   clearLayers: string[]
   clearBefore: boolean
-  otherTags: string[]
   brushType: string
+  continueButton?: boolean
+  resizeBrush?: boolean
+  allowUndo?: boolean
   animationTag?: string
   delay?: number
   repeat?: number
@@ -153,6 +156,11 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
+function getContinueButtonValue(step) {
+  const booleanTagValue = getBooleanTagValue(step, 'continue-button')
+  return booleanTagValue !== undefined ? booleanTagValue : undefined
+}
+
 function getClearLayerNumbers(step: SceneNode): number[] {
   const prefix = 'clear-layer-'
   const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
@@ -244,14 +252,10 @@ export async function updateDisplay(
     displayMode,
     clearBefore: getTags(step).includes('clear-before'),
     clearLayers: layerNumbersToClear.map((n) => n.toString()) || [],
-    otherTags:
-      getTags(step).filter(
-        (t) =>
-          t.startsWith('share-button') ||
-          t.startsWith('allow-undo') ||
-          t.startsWith('continue-button')
-      ) || [],
     brushType,
+    continueButton: getContinueButtonValue(step),
+    allowUndo: getBooleanTagValue(step, 'allow-undo'),
+    resizeBrush: getBooleanTagValue(step, 'resize-brush'),
   })
   await uiApi.setStepNavigationProps(stepNumber, displayMode)
   deleteTmp()
@@ -324,8 +328,9 @@ export function updateProps(settings: formProps) {
       !t.startsWith('s-') &&
       !t.startsWith('clear-layer-') &&
       !t.startsWith('clear-before') &&
-      !t.startsWith('share-button') &&
+      !t.startsWith('continue-button') &&
       !t.startsWith('allow-undo') &&
+      !t.startsWith('resize-brush') &&
       !t.startsWith('brush-name-')
   )
   if (settings.template) {
@@ -348,10 +353,16 @@ export function updateProps(settings: formProps) {
   if (settings.clearBefore) {
     tags.push('clear-before')
   }
-
-  if (settings.otherTags.length > 0) {
-    tags = tags.concat(settings.otherTags)
+  if (settings.continueButton !== undefined) {
+    tags.push(`continue-button-${settings.continueButton}`)
   }
+  if (settings.allowUndo !== undefined) {
+    tags.push(`allow-undo-${settings.allowUndo}`)
+  }
+  if (settings.resizeBrush !== undefined) {
+    tags.push(`resize-brush-${settings.resizeBrush}`)
+  }
+
   if (settings.animationTag !== undefined) {
     addAnimationTag(
       step,
