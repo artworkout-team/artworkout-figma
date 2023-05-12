@@ -1,10 +1,11 @@
-import React from 'react'
-import { Button } from 'react-bootstrap'
+import React, { useEffect, useState } from 'react'
+import { Button, Row } from 'react-bootstrap'
 import { pluginApi } from '../../rpc-api'
 import LoginForm from './LoginForm'
 import Parse from 'parse'
 import { userStore } from '../models/user'
 import { useSnapshot } from 'valtio'
+import { CourseList } from './CourseList'
 
 const ParseLesson = Parse.Object.extend('Lesson')
 const ParseCourse = Parse.Object.extend('Course')
@@ -18,6 +19,44 @@ export function PublishTab() {
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
   const [linkCopied, setLinkCopied] = React.useState(false)
+
+  const [courses, setCourses] = useState([])
+  const [parseCourseList, setParseCourseList] = useState([])
+
+  const onCourseOrderUpdate = async (selected) => {
+    setCourses(selected)
+  }
+
+  async function getAllCoursesFromParse() {
+    try {
+      const courseQuery = new Parse.Query(ParseCourse)
+      const courseList = await courseQuery.find()
+      setParseCourseList(courseList)
+      const courses = courseList.map((courseObject) => {
+        return {
+          id: courseObject.id,
+          path: courseObject.get('path'),
+          order: courseObject.get('order'),
+          name: courseObject.get('name'),
+        }
+      })
+      courses.sort((a, b) => a.order - b.order)
+      return courses
+    } catch (error) {
+      console.error('Error fetching courses:', error)
+      return []
+    }
+  }
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      const fetchedCourses = await getAllCoursesFromParse()
+      setCourses(fetchedCourses)
+    }
+    setTimeout(() => {
+      fetchCourses()
+    }, 500)
+  }, [])
 
   function copyToClipboard(value: string) {
     try {
@@ -119,9 +158,22 @@ export function PublishTab() {
       )
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
-
     setCourseLink(`https://artworkout.app.link/courses/${courseObject.id}`)
+    await getAllCoursesFromParse()
     setIsDisabled(false)
+  }
+  const publishNewCourseOrder = async () => {
+    const updatedCourses = parseCourseList.map((parseCourse) => {
+      const course = courses.find(
+        (course) => course.path === parseCourse.get('path')
+      )
+      if (course) {
+        parseCourse.set('order', course.order)
+      }
+      return parseCourse
+    })
+
+    await Parse.Object.saveAll(updatedCourses)
   }
 
   return (
@@ -179,6 +231,17 @@ export function PublishTab() {
               )
             }
           />
+          <Row className={'mt-3'}>
+            <CourseList courses={courses} onUpdate={onCourseOrderUpdate} />
+          </Row>
+          <Button
+            className={'mt-3'}
+            disabled={isDisabled}
+            onClick={() => publishNewCourseOrder()}
+            style={{ minWidth: '165px' }}
+          >
+            Publish course order
+          </Button>{' '}
         </div>
       )}
     </>
