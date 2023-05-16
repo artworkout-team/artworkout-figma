@@ -6,6 +6,8 @@ import {
   getStepOrder,
   getTags,
   isResultStep,
+  findNextBrushStep,
+  findLessonGroup,
 } from './util'
 import { uiApi } from '../rpc-api'
 
@@ -43,12 +45,6 @@ function stepsByOrder(lesson: FrameNode) {
     .sort((a, b) => {
       return getOrder(a) - getOrder(b)
     })
-}
-
-function deleteTmp() {
-  figma.currentPage
-    .findAll((el) => el.name.startsWith('tmp-'))
-    .forEach((el) => el.remove())
 }
 
 function showTemplateGroups() {
@@ -92,8 +88,24 @@ function showOnlyRGBTemplate(node: GroupNode) {
 }
 
 let lastMode = 'all'
-let lastPage: PageNode
+let lastPage = null
 let lastStepNumber = 1
+
+export function deleteTmp(page?: PageNode) {
+  const p = page || figma.currentPage
+  p.findAll((el) => el.name.startsWith('tmp-')).forEach((el) => el.remove())
+}
+
+export function displayAll(lesson?: FrameNode, setLastMode?: boolean) {
+  const currentLesson = lesson || getCurrentLesson()
+  deleteTmp()
+  currentLesson.children.forEach((step) => {
+    step.visible = true
+  })
+  if (setLastMode) {
+    lastMode = 'all'
+  }
+}
 
 function displayTemplate(lesson: FrameNode, step: GroupNode) {
   lesson.children.forEach((step) => {
@@ -247,16 +259,58 @@ function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   return clearLayerNumbers
 }
 
+export function selectNextBrushStep(stepNumber: number) {
+  let lesson = getCurrentLesson()
+  const page = figma.currentPage
+  if (!lesson) {
+    return
+  }
+  let step: GroupNode
+  let steps = stepsByOrder(lesson)
+  const nextStep = findNextBrushStep(steps.slice(stepNumber))
+
+  if (nextStep) {
+    figma.currentPage.selection = [nextStep]
+    return
+  }
+
+  const lessons = figma.root.children as PageNode[]
+
+  step = lessons
+    .slice(lessons.indexOf(<PageNode>lesson.parent) + 1)
+    .reduce((accumulator: GroupNode | null, newLesson) => {
+      if (accumulator) {
+        return accumulator
+      }
+      const lessonFrame = findLessonGroup(newLesson)
+      if (!lessonFrame) {
+        return null
+      }
+      const newSteps = stepsByOrder(lessonFrame)
+      const newNextStep = findNextBrushStep(newSteps)
+
+      if (newNextStep) {
+        deleteTmp(page)
+        figma.currentPage = newLesson
+        return newNextStep as GroupNode
+      }
+      return null
+    }, null)
+
+  if (step) {
+    figma.currentPage.selection = [step]
+  }
+}
+
 export async function updateDisplay(
   settings: { displayMode: string; stepNumber: number },
   page?: PageNode
 ) {
   page = page || figma.currentPage
-  lastPage = page
   lastMode = settings.displayMode
   lastStepNumber = settings.stepNumber
   const { displayMode, stepNumber } = settings
-  const lesson = page.children.find((el) => el.name == 'lesson') as FrameNode
+  const lesson = findLessonGroup(page)
   if (!lesson) {
     return
   }
@@ -288,13 +342,15 @@ export async function updateDisplay(
   })
   await uiApi.setStepNavigationProps(stepNumber, displayMode)
   deleteTmp()
+  if (lastPage && lastPage != page) {
+    displayAll(lastPage.children.find((el) => el.name == 'lesson'))
+  }
+  lastPage = page
   showTemplateGroups()
   showInputGroups()
   switch (displayMode) {
     case 'all':
-      lesson.children.forEach((step) => {
-        step.visible = true
-      })
+      displayAll(lesson, true)
       break
 
     case 'current':
@@ -404,13 +460,23 @@ export function updateProps(settings: formProps) {
   step.name = tags.join(' ')
 }
 
-export function currentPageChanged(pageNode: any) {
-  if (figma && !lastPage) {
-    lastPage = figma.currentPage
+export function currentPageChanged() {
+  const selection = figma.currentPage.selection[0] as GroupNode
+  const lesson = getCurrentLesson()
+  if (!selection || !lesson || !lesson.children.includes(selection)) {
+    updateDisplay({ displayMode: lastMode, stepNumber: 1 }, figma.currentPage)
+    return
   }
-  updateDisplay({ displayMode: 'all', stepNumber: 1 }, lastPage)
-  updateDisplay({ displayMode: 'all', stepNumber: 1 })
-  lastPage = pageNode
+  const step = figma.currentPage.selection[0] as GroupNode
+  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+
+  updateDisplay(
+    {
+      displayMode: lastMode,
+      stepNumber: stepNumber || 1,
+    },
+    figma.currentPage
+  )
 }
 
 export async function selectionChanged() {

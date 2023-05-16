@@ -3,11 +3,12 @@ import {
   findAll,
   findTag,
   descendants,
+  getCurrentLesson,
   getStepOrder,
   findParentByTag,
   isRGBTemplate,
 } from './util'
-import { updateDisplay } from './tune'
+import { updateDisplay, displayAll, deleteTmp } from './tune'
 
 export interface LintError {
   ignore?: boolean
@@ -527,12 +528,17 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-export function lintPage(
+export async function lintPage(
   currentPage?: PageNode | null,
   appendErrors?: boolean
 ) {
   if (!appendErrors) {
     errors = []
+    const lesson = getCurrentLesson()
+    await deleteTmp()
+    if(lesson) {
+      displayAll(lesson, true)
+    }
   }
   const page = currentPage ? currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
@@ -594,8 +600,12 @@ function lintIndex(page: PageNode) {
   lintThumbnail(page, page.children[0] as FrameNode)
 }
 
-export function lintCourse() {
+export async function lintCourse() {
   errors = []
+  const lesson = getCurrentLesson()
+  if(lesson) {
+    displayAll(lesson, true)
+  }
   assert(
     /^COURSE-[a-z\-0-9]+$/.test(figma.root.name),
     `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`

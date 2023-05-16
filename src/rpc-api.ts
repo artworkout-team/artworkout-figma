@@ -16,6 +16,8 @@ import {
   updateDisplay,
   updateProps,
   formProps,
+  selectNextBrushStep,
+  displayAll,
 } from './plugin/tune'
 import { TuneFormStore } from './app/models/TuneFormStore'
 
@@ -48,6 +50,8 @@ export const pluginApi = createPluginAPI(
     lintCourse,
     resizeUi,
     updateProps,
+    selectNextBrushStep,
+    displayAll,
   },
   { timeout: 1000000 }
 )

@@ -106,6 +106,16 @@ export function descendants(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => getAllTree(n as GroupNode))
 }
 
+export function findNextBrushStep(steps: SceneNode[]) {
+  return steps.find((step) => {
+    return getTags(step).includes('s-multistep-brush')
+  })
+}
+
+export function findLessonGroup(page: PageNode) {
+  return page.children.find((el) => el.name == 'lesson') as FrameNode
+}
+
 export function getParamValue(el, pattern) {
   for (let cl of el) {
     const match = cl.match(pattern)
