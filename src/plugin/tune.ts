@@ -237,30 +237,6 @@ function getClearLayerNumbers(step: SceneNode): number[] {
   return layerNumbers
 }
 
-function showOnlyRGBTemplate(node: GroupNode) {
-  if (getTags(node).includes('settings')) {
-    node.visible = false
-    return
-  }
-  if (
-    getTags(node).includes('rgb-template') ||
-    /GROUP|BOOLEAN_OPERATION/.test(node.type)
-  ) {
-    return
-  }
-  node.children.forEach((v) => {
-    if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
-      return showOnlyRGBTemplate(v as GroupNode)
-    }
-    if (
-      /RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type) &&
-      !getTags(v).includes('rgb-template')
-    ) {
-      return (v.visible = false)
-    }
-  })
-}
-
 function collectLayerNumbersToClear(lesson: FrameNode, step: GroupNode) {
   const currentStepOrder = getStepOrder(step)
   const layersStepOrderTags = lesson.children.map((s) => getStepOrder(s))
@@ -331,7 +307,6 @@ export async function updateDisplay(
   page?: PageNode
 ) {
   page = page || figma.currentPage
-  lastPage = page
   lastMode = settings.displayMode
   lastStepNumber = settings.stepNumber
   const { displayMode, stepNumber } = settings
@@ -367,6 +342,10 @@ export async function updateDisplay(
   })
   await uiApi.setStepNavigationProps(stepNumber, displayMode)
   deleteTmp()
+  if (lastPage && lastPage != page) {
+    displayAll(lastPage.children.find((el) => el.name == 'lesson'))
+  }
+  lastPage = page
   showTemplateGroups()
   showInputGroups()
   switch (displayMode) {
@@ -481,13 +460,23 @@ export function updateProps(settings: formProps) {
   step.name = tags.join(' ')
 }
 
-export function currentPageChanged(pageNode: any) {
-  if (figma && !lastPage) {
-    lastPage = figma.currentPage
+export function currentPageChanged() {
+  const selection = figma.currentPage.selection[0] as GroupNode
+  const lesson = getCurrentLesson()
+  if (!selection || !lesson || !lesson.children.includes(selection)) {
+    updateDisplay({ displayMode: lastMode, stepNumber: 1 }, figma.currentPage)
+    return
   }
-  updateDisplay({ displayMode: 'all', stepNumber: 1 }, lastPage)
-  updateDisplay({ displayMode: 'all', stepNumber: 1 })
-  lastPage = pageNode
+  const step = figma.currentPage.selection[0] as GroupNode
+  const stepNumber = stepsByOrder(lesson).indexOf(step) + 1
+
+  updateDisplay(
+    {
+      displayMode: lastMode,
+      stepNumber: stepNumber || 1,
+    },
+    figma.currentPage
+  )
 }
 
 export async function selectionChanged() {
