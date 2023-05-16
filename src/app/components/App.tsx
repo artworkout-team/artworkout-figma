@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Tabs, Tab } from 'react-bootstrap'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import DisplayForm from './DisplayForm'
+import TuneForm from './TuneForm'
 import InitParse from './InitParse'
 import { userStore } from '../models/user'
 import { PublishTab } from './PublishTab'
@@ -32,7 +32,7 @@ function App() {
         </Tab>
 
         <Tab eventKey='tune' title='Tune' className='m-2'>
-          <DisplayForm />
+          <TuneForm />
         </Tab>
 
         <Tab eventKey='format' title='Format' className='m-2'>

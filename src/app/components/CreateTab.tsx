@@ -1,12 +1,11 @@
 import React from 'react'
 import { Button } from 'react-bootstrap'
 import { pluginApi } from '../../rpc-api'
-import { emit } from '../../events'
 
 export function CreateTab() {
   async function handleSplitByColor() {
     await pluginApi.splitByColor()
-    emit('updateDisplay', { displayMode: 'all', stepNumber: 1 })
+    await pluginApi.updateDisplay({ displayMode: 'all', stepNumber: 1 })
   }
 
   return (
