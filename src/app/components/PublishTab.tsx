@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Row } from 'react-bootstrap'
+import { Button, Col, Form, Row } from 'react-bootstrap'
 import { pluginApi } from '../../rpc-api'
 import LoginForm from './LoginForm'
 import Parse from 'parse'
@@ -176,6 +176,37 @@ export function PublishTab() {
     await Parse.Object.saveAll(updatedCourses)
   }
 
+  const renderCourseOptions = (
+    <Col style={{ width: '100%' }}>
+      <Row className='justify-content-center'>
+        <Col>
+          <Form.Group as={Row} className={'mb-2 align-items-center'}>
+            <Col
+              className={'col-4 d-flex align-items-center justify-content-end'}
+            >
+              <Form.Label column style={{ whiteSpace: 'nowrap' }}>
+                Free lesson
+              </Form.Label>
+            </Col>
+            <Col className={'col-2 d-flex align-items-center'}>
+              <Form.Check />
+            </Col>
+            <Col
+              className={'col-4 d-flex align-items-center justify-content-end'}
+            >
+              <Form.Label column style={{ whiteSpace: 'nowrap' }}>
+                Collect data
+              </Form.Label>
+            </Col>
+            <Col className={'col-2 d-flex align-items-center'}>
+              <Form.Check />
+            </Col>
+          </Form.Group>
+        </Col>
+      </Row>
+    </Col>
+  )
+
   return (
     <>
       <LoginForm />
@@ -221,6 +252,7 @@ export function PublishTab() {
             )}
             &nbsp;
           </p>
+          <p>{renderCourseOptions}</p>
           <p>Scan with iPad to sync your courses:</p>
           <img
             id='qr'
