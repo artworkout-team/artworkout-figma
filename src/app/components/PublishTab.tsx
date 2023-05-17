@@ -19,6 +19,8 @@ export function PublishTab() {
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
   const [linkCopied, setLinkCopied] = React.useState(false)
+  const [analyticsEnabled, setAnalyticsEnabled] = React.useState(false)
+  const [freeLesson, setFreeLesson] = React.useState(false)
 
   const [courses, setCourses] = useState([])
   const [parseCourseList, setParseCourseList] = useState([])
@@ -137,6 +139,8 @@ export function PublishTab() {
     courseObject.set('path', cp)
     courseObject.set('thumbnail', thumbnailFile)
     courseObject.set('author', userSnapshot.user)
+    courseObject.set('free', freeLesson)
+    courseObject.set('analyticsEnabled', analyticsEnabled)
     if (courseObject.isNew()) {
       courseObject.set('order', debug ? -1 : 10)
       courseObject.set('name', {
@@ -177,34 +181,30 @@ export function PublishTab() {
   }
 
   const renderCourseOptions = (
-    <Col style={{ width: '100%' }}>
-      <Row className='justify-content-center'>
-        <Col>
-          <Form.Group as={Row} className={'mb-2 align-items-center'}>
-            <Col
-              className={'col-4 d-flex align-items-center justify-content-end'}
-            >
-              <Form.Label column style={{ whiteSpace: 'nowrap' }}>
-                Free lesson
-              </Form.Label>
-            </Col>
-            <Col className={'col-2 d-flex align-items-center'}>
-              <Form.Check />
-            </Col>
-            <Col
-              className={'col-4 d-flex align-items-center justify-content-end'}
-            >
-              <Form.Label column style={{ whiteSpace: 'nowrap' }}>
-                Collect data
-              </Form.Label>
-            </Col>
-            <Col className={'col-2 d-flex align-items-center'}>
-              <Form.Check />
-            </Col>
-          </Form.Group>
-        </Col>
-      </Row>
-    </Col>
+    <Form.Group as={Row} className='mb-2 justify-content-between'>
+      <Col className='col-4 d-flex align-items-center justify-content-end'>
+        <Form.Label column style={{ whiteSpace: 'nowrap' }}>
+          Free lesson
+        </Form.Label>
+      </Col>
+      <Col className='col-1 d-flex align-items-center mr-3'>
+        <Form.Check
+          checked={freeLesson}
+          onChange={(e) => setFreeLesson(e.target.checked)}
+        />
+      </Col>
+      <Col className='col-4 d-flex align-items-center justify-content-end '>
+        <Form.Label column style={{ whiteSpace: 'nowrap' }}>
+          Collect data
+        </Form.Label>
+      </Col>
+      <Col className='col-1 d-flex align-items-center'>
+        <Form.Check
+          checked={analyticsEnabled}
+          onChange={(e) => setAnalyticsEnabled(e.target.checked)}
+        />
+      </Col>
+    </Form.Group>
   )
 
   return (
@@ -252,7 +252,7 @@ export function PublishTab() {
             )}
             &nbsp;
           </p>
-          <p>{renderCourseOptions}</p>
+          {renderCourseOptions}
           <p>Scan with iPad to sync your courses:</p>
           <img
             id='qr'
