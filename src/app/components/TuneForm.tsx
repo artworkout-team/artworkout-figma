@@ -10,6 +10,7 @@ import {
   Dropdown,
   Accordion,
   ToggleButton,
+  Button,
 } from 'react-bootstrap'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
@@ -116,6 +117,10 @@ export function TuneForm() {
     }
   }
 
+  async function onNextBrushStep() {
+    await pluginApi.selectNextBrushStep(state.stepNavigationProps.stepNumber)
+  }
+
   async function getSteps() {
     const steps = await pluginApi.getSteps()
     setSteps(steps)
@@ -156,6 +161,13 @@ export function TuneForm() {
     'g',
     () => {
       TuneFormStore.stepNavigationProps.stepNumber = 1
+    },
+    { enableOnTags }
+  )
+  useHotkeys(
+    'n',
+    () => {
+      onNextBrushStep()
     },
     { enableOnTags }
   )
@@ -222,7 +234,7 @@ export function TuneForm() {
 
   const renderStepOptions = (
     <Form.Group as={Row}>
-      <Col>
+      <Col style={{ maxWidth: '40%' }}>
         <Form.Group as={Row} className={'justify-content-center'}>
           <OverlayTrigger
             placement={'bottom'}
@@ -244,78 +256,107 @@ export function TuneForm() {
         </Form.Group>
       </Col>
       <Col>
-        <ButtonGroup>
-          <OverlayTrigger
-            placement={'bottom'}
-            overlay={
-              <Tooltip
-                className={'tooltip'}
-                style={{ position: 'fixed' }}
-                id='button-tooltip-all'
+        <Form.Group as={Row}>
+          <Col>
+            <ButtonGroup className={'mr-2'} size={'sm'}>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id='button-tooltip-template'>
+                    (N)ext brush step
+                  </Tooltip>
+                }
               >
-                (Q) All
-              </Tooltip>
-            }
-          >
-            <ToggleButton
-              key={1}
-              variant='outline-primary'
-              type='radio'
-              checked={state.stepNavigationProps.displayMode === 'all'}
-              id={'displayModeAll'}
-              value={'all'}
-              onChange={onDisplayModeChange}
-            >
-              Q
-            </ToggleButton>
-          </OverlayTrigger>
-          <OverlayTrigger
-            placement={'bottom'}
-            overlay={<Tooltip id='button-tooltip-current'>(C)urrent</Tooltip>}
-          >
-            <ToggleButton
-              key={2}
-              variant='outline-primary'
-              type='radio'
-              checked={state.stepNavigationProps.displayMode === 'current'}
-              id={'displayModeCurrent'}
-              value={'current'}
-              onChange={onDisplayModeChange}
-            >
-              C
-            </ToggleButton>
-          </OverlayTrigger>
-          <OverlayTrigger
-            placement={'bottom'}
-            overlay={<Tooltip id='button-tooltip-previous'>(P)revious</Tooltip>}
-          >
-            <ToggleButton
-              variant='outline-primary'
-              type='radio'
-              checked={state.stepNavigationProps.displayMode === 'previous'}
-              id={'displayModePrevious'}
-              value={'previous'}
-              onChange={onDisplayModeChange}
-            >
-              P
-            </ToggleButton>
-          </OverlayTrigger>
-          <OverlayTrigger
-            placement={'bottom'}
-            overlay={<Tooltip id='button-tooltip-template'>(T)emplate</Tooltip>}
-          >
-            <ToggleButton
-              variant='outline-primary'
-              type='radio'
-              checked={state.stepNavigationProps.displayMode === 'template'}
-              id={'displayModeTemplate'}
-              value={'template'}
-              onChange={onDisplayModeChange}
-            >
-              T
-            </ToggleButton>
-          </OverlayTrigger>
-        </ButtonGroup>
+                <Button
+                  variant='outline-primary'
+                  id={'displayModeNextBrushStep'}
+                  value={'next'}
+                  onClick={() => onNextBrushStep()}
+                >
+                  N
+                </Button>
+              </OverlayTrigger>
+            </ButtonGroup>
+            <ButtonGroup>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip
+                    className={'tooltip'}
+                    style={{ position: 'fixed' }}
+                    id='button-tooltip-all'
+                  >
+                    (Q) All
+                  </Tooltip>
+                }
+              >
+                <ToggleButton
+                  key={1}
+                  variant='outline-primary'
+                  type='radio'
+                  checked={state.stepNavigationProps.displayMode === 'all'}
+                  id={'displayModeAll'}
+                  value={'all'}
+                  onChange={onDisplayModeChange}
+                >
+                  Q
+                </ToggleButton>
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id='button-tooltip-current'>(C)urrent</Tooltip>
+                }
+              >
+                <ToggleButton
+                  key={2}
+                  variant='outline-primary'
+                  type='radio'
+                  checked={state.stepNavigationProps.displayMode === 'current'}
+                  id={'displayModeCurrent'}
+                  value={'current'}
+                  onChange={onDisplayModeChange}
+                >
+                  C
+                </ToggleButton>
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id='button-tooltip-previous'>(P)revious</Tooltip>
+                }
+              >
+                <ToggleButton
+                  variant='outline-primary'
+                  type='radio'
+                  checked={state.stepNavigationProps.displayMode === 'previous'}
+                  id={'displayModePrevious'}
+                  value={'previous'}
+                  onChange={onDisplayModeChange}
+                >
+                  P
+                </ToggleButton>
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id='button-tooltip-template'>(T)emplate</Tooltip>
+                }
+              >
+                <ToggleButton
+                  variant='outline-primary'
+                  type='radio'
+                  checked={state.stepNavigationProps.displayMode === 'template'}
+                  id={'displayModeTemplate'}
+                  value={'template'}
+                  onChange={onDisplayModeChange}
+                >
+                  T
+                </ToggleButton>
+              </OverlayTrigger>
+            </ButtonGroup>
+          </Col>
+        </Form.Group>
       </Col>
     </Form.Group>
   )

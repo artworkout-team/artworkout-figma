@@ -62,6 +62,9 @@ subscribe(TuneFormStore.stepProps, async () => {
       ...JSON.parse(JSON.stringify(TuneFormStore.stepProps)),
       ...JSON.parse(JSON.stringify(TuneFormStore.animationProps)),
     })
+    await pluginApi.updateDisplay(
+      JSON.parse(JSON.stringify(TuneFormStore.stepNavigationProps))
+    )
   }
 })
 

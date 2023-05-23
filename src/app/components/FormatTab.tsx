@@ -89,13 +89,9 @@ export function FormatTab() {
     await pluginApi.saveErrors(newTableValue)
   }
 
-
   const renderTooltip = (error: string) => (
-    <Tooltip id="button-tooltip">
-      {error}
-    </Tooltip>
+    <Tooltip id='button-tooltip'>{error}</Tooltip>
   )
-
 
   function renderRow(row: LintError, index: number) {
     let rowColor = 'white'
@@ -104,12 +100,25 @@ export function FormatTab() {
       lastPageName = row.pageName
     }
     return (
-      <tr style={{backgroundColor: rowColor }} key={index} onClick={() => selectError(index)}>
+      <tr
+        style={{ backgroundColor: rowColor }}
+        key={index}
+        onClick={() => selectError(index)}
+      >
         <th>
-          <Form.Check type='checkbox' className={'th'} checked={row.ignore} onChange={() => onCheckBoxChange(index)} />
-       </th>
-        <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(ErrorLevel[row.level])}>
-          <th className="th">
+          <Form.Check
+            type='checkbox'
+            className={'th'}
+            checked={row.ignore}
+            onChange={() => onCheckBoxChange(index)}
+          />
+        </th>
+        <OverlayTrigger
+          placement='bottom'
+          delay={{ show: 250, hide: 400 }}
+          overlay={renderTooltip(ErrorLevel[row.level])}
+        >
+          <th className='th'>
             <div
               className='round-icon'
               style={{
@@ -118,60 +127,73 @@ export function FormatTab() {
               }}
             ></div>
           </th>
-      </OverlayTrigger>
+        </OverlayTrigger>
         <OverlayTrigger
           placement='bottom'
-          delay={{show: 400, hide: 400}}
-          overlay={
-            renderTooltip(`${row?.nodeName ? `Node name: ${row.nodeName} `: ''} \r\n ${row?.nodeType ? `Node type: ${row.nodeType} `: ''}`)
-          }>
-          <th className={'th'}>{row?.step ? `0-${row.step}`: 'Frame'}</th>
+          delay={{ show: 400, hide: 400 }}
+          overlay={renderTooltip(
+            `${row?.nodeName ? `Node name: ${row.nodeName} ` : ''} \r\n ${
+              row?.nodeType ? `Node type: ${row.nodeType} ` : ''
+            }`
+          )}
+        >
+          <th className={'th'}>
+            {row?.stepNumber ? `o-${row.stepNumber}` : 'Frame'}
+          </th>
         </OverlayTrigger>
-      <OverlayTrigger placement='top' delay={{show: 400, hide: 400}}  overlay={renderTooltip('Page name')}>
-      <th className={'th'} >{row.pageName}</th>
+        <OverlayTrigger
+          placement='top'
+          delay={{ show: 400, hide: 400 }}
+          overlay={renderTooltip('Page name')}
+        >
+          <th className={'th'}>{row.pageName}</th>
         </OverlayTrigger>
-      <OverlayTrigger placement='bottom' delay={{show: 250, hide: 400}}  overlay={renderTooltip(row.error)}>
-        <th className={'th-error'}>{row.error}</th>
-      </OverlayTrigger>
+        <OverlayTrigger
+          placement='bottom'
+          delay={{ show: 250, hide: 400 }}
+          overlay={renderTooltip(row.error)}
+        >
+          <th className={'th-error'}>{row.error}</th>
+        </OverlayTrigger>
       </tr>
     )
   }
 
   return (
-    <Stack gap={2} className={'stack'} >
+    <Stack gap={2} className={'stack'}>
       <div className={'content'}>
-      <div>
-        <Button className='plugin-btn' onClick={() => lintCourse()}>
-          Lint course
-        </Button>
-        <Button className='plugin-btn' onClick={() => lintPage()}>
-          Lint page
-        </Button>
-        <Button className='plugin-btn' onClick={() => emit('autoFormat')}>
-          Auto format
-        </Button>
-        <Button className='plugin-btn' onClick={() => emit('formatOrder')}>
-          Format order
-        </Button>
-        <Button className='plugin-btn' onClick={exportTexts}>
-          Export Texts
-        </Button>
-        <Button className='plugin-btn' onClick={importTexts}>
-          Import Texts
-        </Button>
-      </div>
-      <Table hover size="sm">
-        <tbody>
-          {tableValue?.length ?
-            tableValue.map((item, index) => renderRow(item, index))
-            :
-            <tr> Done  </tr>
-          }
-        </tbody>
-      </Table>
+        <div>
+          <Button className='plugin-btn' onClick={() => lintCourse()}>
+            Lint course
+          </Button>
+          <Button className='plugin-btn' onClick={() => lintPage()}>
+            Lint page
+          </Button>
+          <Button className='plugin-btn' onClick={() => emit('autoFormat')}>
+            Auto format
+          </Button>
+          <Button className='plugin-btn' onClick={() => emit('formatOrder')}>
+            Format order
+          </Button>
+          <Button className='plugin-btn' onClick={exportTexts}>
+            Export Texts
+          </Button>
+          <Button className='plugin-btn' onClick={importTexts}>
+            Import Texts
+          </Button>
+        </div>
+        <Table hover size='sm'>
+          <tbody>
+            {tableValue?.length ? (
+              tableValue.map((item, index) => renderRow(item, index))
+            ) : (
+              <tr> Done </tr>
+            )}
+          </tbody>
+        </Table>
       </div>
       <Accordion className={'text-area-spoiler'}>
-        <Accordion.Item eventKey="0">
+        <Accordion.Item eventKey='0'>
           <Accordion.Header>Text area</Accordion.Header>
           <Accordion.Body>
             <textarea

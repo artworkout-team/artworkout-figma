@@ -3,11 +3,12 @@ import {
   findAll,
   findTag,
   descendants,
+  getCurrentLesson,
   getStepOrder,
   findParentByTag,
   isRGBTemplate,
 } from './util'
-import { updateDisplay } from './tune'
+import { updateDisplay, displayAll, deleteTmp } from './tune'
 
 export interface LintError {
   ignore?: boolean
@@ -18,7 +19,7 @@ export interface LintError {
   pageName?: string
   nodeName?: string
   nodeType?: string
-  step?: number
+  stepNumber?: number
 }
 
 let errors: LintError[] = []
@@ -98,20 +99,22 @@ function deepNodes(node: GroupNode): SceneNode[] {
   return node.children.flatMap((n) => deepNodes(n as GroupNode))
 }
 
-function hasGaps(node: VectorNode) {
+function countDisconnectedSegments(node: VectorNode) {
   if (!node.vectorNetwork) return false
-
   const { segments } = node.vectorNetwork
 
   const starts = segments.map((segment) => segment.start)
   const ends = segments.map((segment) => segment.end)
-
-  const hasNonMatchingStart = starts.some(
+  const disconnectedStartSegments = starts.filter(
     (startValue) => !ends.includes(startValue)
   )
-  const hasNonMatchingEnd = ends.some((endValue) => !starts.includes(endValue))
+  const disconnectedEndSegments = ends.filter(
+    (endValue) => !starts.includes(endValue)
+  )
+  const disconnectedSegmentsCount =
+    disconnectedStartSegments.length + disconnectedEndSegments.length
 
-  return hasNonMatchingStart || hasNonMatchingEnd
+  return disconnectedSegmentsCount > 2
 }
 
 function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
@@ -175,7 +178,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
     ErrorLevel.INFO
   )
   assert(
-    !drawLineTag || !hasGaps(node),
+    !drawLineTag || !countDisconnectedSegments(node),
     'Split vector or change animation',
     page,
     node
@@ -531,18 +534,22 @@ function lintThumbnail(page: PageNode, node: FrameNode) {
   assert(node.width == 400 && node.height == 400, 'Must be 400x400', page, node)
 }
 
-export function lintPage(
+export async function lintPage(
   currentPage?: PageNode | null,
   appendErrors?: boolean
 ) {
   if (!appendErrors) {
     errors = []
+    const lesson = getCurrentLesson()
+    await deleteTmp()
+    if(lesson) {
+      displayAll(lesson, true)
+    }
   }
   const page = currentPage ? currentPage : figma.currentPage
   if (/^\/|^INDEX$/.test(page.name)) {
     return
   }
-
   updateDisplay({ displayMode: 'all', stepNumber: 1 }, page)
   if (
     !assert(
@@ -599,8 +606,12 @@ function lintIndex(page: PageNode) {
   lintThumbnail(page, page.children[0] as FrameNode)
 }
 
-export function lintCourse() {
+export async function lintCourse() {
   errors = []
+  const lesson = getCurrentLesson()
+  if(lesson) {
+    displayAll(lesson, true)
+  }
   assert(
     /^COURSE-[a-z\-0-9]+$/.test(figma.root.name),
     `Course name '${figma.root.name}' must match COURSE-[a-z\\-0-9]+`
