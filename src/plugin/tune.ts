@@ -21,6 +21,7 @@ export interface formProps {
   continueButton?: boolean
   resizeBrush?: boolean
   allowUndo?: boolean
+  shareButton?: boolean
   animationTag?: string
   delay?: number
   repeat?: number
@@ -156,11 +157,6 @@ function getBrushSize(step: GroupNode) {
   return strokes.length > 0 ? maxWeight : 25
 }
 
-function getContinueButtonValue(step) {
-  const booleanTagValue = getBooleanTagValue(step, 'continue-button')
-  return booleanTagValue !== undefined ? booleanTagValue : undefined
-}
-
 function getClearLayerNumbers(step: SceneNode): number[] {
   const prefix = 'clear-layer-'
   const clearLayersStep = getTags(step).filter((tag) => tag.startsWith(prefix))
@@ -242,20 +238,24 @@ export async function updateDisplay(
   let layerNumbersToClear = getTags(step).includes('clear-before')
     ? [...Array(stepNumber).keys()].slice(1)
     : getClearLayerNumbers(step)
+  const template = getTag(step, 's-') || 'default'
+  const continueButtonValue = getBooleanTagValue(step, 'continue-button')
   await uiApi.updateUiProps({
     shadowSize: parseInt(getTag(step, 'ss-')) || 0,
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
-    template: getTag(step, 's-') || '0',
+    template,
     stepCount,
     stepNumber,
     displayMode,
     clearBefore: getTags(step).includes('clear-before'),
     clearLayers: layerNumbersToClear.map((n) => n.toString()) || [],
     brushType,
-    continueButton: getContinueButtonValue(step),
+    continueButton:
+      continueButtonValue !== undefined ? continueButtonValue : undefined,
     allowUndo: getBooleanTagValue(step, 'allow-undo'),
     resizeBrush: getBooleanTagValue(step, 'resize-brush'),
+    shareButton: getBooleanTagValue(step, 'share-button'),
   })
   await uiApi.setStepNavigationProps(stepNumber, displayMode)
   deleteTmp()
@@ -331,7 +331,8 @@ export function updateProps(settings: formProps) {
       !t.startsWith('continue-button') &&
       !t.startsWith('allow-undo') &&
       !t.startsWith('resize-brush') &&
-      !t.startsWith('brush-name-')
+      !t.startsWith('brush-name-') &&
+      !t.startsWith('share-button')
   )
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
@@ -361,6 +362,9 @@ export function updateProps(settings: formProps) {
   }
   if (settings.resizeBrush !== undefined) {
     tags.push(`resize-brush-${settings.resizeBrush}`)
+  }
+  if (settings.shareButton !== undefined) {
+    tags.push(`share-button-${settings.shareButton}`)
   }
 
   if (settings.animationTag !== undefined) {

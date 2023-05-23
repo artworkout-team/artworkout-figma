@@ -18,6 +18,7 @@ import { Pencil, Lightbulb, MagicWand, FlipIcon } from './assets/bootstrapIcons'
 import { TuneFormStore } from '../models/TuneFormStore'
 import { useSnapshot } from 'valtio'
 import './TuneForm.css'
+import { stepTemplates } from '../../plugin/util'
 
 export function TuneForm() {
   const [steps, setSteps] = useState([])
@@ -121,6 +122,7 @@ export function TuneForm() {
     { tag: 'continueButton', name: 'Continue btn' },
     { tag: 'resizeBrush', name: 'Resize brush' },
     { tag: 'allowUndo', name: 'Allow undo' },
+    { tag: 'shareButton', name: 'Share btn' },
   ]
 
   useHotkeys(
@@ -339,21 +341,14 @@ export function TuneForm() {
 
   const renderOtherTagsElement = (tag, index) => {
     const isChecked = () => {
-      if (state.stepProps[tag.tag] === undefined) {
-        return (
-          (state.stepProps.template === 'multistep-bg' ||
-            state.stepProps.template === 'multistep-result') &&
-          tag.tag === 'continueButton'
-        )
-      }
-      return state.stepProps[tag.tag]
+      return state.stepProps[tag.tag] === undefined
+        ? stepTemplates[state.stepProps.template][tag.tag]
+        : state.stepProps[tag.tag]
     }
     const onOtherTagsChange = (value) => {
-      if (state.stepProps[tag.tag] === value) {
-        TuneFormStore.stepProps[tag.tag] = undefined
-      } else {
-        TuneFormStore.stepProps[tag.tag] = value
-      }
+      return state.stepProps[tag.tag] === value
+        ? (TuneFormStore.stepProps[tag.tag] = undefined)
+        : (TuneFormStore.stepProps[tag.tag] = value)
     }
 
     const strikeThroughClass =
@@ -568,7 +563,7 @@ export function TuneForm() {
                 value={state.stepProps.template}
                 onChange={onTemplateChange}
               >
-                <option value=''></option>
+                <option value='default'></option>
                 <option value='multistep-brush'>brush</option>
                 <option value='multistep-bg'>bg</option>
                 <option value='multistep-result'>result</option>

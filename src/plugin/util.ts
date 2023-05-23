@@ -1,6 +1,33 @@
 import { emit } from '../events'
 import { Step } from './tune-rpc'
 
+export const stepTemplates = {
+  'multistep-bg': {
+    continueButton: true,
+    resizeBrush: false,
+    allowUndo: false,
+    shareButton: false,
+  },
+  'multistep-result': {
+    continueButton: true,
+    resizeBrush: false,
+    allowUndo: false,
+    shareButton: false,
+  },
+  'multistep-brush': {
+    continueButton: false,
+    resizeBrush: false,
+    allowUndo: false,
+    shareButton: false,
+  },
+  default: {
+    continueButton: false,
+    resizeBrush: false,
+    allowUndo: false,
+    shareButton: false,
+  },
+}
+
 export function findAll(node: BaseNode, f: (node: BaseNode) => boolean) {
   let arr: BaseNode[] = []
   if (f(node)) {
@@ -64,9 +91,7 @@ export function getBooleanTagValue(node: BaseNode, tag: string) {
   if (!node) return undefined
   const foundTag = getTags(node).find((t) => t.startsWith(`${tag}-`))
   if (!foundTag) return undefined
-  if (foundTag) {
-    return foundTag.endsWith('true')
-  }
+  return foundTag.endsWith('true')
 }
 
 export function print(text: string) {
