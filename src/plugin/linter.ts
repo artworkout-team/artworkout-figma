@@ -129,10 +129,10 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
     if (f.type === 'IMAGE') {
       assert(
         f.opacity == 1 || !rgbt,
-        'Image fill must not be opaque',
+        'Image fill must be opaque',
         page,
         node,
-        ErrorLevel.WARN
+        ErrorLevel.INFO
       )
     }
   })
@@ -150,7 +150,7 @@ function lintStrokes(node: VectorNode, page: PageNode, strokes: Paint[]) {
         'Image stroke must be opaque',
         page,
         node,
-        ErrorLevel.WARN
+        ErrorLevel.INFO
       )
     }
   })
@@ -193,7 +193,13 @@ function lintVector(page: PageNode, node: VectorNode) {
     findParentByTag(node, 'draw-line') ||
     findParentByTag(node, 'blink')
 
-  assert(node.opacity == 1 || !rgbt, 'Must be opaque', page, node)
+  assert(
+    node.opacity == 1 || !rgbt,
+    'Must be opaque',
+    page,
+    node,
+    ErrorLevel.INFO
+  )
   assert(node.visible, 'Must be visible', page, node)
 
   assert(
@@ -228,7 +234,7 @@ function lintVector(page: PageNode, node: VectorNode) {
     "Must have 'blink' or 'draw-line'",
     page,
     node,
-    ErrorLevel.WARN
+    ErrorLevel.ERROR
   ) // every rgbt must have animation
 }
 
