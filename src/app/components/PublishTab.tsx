@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Col, Form, Row } from 'react-bootstrap'
+import { Button, Row } from 'react-bootstrap'
 import { pluginApi } from '../../rpc-api'
 import LoginForm from './LoginForm'
 import Parse from 'parse'
@@ -19,8 +19,6 @@ export function PublishTab() {
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
   const [linkCopied, setLinkCopied] = React.useState(false)
-  const [analyticsEnabled, setAnalyticsEnabled] = React.useState(false)
-  const [freeLesson, setFreeLesson] = React.useState(false)
 
   const [courses, setCourses] = useState([])
   const [parseCourseList, setParseCourseList] = useState([])
@@ -102,7 +100,14 @@ export function PublishTab() {
     if (serverLesson.isNew()) {
       serverLesson.set('coursePath', cp)
       serverLesson.set('path', lesson.path)
-      serverLesson.set('free', free)
+      serverLesson.set(
+        'free',
+        free || lesson.lessonAsyncStorage?.free === 'true'
+      )
+      serverLesson.set(
+        'enableAnalytics',
+        lesson.lessonAsyncStorage?.enableAnalytics === 'true'
+      )
       serverLesson.set('name', {
         en: capitalize(lesson.path.split('-').join(' ')),
       })
@@ -129,7 +134,7 @@ export function PublishTab() {
       ).save(),
       new Parse.Query(ParseLesson).equalTo('coursePath', cp).find(),
     ])
-    // delete lessons that are not in the course anymore
+    //delete lessons that are not in the course anymore
     const lessonPaths = course.lessons.map((l) => l.path)
     const deletedLessons = serverLessons.filter(
       (l) => !lessonPaths.includes(l.get('path'))
@@ -139,8 +144,6 @@ export function PublishTab() {
     courseObject.set('path', cp)
     courseObject.set('thumbnail', thumbnailFile)
     courseObject.set('author', userSnapshot.user)
-    courseObject.set('free', freeLesson)
-    courseObject.set('analyticsEnabled', analyticsEnabled)
     if (courseObject.isNew()) {
       courseObject.set('order', debug ? -1 : 10)
       courseObject.set('name', {
@@ -179,33 +182,6 @@ export function PublishTab() {
 
     await Parse.Object.saveAll(updatedCourses)
   }
-
-  const renderCourseOptions = (
-    <Form.Group as={Row} className='mb-2 justify-content-between'>
-      <Col className='col-4 d-flex align-items-center justify-content-end'>
-        <Form.Label column style={{ whiteSpace: 'nowrap' }}>
-          Free lesson
-        </Form.Label>
-      </Col>
-      <Col className='col-1 d-flex align-items-center mr-3'>
-        <Form.Check
-          checked={freeLesson}
-          onChange={(e) => setFreeLesson(e.target.checked)}
-        />
-      </Col>
-      <Col className='col-4 d-flex align-items-center justify-content-end '>
-        <Form.Label column style={{ whiteSpace: 'nowrap' }}>
-          Collect data
-        </Form.Label>
-      </Col>
-      <Col className='col-1 d-flex align-items-center'>
-        <Form.Check
-          checked={analyticsEnabled}
-          onChange={(e) => setAnalyticsEnabled(e.target.checked)}
-        />
-      </Col>
-    </Form.Group>
-  )
 
   return (
     <>
@@ -252,7 +228,6 @@ export function PublishTab() {
             )}
             &nbsp;
           </p>
-          {renderCourseOptions}
           <p>Scan with iPad to sync your courses:</p>
           <img
             id='qr'

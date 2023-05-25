@@ -21,6 +21,8 @@ import { useSnapshot } from 'valtio'
 
 export function TuneForm() {
   const [steps, setSteps] = useState([])
+  const [freeLesson, setFreeLesson] = useState(false)
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false)
 
   const state = useSnapshot(TuneFormStore)
 
@@ -117,6 +119,16 @@ export function TuneForm() {
     }
   }
 
+  function onFreeLessonChange(value: boolean) {
+    setFreeLesson(value)
+    pluginApi.setCurrentLessonAsyncStorage('free', value.toString())
+  }
+
+  function onAnalyticsEnabledChange(value: boolean) {
+    setAnalyticsEnabled(value)
+    pluginApi.setCurrentLessonAsyncStorage('analyticsEnabled', value.toString())
+  }
+
   async function onNextBrushStep() {
     await pluginApi.selectNextBrushStep(state.stepNavigationProps.stepNumber)
   }
@@ -126,8 +138,15 @@ export function TuneForm() {
     setSteps(steps)
   }
 
+  async function getLessonAsyncStorage() {
+    const storage = await pluginApi.getLessonAsyncStorage()
+    setFreeLesson(storage.free === 'true')
+    setAnalyticsEnabled(storage.analyticsEnabled === 'true')
+  }
+
   useEffect(() => {
     getSteps()
+    getLessonAsyncStorage()
   }, [state])
 
   const enableOnTags: any = ['INPUT', 'TEXTAREA', 'SELECT']
@@ -513,59 +532,30 @@ export function TuneForm() {
           </OverlayTrigger>
         </ButtonGroup>
       </ButtonToolbar>
-      <Row>
-        <Col>
-          <Form.Group as={Row} className={'mb-2'}>
-            <OverlayTrigger
-              placement={'bottom'}
-              overlay={<Tooltip id='button-tooltip-wiggle-4'>Delay</Tooltip>}
-            >
-              <Form.Label column className={'col-2'}>
-                D
-              </Form.Label>
-            </OverlayTrigger>
-            <Col className={'col-4'}>
-              <Form.Control
-                disabled={state.animationProps.animationTag === undefined}
-                type='number'
-                min={0}
-                max={10}
-                value={state.animationProps.delay}
-                onChange={(e) =>
-                  (TuneFormStore.animationProps.delay = parseInt(
-                    e.target.value
-                  ))
-                }
-                step={1}
-              />
-            </Col>
-            <OverlayTrigger
-              placement={'bottom'}
-              overlay={<Tooltip id='button-tooltip-wiggle-4'>Repeat</Tooltip>}
-            >
-              <Form.Label column className={'col-2'}>
-                R
-              </Form.Label>
-            </OverlayTrigger>
-            <Col className={'col-4'}>
-              <Form.Control
-                disabled={state.animationProps.animationTag === undefined}
-                type='number'
-                min={0}
-                max={10}
-                value={state.animationProps.repeat}
-                onChange={(e) =>
-                  (TuneFormStore.animationProps.repeat = parseInt(
-                    e.target.value
-                  ))
-                }
-                step={1}
-              />
-            </Col>
-          </Form.Group>
-        </Col>
-      </Row>
     </Col>
+  )
+
+  const renderLessonSettings = (
+    <Form.Group as={Row} className='mb-2 justify-content-between'>
+      <Col className='col-4 d-flex align-items-center justify-content-end'>
+        <Form.Label column>Free</Form.Label>
+      </Col>
+      <Col className='col-1 d-flex align-items-center mr-3'>
+        <Form.Check
+          checked={freeLesson}
+          onChange={(e) => onFreeLessonChange(e.target.checked)}
+        />
+      </Col>
+      <Col className='col-4 '>
+        <Form.Label column>Analytics</Form.Label>
+      </Col>
+      <Col className='col-1 d-flex align-items-center'>
+        <Form.Check
+          checked={analyticsEnabled}
+          onChange={(e) => onAnalyticsEnabledChange(e.target.checked)}
+        />
+      </Col>
+    </Form.Group>
   )
 
   return (
@@ -671,6 +661,7 @@ export function TuneForm() {
               <Col style={{ width: '45%' }}>{renderOtherTagsDropdown}</Col>
             </Form.Group>
             <Row>{renderAnimationsButtons}</Row>
+            <Row>{renderLessonSettings}</Row>
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>

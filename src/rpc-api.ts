@@ -8,7 +8,12 @@ import {
   splitByColor,
   joinSteps,
 } from './plugin/create'
-import { displayNotification, resizeUi } from './plugin/util'
+import {
+  displayNotification,
+  getLessonAsyncStorage,
+  resizeUi,
+  setCurrentLessonAsyncStorage,
+} from './plugin/util'
 import { lintPage, lintCourse, selectError, saveErrors } from './plugin/linter'
 import {
   selectionChanged,
@@ -52,6 +57,8 @@ export const pluginApi = createPluginAPI(
     updateProps,
     selectNextBrushStep,
     displayAll,
+    getLessonAsyncStorage,
+    setCurrentLessonAsyncStorage,
   },
   { timeout: 1000000 }
 )

@@ -127,5 +127,21 @@ export function getParamValue(el, pattern) {
 }
 
 export function isRGBTemplate(node: SceneNode) {
-  return findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
+  return (
+    findTag(node, /^rgb-template$/) || findParentByTag(node, 'rgb-template')
+  )
+}
+
+export async function getLessonAsyncStorage(lesson?: PageNode) {
+  if (!lesson) {
+    lesson = figma.currentPage
+  }
+  return {
+    analyticsEnabled: lesson.getPluginData('analyticsEnabled'),
+    free: lesson.getPluginData('free'),
+  }
+}
+
+export function setCurrentLessonAsyncStorage(key: string, value: string) {
+  figma.currentPage.setPluginData(key, value)
 }

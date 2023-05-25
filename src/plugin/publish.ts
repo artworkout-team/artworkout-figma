@@ -1,5 +1,5 @@
 import { on } from '../events'
-import { capitalize, findAll, print } from './util'
+import { capitalize, findAll, getLessonAsyncStorage, print } from './util'
 
 function generateTranslationsCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
@@ -29,6 +29,7 @@ interface ILesson {
   file: Uint8Array
   thumbnail: Uint8Array
   index: number
+  lessonAsyncStorage: { analyticsEnabled: string; free: string }
 }
 
 function prepareCourseForPublishing() {
@@ -51,6 +52,8 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
   const index = figma.root.children.indexOf(page)
   const lessonNode = page.children.find((f) => f.name == 'lesson')
   const thumbnailNode = page.children.find((f) => f.name == 'thumbnail')
+
+  const lessonAsyncStorage = await getLessonAsyncStorage(page)
   if (!lessonNode) {
     return
   }
@@ -72,6 +75,7 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
     file,
     thumbnail,
     index,
+    lessonAsyncStorage,
   }
 }
 
