@@ -238,7 +238,7 @@ export async function updateDisplay(
   let layerNumbersToClear = getTags(step).includes('clear-before')
     ? [...Array(stepNumber).keys()].slice(1)
     : getClearLayerNumbers(step)
-  const template = getTag(step, 's-') || 'default'
+  const template = getTag(step, 's-') || ''
   const continueButtonValue = getBooleanTagValue(step, 'continue-button')
   await uiApi.updateUiProps({
     shadowSize: parseInt(getTag(step, 'ss-')) || 0,
@@ -251,8 +251,7 @@ export async function updateDisplay(
     clearBefore: getTags(step).includes('clear-before'),
     clearLayers: layerNumbersToClear.map((n) => n.toString()) || [],
     brushType,
-    continueButton:
-      continueButtonValue !== undefined ? continueButtonValue : undefined,
+    continueButton: continueButtonValue,
     allowUndo: getBooleanTagValue(step, 'allow-undo'),
     resizeBrush: getBooleanTagValue(step, 'resize-brush'),
     shareButton: getBooleanTagValue(step, 'share-button'),

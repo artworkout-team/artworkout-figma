@@ -342,11 +342,11 @@ export function TuneForm() {
   const renderOtherTagsElement = (tag, index) => {
     const isChecked = () => {
       return state.stepProps[tag.tag] === undefined
-        ? stepTemplates[state.stepProps.template][tag.tag]
-        : state.stepProps[tag.tag]
+        ? stepTemplates?.[state.stepProps.template]?.[tag.tag] ?? false
+        : state.stepProps?.[tag.tag]
     }
     const onOtherTagsChange = (value) => {
-      return state.stepProps[tag.tag] === value
+      state.stepProps[tag.tag] === value
         ? (TuneFormStore.stepProps[tag.tag] = undefined)
         : (TuneFormStore.stepProps[tag.tag] = value)
     }
@@ -563,7 +563,7 @@ export function TuneForm() {
                 value={state.stepProps.template}
                 onChange={onTemplateChange}
               >
-                <option value='default'></option>
+                <option value=''></option>
                 <option value='multistep-brush'>brush</option>
                 <option value='multistep-bg'>bg</option>
                 <option value='multistep-result'>result</option>
