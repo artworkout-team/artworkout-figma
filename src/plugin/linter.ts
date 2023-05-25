@@ -132,7 +132,7 @@ function lintFills(node: VectorNode, page: PageNode, fills: Paint[]) {
     if (f.type === 'IMAGE') {
       assert(
         f.opacity == 1 || !rgbt,
-        'Image fill must not be opaque',
+        'Image fill must be opaque',
         page,
         node,
         ErrorLevel.INFO
@@ -232,7 +232,13 @@ function lintVector(page: PageNode, node: VectorNode) {
   lintStrokes(node, page, strokes)
   lintFills(node, page, fills)
 
-  assert(!rgbt || !!anim, "Must have 'blink' or 'draw-line'", page, node) // every rgbt must have animation
+  assert(
+    !rgbt || !!anim,
+    "Must have 'blink' or 'draw-line'",
+    page,
+    node,
+    ErrorLevel.ERROR
+  ) // every rgbt must have animation
 }
 
 const validGroupTags =
@@ -253,7 +259,7 @@ function lintGroup(page: PageNode, node: GroupNode) {
     node,
     ErrorLevel.INFO
   )
-  assert(node.opacity == 1, 'Must be opaque', page, node)
+  assert(node.opacity == 1, 'Must be opaque', page, node, ErrorLevel.WARN)
   assert(node.visible, 'Must be visible', page, node)
   assert(
     tags.length > 0,
