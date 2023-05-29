@@ -47,22 +47,6 @@ function stepsByOrder(lesson: FrameNode) {
     })
 }
 
-function showTemplateGroups() {
-  figma.currentPage
-    .findAll((el) => el.name.includes('template'))
-    .forEach((el) => {
-      el.visible = true
-    })
-}
-
-function showInputGroups() {
-  figma.currentPage
-    .findAll((el) => el.name.includes('input'))
-    .forEach((el) => {
-      el.visible = true
-    })
-}
-
 function showOnlyRGBTemplate(node: GroupNode) {
   if (getTags(node).includes('settings')) {
     node.visible = false
@@ -94,6 +78,11 @@ let lastStepNumber = 1
 export function deleteTmp(page?: PageNode) {
   const p = page || figma.currentPage
   p.findAll((el) => el.name.startsWith('tmp-')).forEach((el) => el.remove())
+}
+
+function displayAllElements(lesson: FrameNode) {
+  const l = lesson || figma.currentPage
+  l.findAll((el) => (el.visible = true))
 }
 
 export function displayAll(lesson?: FrameNode, setLastMode?: boolean) {
@@ -346,8 +335,7 @@ export async function updateDisplay(
     displayAll(lastPage.children.find((el) => el.name == 'lesson'))
   }
   lastPage = page
-  showTemplateGroups()
-  showInputGroups()
+  displayAllElements(lesson)
   switch (displayMode) {
     case 'all':
       displayAll(lesson, true)
