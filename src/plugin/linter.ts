@@ -276,16 +276,16 @@ function lintInput(page: PageNode, node: GroupNode) {
   }
   assert(node.opacity == 1, 'Must be opaque', page, node)
   assert(node.visible, 'Must be visible', page, node)
-  assert(node.name == 'input', "Must be 'input'", page, node)
+  assert(/^input$|^background$/.test(node.name), "Must be 'input'", page, node)
   descendants(node as GroupNode).forEach((v) => {
-    if (/GROUP|BOOLEAN_OPERATION/.test(v.type)) {
+    if (/GROUP|BOOLEAN_OPERATION|FRAME/.test(v.type)) {
       lintGroup(page, v as GroupNode)
     } else if (/RECTANGLE|ELLIPSE|VECTOR|TEXT/.test(v.type)) {
       lintVector(page, v as VectorNode)
     } else {
       assert(
         false,
-        "Must be 'GROUP/VECTOR/RECTANGLE/ELLIPSE/TEXT' type",
+        "Must be 'FRAME/GROUP/VECTOR/RECTANGLE/ELLIPSE/TEXT' type",
         page,
         v
       )
@@ -323,7 +323,7 @@ function lintSettings(page: PageNode, node: EllipseNode) {
 }
 
 const validStepTags =
-  /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$/
+  /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$|^tool-picker-(true|false)$|^brush-color-[0-9a-fA-F]{8}$/
 
 function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {
@@ -448,12 +448,12 @@ function lintStep(page: PageNode, step: GroupNode) {
     ErrorLevel.INFO
   )
   ;(step as GroupNode).children.forEach((n) => {
-    if (n.name == 'input') {
+    if (/^input$|^background$/.test(n.name)) {
       lintInput(page, n as GroupNode)
     } else if (n.name === 'template') {
       // lint template
     } else {
-      assert(false, "Must be 'input' or 'template'", page, n)
+      assert(false, "Must be 'input', 'background' or 'template'", page, n)
     }
   })
 
@@ -542,7 +542,7 @@ export async function lintPage(
     errors = []
     const lesson = getCurrentLesson()
     await deleteTmp()
-    if(lesson) {
+    if (lesson) {
       displayAll(lesson, true)
     }
   }
@@ -609,7 +609,7 @@ function lintIndex(page: PageNode) {
 export async function lintCourse() {
   errors = []
   const lesson = getCurrentLesson()
-  if(lesson) {
+  if (lesson) {
     displayAll(lesson, true)
   }
   assert(
