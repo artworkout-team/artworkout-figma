@@ -44,7 +44,10 @@ function prepareCourseForPublishing() {
   })
 }
 
-export async function exportLesson(page?: PageNode): Promise<ILesson> {
+export async function exportLesson(
+  page?: PageNode,
+  outlineText?: boolean
+): Promise<ILesson> {
   if (!page) {
     page = figma.currentPage
   }
@@ -56,7 +59,7 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
   }
   const file = await lessonNode.exportAsync({
     format: 'SVG',
-    // svgOutlineText: false,
+    svgOutlineText: outlineText,
     svgIdAttribute: true,
   })
   const thumbnail = await thumbnailNode.exportAsync({
@@ -75,13 +78,13 @@ export async function exportLesson(page?: PageNode): Promise<ILesson> {
   }
 }
 
-export async function exportCourse() {
+export async function exportCourse(outlineText: boolean) {
   prepareCourseForPublishing()
   const [lessons, thumbnail] = await Promise.all([
     Promise.all(
       figma.root.children
         .filter((page) => page.name != 'INDEX')
-        .map((page) => exportLesson(page))
+        .map((page) => exportLesson(page, outlineText))
     ),
     figma.root.children
       .find((page) => page.name == 'INDEX')

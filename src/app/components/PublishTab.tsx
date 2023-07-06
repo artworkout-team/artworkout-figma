@@ -19,6 +19,7 @@ export function PublishTab() {
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
   const [linkCopied, setLinkCopied] = React.useState(false)
+  const [outlineText, setOutlineText] = React.useState(false)
 
   const [courses, setCourses] = useState([])
   const [parseCourseList, setParseCourseList] = useState([])
@@ -116,7 +117,7 @@ export function PublishTab() {
     { debug }: { debug: boolean } = { debug: false }
   ) {
     setIsDisabled(true)
-    const course = await pluginApi.exportCourse()
+    const course = await pluginApi.exportCourse(outlineText)
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
       new Parse.Query(ParseCourse).equalTo('path', cp).first(),
@@ -188,6 +189,14 @@ export function PublishTab() {
             alignItems: 'center',
           }}
         >
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              type='checkbox'
+              checked={outlineText}
+              onChange={(e) => setOutlineText(e.target.checked)}
+            />
+            <label style={{ marginLeft: '0.5em' }}>Outline text</label>
+          </div>
           <Button
             disabled={isDisabled}
             onClick={() => publishCourse({ debug: true })}
