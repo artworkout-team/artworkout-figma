@@ -122,6 +122,9 @@ export function PublishTab() {
   async function publishCourse(
     { debug }: { debug: boolean } = { debug: false }
   ) {
+    if (!debug && !confirm('Publish to production?')) {
+      return
+    }
     setIsDisabled(true)
     const course = await pluginApi.exportCourse(outlineText)
     const cp = debug ? `${course.path}-debug` : course.path
@@ -145,6 +148,9 @@ export function PublishTab() {
     courseObject.set('thumbnail', thumbnailFile)
     courseObject.set('author', userSnapshot.user)
     if (courseObject.isNew()) {
+      if (!debug) {
+        courseObject.set('approved', true)
+      }
       courseObject.set('order', debug ? -1 : 10)
       courseObject.set('name', {
         en: capitalize(cp.split('-').join(' ')),
