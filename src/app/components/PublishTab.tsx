@@ -6,6 +6,7 @@ import Parse from 'parse'
 import { userStore } from '../models/user'
 import { useSnapshot } from 'valtio'
 import { CourseList } from './CourseList'
+import { gzipSync } from 'fflate'
 
 const ParseLesson = Parse.Object.extend('Lesson')
 const ParseCourse = Parse.Object.extend('Course')
@@ -86,12 +87,17 @@ export function PublishTab() {
 
   async function makeLesson(lesson, course, serverLesson, free, debug) {
     const cp = debug ? `${lesson.coursePath}-debug` : lesson.coursePath
+
+    const svg = new Parse.File(
+      `${cp}.${lesson.path}.svg`,
+      Array.from(gzipSync(lesson.file, { level: 9 })),
+      'image/svg+xml'
+    )
+
+    svg.addMetadata('contentEncoding', 'gzip')
+
     const [lessonFile, thumbnailFile] = await Promise.all([
-      new Parse.File(
-        `${cp}.${lesson.path}.svg`,
-        Array.from(lesson.file),
-        'image/svg+xml'
-      ).save(),
+      svg.save(),
       new Parse.File(
         `${cp}.${lesson.path}.thumbnail.png`,
         Array.from(lesson.thumbnail),
