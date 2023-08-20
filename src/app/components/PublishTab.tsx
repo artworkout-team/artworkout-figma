@@ -99,7 +99,7 @@ export function PublishTab() {
     const [lessonFile, thumbnailFile] = await Promise.all([
       svg.save(),
       new Parse.File(
-        `${cp}.${lesson.path}.thumbnail.png`,
+        `${cp}.${lesson.path}.thumbnail.ch.png`,
         Array.from(lesson.thumbnail),
         'image/png'
       ).save(),
@@ -131,7 +131,7 @@ export function PublishTab() {
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
       new Parse.Query(ParseCourse).equalTo('path', cp).first(),
       new Parse.File(
-        `${cp}.INDEX.thumbnail.png`,
+        `${cp}.INDEX.thumbnail.ch.png`,
         Array.from(course.thumbnail),
         'image/png'
       ).save(),
