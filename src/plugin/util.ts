@@ -36,7 +36,7 @@ export function getNodeIndex(node: BaseNode) {
 export function getCurrentLesson() {
   return figma.currentPage.children.find(
     (el) => el.name === 'lesson'
-  ) as FrameNode
+  ) as FrameNode;
 }
 
 export function getTags(node: BaseNode | Step) {
@@ -54,6 +54,13 @@ export function addTag(node: BaseNode, tag: string) {
 
 export function findParentByTag(node: BaseNode, tag: string): GroupNode {
   return findParent(node, (n) => getTags(n).includes(tag))
+}
+
+export function findChildrenByTag(node: BaseNode, tag: string): BaseNode[] {
+  const predicate = (n: BaseNode) => {
+    return getTags(n).includes(tag)
+  };
+  return findAll(node, predicate);
 }
 
 export function isResultStep(node: BaseNode) {

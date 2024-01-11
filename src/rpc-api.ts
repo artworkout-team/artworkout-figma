@@ -19,7 +19,9 @@ import {
   selectNextBrushStep,
   displayAll,
 } from './plugin/tune'
+import { setMetaTags } from "./plugin/meta"
 import { TuneFormStore } from './app/models/TuneFormStore'
+import { MetaFormStore, MetaStoreProps } from "./app/models/MetaStore"
 
 // Figma plugin methods
 export const pluginApi = createPluginAPI(
@@ -50,6 +52,7 @@ export const pluginApi = createPluginAPI(
     lintCourse,
     resizeUi,
     updateProps,
+    setMetaTags,
     selectNextBrushStep,
     displayAll,
   },
@@ -68,6 +71,9 @@ export const uiApi = createUIAPI(
     setStepNavigationProps(stepNumber: number, displayMode: string) {
       TuneFormStore.setStepNavigationProps(stepNumber, displayMode)
     },
+    setMetaProps(props: MetaStoreProps) {
+      MetaFormStore.setMetaProps(props);
+    }
   },
   { timeout: 1000000 }
 )

@@ -134,9 +134,9 @@ export function createLesson() {
 
   // Create settings
   const settingsEllipse = figma.createEllipse()
-  fillServiceNodes(settingsEllipse)
+  fillServiceNodes(settingsEllipse);
   formatNode(settingsEllipse, {
-    name: 'settings capture-color zoom-scale-2 order-layers',
+    name: `settings capture-color zoom-scale-2 order-layers`,
     x: 10,
     y: 10,
   })
@@ -211,7 +211,7 @@ export function separateStep() {
   if (isResultStep(firstParentStep)) {
     return
   }
-  const lesson = getCurrentLesson()
+  const lesson = getCurrentLesson();
   const index = getNodeIndex(firstParentStep)
   const step = createStepNode(lesson, leaves, index)
   const resultStep = lesson.children.find((n) =>

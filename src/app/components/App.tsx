@@ -6,10 +6,11 @@ import InitParse from './InitParse'
 import { userStore } from '../models/user'
 import { PublishTab } from './PublishTab'
 import { FormatTab } from './FormatTab'
-import { CreateTab } from './CreateTab'
+import { CreateTab } from './createLessonForm/CreateTab'
 import './App.css'
 import { pluginApi } from '../../rpc-api'
 import { ResizeIcon } from './assets/bootstrapIcons'
+import { LessonMetaForm } from "./createLessonForm/LessonMetaForm"
 
 function App() {
   const [wideMode, setWideMode] = useState(true)
@@ -33,6 +34,10 @@ function App() {
 
         <Tab eventKey='tune' title='Tune' className='m-2'>
           <TuneForm />
+        </Tab>
+
+        <Tab eventKey='meta' title='Meta' className='m-2'>
+          <LessonMetaForm />
         </Tab>
 
         <Tab eventKey='format' title='Format' className='m-2'>
