@@ -294,7 +294,7 @@ function lintInput(page: PageNode, node: GroupNode) {
 }
 
 const validSettingsTags =
-  /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$/
+  /^\/|^settings$|^capture-color$|^zoom-scale-\d+$|^order-layers$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep$|^s-multistep-brush-\d+$|^brush-name-\w+$|^ss-\d+$|^bs-\d+$|^meta-duration-\d+$|^meta-type-\w+$/
 
 function lintSettings(page: PageNode, node: EllipseNode) {
   assert(node.type == 'ELLIPSE', "Must be 'ELLIPSE' type'", page, node)

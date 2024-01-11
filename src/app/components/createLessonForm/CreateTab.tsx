@@ -1,17 +1,22 @@
-import React from 'react'
-import { Button } from 'react-bootstrap'
-import { pluginApi } from '../../rpc-api'
+import React  from "react"
+import { Button } from "react-bootstrap"
+import { pluginApi } from '../../../rpc-api'
 
 export function CreateTab() {
+
   async function handleSplitByColor() {
     await pluginApi.splitByColor()
     await pluginApi.updateDisplay({ displayMode: 'all', stepNumber: 1 })
   }
 
+  const createLesson = () => {
+    pluginApi.createLesson();
+  }
+
   return (
     <>
       <Button
-        onClick={async () => pluginApi.createLesson()}
+        onClick={createLesson}
         className='plugin-btn'
       >
         Create lesson
