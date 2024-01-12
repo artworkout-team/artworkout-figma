@@ -1,26 +1,27 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+import React, { ChangeEvent, FormEvent, useEffect, useState } from "react"
 import {
-  Form,
-  Row,
-  Col,
-  ButtonGroup,
-  OverlayTrigger,
-  Tooltip,
-  ButtonToolbar,
-  Dropdown,
   Accordion,
-  ToggleButton,
   Button,
-} from 'react-bootstrap'
-import { useHotkeys } from 'react-hotkeys-hook'
-import { pluginApi } from '../../rpc-api'
-import { StepList } from './StepList'
-import { Pencil, Lightbulb, MagicWand, FlipIcon } from './assets/bootstrapIcons'
-import { TuneFormStore } from '../models/TuneFormStore'
-import { useSnapshot } from 'valtio'
+  ButtonGroup,
+  ButtonToolbar,
+  Col,
+  Dropdown,
+  Form,
+  OverlayTrigger,
+  Row,
+  ToggleButton,
+  Tooltip
+} from "react-bootstrap"
+import { useHotkeys } from "react-hotkeys-hook"
+import { pluginApi } from "../../rpc-api"
+import { StepList } from "./StepList"
+import { FlipIcon, Lightbulb, MagicWand, Pencil } from "./assets/bootstrapIcons"
+import { TuneFormStore } from "../models/TuneFormStore"
+import { useSnapshot } from "valtio"
+import { DEFAULT_TEMPLATE_COLOR } from "../../plugin/tune"
 
 export function TuneForm() {
-  const [steps, setSteps] = useState([])
+  const [steps, setSteps] = useState([]);
 
   const state = useSnapshot(TuneFormStore)
 
@@ -37,11 +38,21 @@ export function TuneForm() {
   }
 
   function onTemplateChange(event: FormEvent) {
-    const targetSelect = event.target as HTMLSelectElement
+    const targetSelect = event.target as HTMLSelectElement;
     if (targetSelect.value === 'multistep-bg') {
       TuneFormStore.stepProps.shadowSize = 0
     }
     TuneFormStore.stepProps.template = targetSelect.value
+  }
+
+  function onTemplateColorChange(event: React.ChangeEvent) {
+    const targetColorPicker = event.target as HTMLInputElement;
+    const newValue = targetColorPicker.value;
+    TuneFormStore.stepProps.templateColor = newValue;
+  }
+
+  function resetTemplateColor() {
+    TuneFormStore.stepProps.templateColor = DEFAULT_TEMPLATE_COLOR;
   }
 
   function onBrushTypeChange(event: FormEvent) {
@@ -589,6 +600,31 @@ export function TuneForm() {
                 <option value='multistep-bg'>bg</option>
                 <option value='multistep-result'>result</option>
               </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} className='mb-2'>
+            <Form.Label column xs={5}>
+              Template color
+            </Form.Label>
+            <Col>
+              <Form.Control
+                style={{
+                  height: "40px"
+                }}
+                type="color"
+                id="templateColorPicker"
+                value={state.stepProps.templateColor}
+                title="Choose your color"
+                onChange={onTemplateColorChange}
+              />
+            </Col>
+            <Col>
+              <Button
+                variant='outline-primary'
+                onClick={resetTemplateColor}
+              >
+                Reset
+              </Button>
             </Col>
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>

@@ -75,7 +75,6 @@ export async function exportLesson(
   })
 
   const meta = getMetaTags(lessonNode as FrameNode);
-  console.log("META TAGS FOR LESSON", meta);
 
   const lessonObject = {
     coursePath: figma.root.name.replace('COURSE-', ''),
@@ -86,7 +85,6 @@ export async function exportLesson(
     ...meta,
   };
 
-  console.log("LESSON OBJECT", lessonObject);
   return lessonObject;
 }
 
