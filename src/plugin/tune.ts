@@ -29,7 +29,7 @@ export interface formProps {
   displayMode?: string;
 }
 
-export const DEFAULT_TEMPLATE_COLOR = "#6685d4";
+export const DEFAULT_TEMPLATE_COLOR = '6685d4ff'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -321,7 +321,7 @@ export async function updateDisplay(
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-') || '0',
-    templateColor: getTag(step, 't-color-') || DEFAULT_TEMPLATE_COLOR,
+    templateColor: getTag(step, 'template-color-') || DEFAULT_TEMPLATE_COLOR,
     stepCount,
     stepNumber,
     displayMode,
@@ -416,7 +416,7 @@ export function updateProps(settings: formProps) {
       !t.startsWith('share-button') &&
       !t.startsWith('allow-undo') &&
       !t.startsWith('brush-name-') &&
-      !t.startsWith('t-color-')
+      !t.startsWith('template-color-')
   )
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
@@ -441,7 +441,7 @@ export function updateProps(settings: formProps) {
 
   if (settings.templateColor) {
     if (settings.templateColor !== DEFAULT_TEMPLATE_COLOR)
-      tags.push(`t-color-${settings.templateColor}`)
+      tags.push(`template-color-${settings.templateColor}`)
   }
 
   if (settings.otherTags.length > 0) {

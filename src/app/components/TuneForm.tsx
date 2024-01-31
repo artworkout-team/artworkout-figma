@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from "react"
+import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import {
   Accordion,
   Button,
@@ -10,18 +10,18 @@ import {
   OverlayTrigger,
   Row,
   ToggleButton,
-  Tooltip
-} from "react-bootstrap"
-import { useHotkeys } from "react-hotkeys-hook"
-import { pluginApi } from "../../rpc-api"
-import { StepList } from "./StepList"
-import { FlipIcon, Lightbulb, MagicWand, Pencil } from "./assets/bootstrapIcons"
-import { TuneFormStore } from "../models/TuneFormStore"
-import { useSnapshot } from "valtio"
-import { DEFAULT_TEMPLATE_COLOR } from "../../plugin/tune"
+  Tooltip,
+} from 'react-bootstrap'
+import { useHotkeys } from 'react-hotkeys-hook'
+import { pluginApi } from '../../rpc-api'
+import { StepList } from './StepList'
+import { FlipIcon, Lightbulb, MagicWand, Pencil } from './assets/bootstrapIcons'
+import { TuneFormStore } from '../models/TuneFormStore'
+import { useSnapshot } from 'valtio'
+import { DEFAULT_TEMPLATE_COLOR } from '../../plugin/tune'
 
 export function TuneForm() {
-  const [steps, setSteps] = useState([]);
+  const [steps, setSteps] = useState([])
 
   const state = useSnapshot(TuneFormStore)
 
@@ -38,21 +38,41 @@ export function TuneForm() {
   }
 
   function onTemplateChange(event: FormEvent) {
-    const targetSelect = event.target as HTMLSelectElement;
+    const targetSelect = event.target as HTMLSelectElement
     if (targetSelect.value === 'multistep-bg') {
       TuneFormStore.stepProps.shadowSize = 0
     }
     TuneFormStore.stepProps.template = targetSelect.value
   }
 
+  function decimalAlphaToHex(a: number) {
+    let newAlpha = Math.round(a * 255)
+    return (newAlpha + 0x10000).toString(16).substr(-2).toUpperCase()
+  }
+
+  function hexToOpacity(hex: string) {
+    const decimal = parseInt(hex, 16)
+    return decimal / 255
+  }
+
   function onTemplateColorChange(event: React.ChangeEvent) {
-    const targetColorPicker = event.target as HTMLInputElement;
-    const newValue = targetColorPicker.value;
-    TuneFormStore.stepProps.templateColor = newValue;
+    const targetColorPicker = event.target as HTMLInputElement
+    const colorWOAlpha = targetColorPicker.value.toUpperCase().replace('#', '')
+    const hexAlpha = state.stepProps.templateColor.substr(6,2)
+    TuneFormStore.stepProps.templateColor = `${colorWOAlpha}${hexAlpha}`
   }
 
   function resetTemplateColor() {
-    TuneFormStore.stepProps.templateColor = DEFAULT_TEMPLATE_COLOR;
+    TuneFormStore.stepProps.templateColor = DEFAULT_TEMPLATE_COLOR
+  }
+  
+  function handleAlphaSliderChange(event: React.ChangeEvent) {
+    const targetAlphaSlider = event.target as HTMLInputElement
+    const newValue = parseFloat(targetAlphaSlider.value)
+
+    let hexAlpha = decimalAlphaToHex(newValue)
+    console.log('state.stepProps.templateColor', state.stepProps.templateColor)
+    TuneFormStore.stepProps.templateColor = `${state.stepProps.templateColor.substr(0, 6)}${hexAlpha}`
   }
 
   function onBrushTypeChange(event: FormEvent) {
@@ -606,25 +626,73 @@ export function TuneForm() {
             <Form.Label column xs={5}>
               Template color
             </Form.Label>
-            <Col>
+            <Col xs={2}>
               <Form.Control
                 style={{
-                  height: "40px"
+                  height: '40px',
                 }}
                 type="color"
                 id="templateColorPicker"
-                value={state.stepProps.templateColor}
+                value={`#${state.stepProps.templateColor.substr(0, 6)}`}
                 title="Choose your color"
                 onChange={onTemplateColorChange}
               />
             </Col>
-            <Col>
+            <Col xs={2}>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id="reference-color-tooltip">Default color reference</Tooltip>
+                }
+              >
+                <div
+                  style={{
+                    backgroundColor: `#${DEFAULT_TEMPLATE_COLOR}`,
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                  }}
+                />
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id="reference-color-tooltip">Picked color with Alpha</Tooltip>
+                }
+              >
+                <div
+                  style={{
+                    backgroundColor: `#${state.stepProps.templateColor}`,
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                    marginTop: '4px',
+                  }}
+                />
+              </OverlayTrigger>
+            </Col>
+            <Col xs={3}>
               <Button
-                variant='outline-primary'
+                variant="outline-primary"
                 onClick={resetTemplateColor}
               >
                 Reset
               </Button>
+            </Col>
+          </Form.Group>
+
+          <Form.Group as={Row} className='mb-2'>
+            <Form.Label column xs={5}>
+              Alpha
+            </Form.Label>
+            <Col xs={7}>
+              <Form.Range
+                min={0}
+                max={1}
+                step={0.01}
+                value={hexToOpacity(state.stepProps.templateColor.substr(6, 2))}
+                onChange={handleAlphaSliderChange}
+                className="custom-slider"/>
             </Col>
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
