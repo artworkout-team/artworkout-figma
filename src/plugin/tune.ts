@@ -16,7 +16,7 @@ export interface formProps {
   brushSize: number;
   stepNumber: number;
   template: string;
-  templateColor: string;
+  stencilColor: string;
   clearLayers: string[];
   clearBefore: boolean;
   otherTags: string[];
@@ -29,7 +29,7 @@ export interface formProps {
   displayMode?: string;
 }
 
-export const DEFAULT_TEMPLATE_COLOR = '6685d4ff'
+export const DEFAULT_STENCIL_COLOR = '6685d4ff'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -321,7 +321,7 @@ export async function updateDisplay(
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-') || '0',
-    templateColor: getTag(step, 'template-color-') || DEFAULT_TEMPLATE_COLOR,
+    stencilColor: getTag(step, 'stencil-color-') || DEFAULT_STENCIL_COLOR,
     stepCount,
     stepNumber,
     displayMode,
@@ -416,7 +416,7 @@ export function updateProps(settings: formProps) {
       !t.startsWith('share-button') &&
       !t.startsWith('allow-undo') &&
       !t.startsWith('brush-name-') &&
-      !t.startsWith('template-color-')
+      !t.startsWith('stencil-color-')
   )
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
@@ -439,9 +439,9 @@ export function updateProps(settings: formProps) {
     tags.push('clear-before')
   }
 
-  if (settings.templateColor) {
-    if (settings.templateColor !== DEFAULT_TEMPLATE_COLOR)
-      tags.push(`template-color-${settings.templateColor}`)
+  if (settings.stencilColor) {
+    if (settings.stencilColor !== DEFAULT_STENCIL_COLOR)
+      tags.push(`stencil-color-${settings.stencilColor}`)
   }
 
   if (settings.otherTags.length > 0) {

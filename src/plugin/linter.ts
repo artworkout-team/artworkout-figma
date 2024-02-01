@@ -323,7 +323,7 @@ function lintSettings(page: PageNode, node: EllipseNode) {
 }
 
 const validStepTags =
-  /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$|^tool-picker-(true|false)$|^brush-color-[0-9a-fA-F]{8}$|^template-color-#\w+/
+  /^\/|^step$|^s-multistep-bg-\d+$|^s-multistep-result$|^s-multistep-brush$|^s-continue$|^s-multistep-brush-\d+$|^s-multistep-bg$|^brush-name-\w+$|^clear-layer-(\d+,?)+$|^ss-\d+$|^bs-\d+$|^o-\d+$|^allow-undo$|^share-button$|^clear-before$|^tool-picker-(true|false)$|^brush-color-[0-9a-fA-F]{8}$|^stencil-color-#\w+/
 
 function lintStep(page: PageNode, step: GroupNode) {
   if (!assert(step.type == 'GROUP', "Must be 'GROUP' type'", page, step)) {

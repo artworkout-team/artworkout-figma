@@ -15,7 +15,7 @@ export const TuneFormStore = proxy({
     clearLayers: [],
     otherTags: [],
     brushType: '',
-    templateColor: '6685d4ff',
+    stencilColor: '6685d4ff',
   },
   animationProps: {
     animationTag: undefined,

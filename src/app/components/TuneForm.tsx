@@ -18,7 +18,7 @@ import { StepList } from './StepList'
 import { FlipIcon, Lightbulb, MagicWand, Pencil } from './assets/bootstrapIcons'
 import { TuneFormStore } from '../models/TuneFormStore'
 import { useSnapshot } from 'valtio'
-import { DEFAULT_TEMPLATE_COLOR } from '../../plugin/tune'
+import { DEFAULT_STENCIL_COLOR } from '../../plugin/tune'
 
 export function TuneForm() {
   const [steps, setSteps] = useState([])
@@ -55,15 +55,15 @@ export function TuneForm() {
     return decimal / 255
   }
 
-  function onTemplateColorChange(event: React.ChangeEvent) {
+  function onstencilColorChange(event: React.ChangeEvent) {
     const targetColorPicker = event.target as HTMLInputElement
     const colorWOAlpha = targetColorPicker.value.toUpperCase().replace('#', '')
-    const hexAlpha = state.stepProps.templateColor.substr(6,2)
-    TuneFormStore.stepProps.templateColor = `${colorWOAlpha}${hexAlpha}`
+    const hexAlpha = state.stepProps.stencilColor.substr(6,2)
+    TuneFormStore.stepProps.stencilColor = `${colorWOAlpha}${hexAlpha}`
   }
 
-  function resetTemplateColor() {
-    TuneFormStore.stepProps.templateColor = DEFAULT_TEMPLATE_COLOR
+  function resetstencilColor() {
+    TuneFormStore.stepProps.stencilColor = DEFAULT_STENCIL_COLOR
   }
   
   function handleAlphaSliderChange(event: React.ChangeEvent) {
@@ -71,8 +71,8 @@ export function TuneForm() {
     const newValue = parseFloat(targetAlphaSlider.value)
 
     let hexAlpha = decimalAlphaToHex(newValue)
-    console.log('state.stepProps.templateColor', state.stepProps.templateColor)
-    TuneFormStore.stepProps.templateColor = `${state.stepProps.templateColor.substr(0, 6)}${hexAlpha}`
+    console.log('state.stepProps.stencilColor', state.stepProps.stencilColor)
+    TuneFormStore.stepProps.stencilColor = `${state.stepProps.stencilColor.substr(0, 6)}${hexAlpha}`
   }
 
   function onBrushTypeChange(event: FormEvent) {
@@ -608,7 +608,7 @@ export function TuneForm() {
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
             <Form.Label column xs={5}>
-              Template
+              Step Template
             </Form.Label>
             <Col>
               <Form.Select
@@ -624,7 +624,7 @@ export function TuneForm() {
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
             <Form.Label column xs={5}>
-              Template color
+              Stencil color
             </Form.Label>
             <Col xs={2}>
               <Form.Control
@@ -632,10 +632,10 @@ export function TuneForm() {
                   height: '40px',
                 }}
                 type="color"
-                id="templateColorPicker"
-                value={`#${state.stepProps.templateColor.substr(0, 6)}`}
+                id="stencilColorPicker"
+                value={`#${state.stepProps.stencilColor.substr(0, 6)}`}
                 title="Choose your color"
-                onChange={onTemplateColorChange}
+                onChange={onstencilColorChange}
               />
             </Col>
             <Col xs={2}>
@@ -647,7 +647,7 @@ export function TuneForm() {
               >
                 <div
                   style={{
-                    backgroundColor: `#${DEFAULT_TEMPLATE_COLOR}`,
+                    backgroundColor: `#${DEFAULT_STENCIL_COLOR}`,
                     width: '16px',
                     height: '16px',
                     borderRadius: '4px',
@@ -662,7 +662,7 @@ export function TuneForm() {
               >
                 <div
                   style={{
-                    backgroundColor: `#${state.stepProps.templateColor}`,
+                    backgroundColor: `#${state.stepProps.stencilColor}`,
                     width: '16px',
                     height: '16px',
                     borderRadius: '4px',
@@ -674,7 +674,7 @@ export function TuneForm() {
             <Col xs={3}>
               <Button
                 variant="outline-primary"
-                onClick={resetTemplateColor}
+                onClick={resetstencilColor}
               >
                 Reset
               </Button>
@@ -690,7 +690,7 @@ export function TuneForm() {
                 min={0}
                 max={1}
                 step={0.01}
-                value={hexToOpacity(state.stepProps.templateColor.substr(6, 2))}
+                value={hexToOpacity(state.stepProps.stencilColor.substr(6, 2))}
                 onChange={handleAlphaSliderChange}
                 className="custom-slider"/>
             </Col>
