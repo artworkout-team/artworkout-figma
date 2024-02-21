@@ -64,11 +64,6 @@ export const LessonMetaForm: FC<ILessonMetaProps> = () => {
               />
             </Col>
           </Form.Group>
-          {/*<Form.Group as={Row} className='mb-2'>*/}
-          {/*  <Button className='plugin-btn' style={{ width: "130px" }} onClick={handleClear}>*/}
-          {/*    Clear*/}
-          {/*  </Button>*/}
-          {/*</Form.Group>*/}
         </fieldset>
       </Form>
     </div>

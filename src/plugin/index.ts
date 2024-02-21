@@ -21,5 +21,6 @@ figma.on('currentpagechange', () => {
 })
 
 setTimeout(() => {
-  updateDisplay( { displayMode: 'all', stepNumber: 1 }, figma.currentPage)
+  updateDisplay( { displayMode: 'all', stepNumber: 1 }, figma.currentPage);
+  setMetaTagsFromNodesToStore();
 }, 1500)

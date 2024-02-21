@@ -31,7 +31,6 @@ export const MetaFormStore = proxy({
   },
 
   async setDefaultProps() {
-    console.log("CONTINUE CLEAR");
     MetaFormStore.setMetaProps(defaultMetaProps);
   }
 });

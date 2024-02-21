@@ -117,7 +117,6 @@ export function PublishTab() {
     serverLesson.set('thumbnail', thumbnailFile)
     serverLesson.set('order', lesson.index);
 
-    console.log("MAKE LESSON FROM LESSON: ", lesson);
     if (lesson.duration) {
       serverLesson.set('duration', lesson.duration);
     }
