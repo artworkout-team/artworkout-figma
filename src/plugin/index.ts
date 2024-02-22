@@ -16,10 +16,11 @@ figma.on('selectionchange', () => {
   selectionChanged()
 })
 figma.on('currentpagechange', () => {
-  currentPageChanged();
-  setMetaTagsFromNodesToStore();
+  currentPageChanged()
+  setMetaTagsFromNodesToStore()
 })
 
 setTimeout(() => {
   updateDisplay( { displayMode: 'all', stepNumber: 1 }, figma.currentPage)
+  setMetaTagsFromNodesToStore()
 }, 1500)

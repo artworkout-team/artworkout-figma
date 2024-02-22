@@ -12,21 +12,24 @@ import {
 import { uiApi } from '../rpc-api'
 
 export interface formProps {
-  shadowSize: number
-  brushSize: number
-  stepNumber: number
-  template: string
-  clearLayers: string[]
-  clearBefore: boolean
-  otherTags: string[]
-  brushType: string
-  animationTag?: string
-  delay?: number
-  repeat?: number
-  suggestedBrushSize?: number
-  stepCount?: number
-  displayMode?: string
+  shadowSize: number;
+  brushSize: number;
+  stepNumber: number;
+  template: string;
+  stencilColor: string;
+  clearLayers: string[];
+  clearBefore: boolean;
+  otherTags: string[];
+  brushType: string;
+  animationTag?: string;
+  delay?: number;
+  repeat?: number;
+  suggestedBrushSize?: number;
+  stepCount?: number;
+  displayMode?: string;
 }
+
+export const DEFAULT_STENCIL_COLOR = '6685d4ff'
 
 function getOrder(step: SceneNode) {
   const otag = getTags(step).find((t) => t.startsWith('o-')) || ''
@@ -34,7 +37,7 @@ function getOrder(step: SceneNode) {
   return isNaN(o) ? 9999 : o
 }
 
-function getTag(step, tag) {
+export function getTag(step, tag) {
   const v = getTags(step).find((t) => t.startsWith(tag))
   return v ? v.replace(tag, '') : null
 }
@@ -318,6 +321,7 @@ export async function updateDisplay(
     brushSize: parseInt(getTag(step, 'bs-')) || 0,
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-') || '0',
+    stencilColor: getTag(step, 'stencil-color-') || DEFAULT_STENCIL_COLOR,
     stepCount,
     stepNumber,
     displayMode,
@@ -411,7 +415,8 @@ export function updateProps(settings: formProps) {
       !t.startsWith('clear-before') &&
       !t.startsWith('share-button') &&
       !t.startsWith('allow-undo') &&
-      !t.startsWith('brush-name-')
+      !t.startsWith('brush-name-') &&
+      !t.startsWith('stencil-color-')
   )
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
@@ -432,6 +437,11 @@ export function updateProps(settings: formProps) {
   }
   if (settings.clearBefore) {
     tags.push('clear-before')
+  }
+
+  if (settings.stencilColor) {
+    if (settings.stencilColor !== DEFAULT_STENCIL_COLOR)
+      tags.push(`stencil-color-${settings.stencilColor}`)
   }
 
   if (settings.otherTags.length > 0) {

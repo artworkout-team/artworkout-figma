@@ -1,23 +1,24 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
 import {
-  Form,
-  Row,
-  Col,
-  ButtonGroup,
-  OverlayTrigger,
-  Tooltip,
-  ButtonToolbar,
-  Dropdown,
   Accordion,
-  ToggleButton,
   Button,
+  ButtonGroup,
+  ButtonToolbar,
+  Col,
+  Dropdown,
+  Form,
+  OverlayTrigger,
+  Row,
+  ToggleButton,
+  Tooltip,
 } from 'react-bootstrap'
 import { useHotkeys } from 'react-hotkeys-hook'
 import { pluginApi } from '../../rpc-api'
 import { StepList } from './StepList'
-import { Pencil, Lightbulb, MagicWand, FlipIcon } from './assets/bootstrapIcons'
+import { FlipIcon, Lightbulb, MagicWand, Pencil } from './assets/bootstrapIcons'
 import { TuneFormStore } from '../models/TuneFormStore'
 import { useSnapshot } from 'valtio'
+import { DEFAULT_STENCIL_COLOR } from '../../plugin/tune'
 
 export function TuneForm() {
   const [steps, setSteps] = useState([])
@@ -42,6 +43,36 @@ export function TuneForm() {
       TuneFormStore.stepProps.shadowSize = 0
     }
     TuneFormStore.stepProps.template = targetSelect.value
+  }
+
+  function decimalAlphaToHex(a: number) {
+    let newAlpha = Math.round(a * 255)
+    return (newAlpha + 0x10000).toString(16).substr(-2).toUpperCase()
+  }
+
+  function hexToOpacity(hex: string) {
+    const decimal = parseInt(hex, 16)
+    return decimal / 255
+  }
+
+  function onstencilColorChange(event: React.ChangeEvent) {
+    const targetColorPicker = event.target as HTMLInputElement
+    const colorWOAlpha = targetColorPicker.value.toUpperCase().replace('#', '')
+    const hexAlpha = state.stepProps.stencilColor.substr(6,2)
+    TuneFormStore.stepProps.stencilColor = `${colorWOAlpha}${hexAlpha}`
+  }
+
+  function resetstencilColor() {
+    TuneFormStore.stepProps.stencilColor = DEFAULT_STENCIL_COLOR
+  }
+  
+  function handleAlphaSliderChange(event: React.ChangeEvent) {
+    const targetAlphaSlider = event.target as HTMLInputElement
+    const newValue = parseFloat(targetAlphaSlider.value)
+
+    let hexAlpha = decimalAlphaToHex(newValue)
+    console.log('state.stepProps.stencilColor', state.stepProps.stencilColor)
+    TuneFormStore.stepProps.stencilColor = `${state.stepProps.stencilColor.substr(0, 6)}${hexAlpha}`
   }
 
   function onBrushTypeChange(event: FormEvent) {
@@ -577,7 +608,7 @@ export function TuneForm() {
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
             <Form.Label column xs={5}>
-              Template
+              Step Template
             </Form.Label>
             <Col>
               <Form.Select
@@ -589,6 +620,79 @@ export function TuneForm() {
                 <option value='multistep-bg'>bg</option>
                 <option value='multistep-result'>result</option>
               </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} className='mb-2'>
+            <Form.Label column xs={5}>
+              Stencil color
+            </Form.Label>
+            <Col xs={2}>
+              <Form.Control
+                style={{
+                  height: '40px',
+                }}
+                type="color"
+                id="stencilColorPicker"
+                value={`#${state.stepProps.stencilColor.substr(0, 6)}`}
+                title="Choose your color"
+                onChange={onstencilColorChange}
+              />
+            </Col>
+            <Col xs={2}>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id="reference-color-tooltip">Default color reference</Tooltip>
+                }
+              >
+                <div
+                  style={{
+                    backgroundColor: `#${DEFAULT_STENCIL_COLOR}`,
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                  }}
+                />
+              </OverlayTrigger>
+              <OverlayTrigger
+                placement={'bottom'}
+                overlay={
+                  <Tooltip id="reference-color-tooltip">Picked color with Alpha</Tooltip>
+                }
+              >
+                <div
+                  style={{
+                    backgroundColor: `#${state.stepProps.stencilColor}`,
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '4px',
+                    marginTop: '4px',
+                  }}
+                />
+              </OverlayTrigger>
+            </Col>
+            <Col xs={3}>
+              <Button
+                variant="outline-primary"
+                onClick={resetstencilColor}
+              >
+                Reset
+              </Button>
+            </Col>
+          </Form.Group>
+
+          <Form.Group as={Row} className='mb-2'>
+            <Form.Label column xs={5}>
+              Alpha
+            </Form.Label>
+            <Col xs={7}>
+              <Form.Range
+                min={0}
+                max={1}
+                step={0.01}
+                value={hexToOpacity(state.stepProps.stencilColor.substr(6, 2))}
+                onChange={handleAlphaSliderChange}
+                className="custom-slider"/>
             </Col>
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
