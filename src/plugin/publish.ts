@@ -1,7 +1,7 @@
 import { on } from '../events'
-import { capitalize, findAll, print } from "./util"
-import { AvailableMetaTypes } from "../app/models/MetaStore"
-import { getMetaTags } from "./meta"
+import { capitalize, findAll, print } from './util'
+import { AvailableMetaTypes } from '../app/models/MetaStore'
+import { getMetaTags } from './meta'
 
 function generateTranslationsCode() {
   const courseName = figma.root.name.replace(/COURSE-/, '')
@@ -56,8 +56,8 @@ export async function exportLesson(
     page = figma.currentPage
   }
   const index = figma.root.children.indexOf(page)
-  const lessonNode = page.children.find((f) => f.name == 'lesson');
-  const thumbnailNode = page.children.find((f) => f.name == 'thumbnail');
+  const lessonNode = page.children.find((f) => f.name == 'lesson')
+  const thumbnailNode = page.children.find((f) => f.name == 'thumbnail')
   if (!lessonNode) {
     return
   }
@@ -74,7 +74,8 @@ export async function exportLesson(
     },
   })
 
-  const meta = getMetaTags(lessonNode as FrameNode);
+  const meta = getMetaTags(lessonNode as FrameNode)
+  console.log('META TAGS FOR LESSON', meta)
 
   const lessonObject = {
     coursePath: figma.root.name.replace('COURSE-', ''),
@@ -83,13 +84,14 @@ export async function exportLesson(
     thumbnail,
     index,
     ...meta,
-  };
+  }
 
-  return lessonObject;
+  console.log('LESSON OBJECT', lessonObject)
+  return lessonObject
 }
 
 export async function exportCourse(outlineText: boolean) {
-  prepareCourseForPublishing();
+  prepareCourseForPublishing()
   const [lessons, thumbnail] = await Promise.all([
     Promise.all(
       figma.root.children

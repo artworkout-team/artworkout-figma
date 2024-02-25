@@ -1,6 +1,6 @@
-import { proxy, subscribe } from 'valtio';
-import { availableTypes } from "../components/createLessonForm/LessonMetaForm"
-import { pluginApi } from "../../rpc-api"
+import { proxy, subscribe } from 'valtio'
+import { availableTypes } from '../components/createLessonForm/LessonMetaForm'
+import { pluginApi } from '../../rpc-api'
 
 let mutex = false
 
@@ -13,9 +13,9 @@ export interface MetaStoreProps {
 }
 
 const defaultMetaProps = {
-  duration: "0",
-  type: "",
-};
+  duration: '0',
+  type: '',
+}
 
 export const MetaFormStore = proxy({
   metaProps: defaultMetaProps,
@@ -31,14 +31,14 @@ export const MetaFormStore = proxy({
   },
 
   async setDefaultProps() {
-    MetaFormStore.setMetaProps(defaultMetaProps);
-  }
-});
+    MetaFormStore.setMetaProps(defaultMetaProps)
+  },
+})
 
 subscribe(MetaFormStore.metaProps, async () => {
   if (!mutex) {
     await pluginApi.setMetaTags(
       JSON.parse(JSON.stringify(MetaFormStore.metaProps))
-    );
+    )
   }
 })

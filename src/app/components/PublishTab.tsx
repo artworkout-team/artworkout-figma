@@ -13,10 +13,11 @@ const ParseCourse = Parse.Object.extend('Course')
 
 export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
-const allowedEmails = ['ulitiy@gmail.com', 'indie.djan@gmail.com']
+export const allowedEmails = ['ulitiy@gmail.com', 'indie.djan@gmail.com', 'artem@artworkout.app']
+export const adminEmails = ['ulitiy@gmail.com']
 
 export function PublishTab() {
-  const userSnapshot = useSnapshot(userStore);
+  const userSnapshot = useSnapshot(userStore)
   const [isDisabled, setIsDisabled] = React.useState(false)
   const [courseLink, setCourseLink] = React.useState('')
   const [linkCopied, setLinkCopied] = React.useState(false)
@@ -115,13 +116,13 @@ export function PublishTab() {
     serverLesson.set('course', course)
     serverLesson.set('file', lessonFile)
     serverLesson.set('thumbnail', thumbnailFile)
-    serverLesson.set('order', lesson.index);
+    serverLesson.set('order', lesson.index)
 
     if (lesson.duration) {
-      serverLesson.set('duration', lesson.duration);
+      serverLesson.set('duration', lesson.duration)
     }
     if (lesson.type) {
-      serverLesson.set('type', lesson.type);
+      serverLesson.set('type', lesson.type)
     }
     return serverLesson
   }
@@ -133,7 +134,7 @@ export function PublishTab() {
       return
     }
     setIsDisabled(true)
-    const course = await pluginApi.exportCourse(outlineText);
+    const course = await pluginApi.exportCourse(outlineText)
     const cp = debug ? `${course.path}-debug` : course.path
     let [courseObject, thumbnailFile, serverLessons] = await Promise.all([
       new Parse.Query(ParseCourse).equalTo('path', cp).first(),
@@ -150,10 +151,10 @@ export function PublishTab() {
       (l) => !lessonPaths.includes(l.get('path'))
     )
     Parse.Object.destroyAll(deletedLessons) // no need to await
-    courseObject = courseObject || new ParseCourse();
-    courseObject.set('path', cp);
-    courseObject.set('thumbnail', thumbnailFile);
-    courseObject.set('author', userSnapshot.user);
+    courseObject = courseObject || new ParseCourse()
+    courseObject.set('path', cp)
+    courseObject.set('thumbnail', thumbnailFile)
+    courseObject.set('author', userSnapshot.user)
     if (courseObject.isNew()) {
       if (!debug) {
         courseObject.set('approved', true)
@@ -162,8 +163,8 @@ export function PublishTab() {
       courseObject.set('name', {
         en: capitalize(cp.split('-').join(' ')),
       }) // make all languages the same for now, just copy EN
-      courseObject.set('description', { en: '' });
-      await courseObject.save();
+      courseObject.set('description', { en: '' })
+      await courseObject.save()
     }
     const lessons = await Promise.all(
       course.lessons.map((lesson, index) =>
@@ -179,8 +180,21 @@ export function PublishTab() {
     )
     await Parse.Object.saveAll(lessons.concat([courseObject]))
     setCourseLink(`https://artworkout.app.link/courses/${courseObject.id}`)
-    await getAllCoursesFromParse()
+    const fetchedCourses = await getAllCoursesFromParse()
+    setCourses(fetchedCourses)
     setIsDisabled(false)
+  }
+
+  async function deleteCourse(courseId: string) {
+    if (confirm('Delete course?')) {
+      setIsDisabled(true)
+      const deletedCourse = parseCourseList.find(el => el.id === courseId)
+      console.log('deletedCourse', deletedCourse)
+      await Parse.Object.destroyAll(deletedCourse)
+      const fetchedCourses = await getAllCoursesFromParse()
+      setCourses(fetchedCourses)
+      setIsDisabled(false)
+    }
   }
   const publishNewCourseOrder = async () => {
     const updatedCourses = parseCourseList.map((parseCourse) => {
@@ -260,7 +274,7 @@ export function PublishTab() {
             }
           />
           <Row className={'mt-3'}>
-            <CourseList courses={courses} onUpdate={onCourseOrderUpdate} />
+            <CourseList courses={courses} onUpdate={onCourseOrderUpdate} onCourseDelete={deleteCourse} />
           </Row>
           <Button
             className={'mt-3'}
