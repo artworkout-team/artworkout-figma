@@ -5,7 +5,7 @@ import './linter'
 import './publish'
 import '../rpc-api'
 import { currentPageChanged, selectionChanged, updateDisplay } from './tune'
-import { setMetaTagsFromNodesToStore } from "./meta"
+import { setMetaTagsFromNodesToStore } from './meta'
 
 figma.showUI(__html__)
 figma.ui.resize(340, 470)
