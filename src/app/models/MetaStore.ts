@@ -1,6 +1,6 @@
 import { proxy, subscribe } from 'valtio'
-import { availableTypes } from '../components/createLessonForm/LessonMetaForm'
 import { pluginApi } from '../../rpc-api'
+import { availableTypes } from '../../plugin/meta'
 
 let mutex = false
 
