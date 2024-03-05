@@ -8,7 +8,7 @@ export const availableTypes = [
   'handwriting',
   'educational',
   'painting',
-  'oneline',
+  'oneLine',
 ]
 
 export const getSettingsNode = (lesson?: FrameNode) => {
