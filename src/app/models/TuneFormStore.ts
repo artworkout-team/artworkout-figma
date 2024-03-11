@@ -11,6 +11,7 @@ export const TuneFormStore = proxy({
     suggestedBrushSize: 0,
     stepCount: 1,
     template: '',
+    isFade: false,
     clearBefore: false,
     clearLayers: [],
     otherTags: [],

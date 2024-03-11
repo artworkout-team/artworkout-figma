@@ -45,6 +45,12 @@ export function TuneForm() {
     TuneFormStore.stepProps.template = targetSelect.value
   }
 
+  function onFadeSwitchChange(event: FormEvent) {
+    const target = event.target as HTMLInputElement
+    TuneFormStore.stepProps.isFade = !!target.checked
+
+  }
+
   function decimalAlphaToHex(a: number) {
     let newAlpha = Math.round(a * 255)
     return (newAlpha + 0x10000).toString(16).substr(-2).toUpperCase()
@@ -71,7 +77,6 @@ export function TuneForm() {
     const newValue = parseFloat(targetAlphaSlider.value)
 
     let hexAlpha = decimalAlphaToHex(newValue)
-    console.log('state.stepProps.stencilColor', state.stepProps.stencilColor)
     TuneFormStore.stepProps.stencilColor = `${state.stepProps.stencilColor.substr(0, 6)}${hexAlpha}`
   }
 
@@ -620,6 +625,21 @@ export function TuneForm() {
                 <option value='multistep-bg'>bg</option>
                 <option value='multistep-result'>result</option>
               </Form.Select>
+            </Col>
+          </Form.Group>
+          <Form.Group as={Row} className='mb-2'>
+            <Form.Label column xs={5}>
+              Is Fade Out
+            </Form.Label>
+            <Col
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
+              <Form.Check
+                type="switch"
+                id="fade-switch"
+                checked={state.stepProps.isFade}
+                onChange={onFadeSwitchChange}
+              />
             </Col>
           </Form.Group>
           <Form.Group as={Row} className='mb-2'>
