@@ -17,6 +17,7 @@ export interface formProps {
   stepNumber: number;
   template: string;
   stencilColor: string;
+  isFade: boolean;
   clearLayers: string[];
   clearBefore: boolean;
   otherTags: string[];
@@ -322,6 +323,7 @@ export async function updateDisplay(
     suggestedBrushSize: isResultStep(step) ? 0 : maxStrokeWeight,
     template: getTag(step, 's-') || '0',
     stencilColor: getTag(step, 'stencil-color-') || DEFAULT_STENCIL_COLOR,
+    isFade: getTag(step, 'step-fade') !== null,
     stepCount,
     stepNumber,
     displayMode,
@@ -416,7 +418,8 @@ export function updateProps(settings: formProps) {
       !t.startsWith('share-button') &&
       !t.startsWith('allow-undo') &&
       !t.startsWith('brush-name-') &&
-      !t.startsWith('stencil-color-')
+      !t.startsWith('stencil-color-') &&
+      !t.startsWith('step-fade')
   )
   if (settings.template) {
     tags.splice(1, 0, `s-${settings.template}`)
@@ -442,6 +445,10 @@ export function updateProps(settings: formProps) {
   if (settings.stencilColor) {
     if (settings.stencilColor !== DEFAULT_STENCIL_COLOR)
       tags.push(`stencil-color-${settings.stencilColor}`)
+  }
+
+  if (settings.isFade) {
+    tags.push('step-fade')
   }
 
   if (settings.otherTags.length > 0) {
